@@ -1,4 +1,4 @@
-import { Home, Compass, Wallet, Settings, Shield, Menu, LineChart } from 'lucide-react';
+import { Home, Compass, Wallet, Settings, Shield, Menu, LineChart, Gamepad2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { SidebarNav } from '@/components/navigation/SidebarNav';
@@ -12,6 +12,7 @@ const navItems = [
   { label: 'Contributes', href: '/contributes', icon: LineChart },
   { label: 'Wallet', href: '/wallet', icon: Wallet },
   { label: 'Settings', href: '/settings', icon: Settings },
+  { label: 'Games', href: '/games', icon: Gamepad2 },
 ];
 
 export const LeftRail = () => {
