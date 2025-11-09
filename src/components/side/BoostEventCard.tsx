@@ -58,11 +58,9 @@ export const BoostEventCard = ({
   events = boostEvents,
   className,
 }: BoostEventCardProps) => {
-  const { connected, address, grantNop } = useWalletStore((state) => ({
-    connected: state.connected,
-    address: state.address,
-    grantNop: state.grantNop,
-  }));
+  const connected = useWalletStore((state) => state.connected);
+  const address = useWalletStore((state) => state.address);
+  const grantNop = useWalletStore((state) => state.grantNop);
 
   const userId = address ?? 'guest';
 
