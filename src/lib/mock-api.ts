@@ -1,7 +1,7 @@
 import { Post, FeedResponse } from '@/types/feed';
 import { TopGainer, MarketData } from '@/types/market';
 import { TrendingUser } from '@/types/user';
-import { BurnStats, BoostEvent } from '@/types/admin';
+import { BurnStats } from '@/types/admin';
 import { generateRefCode } from '@/lib/utils';
 
 // Mock data generators
@@ -106,30 +106,6 @@ export const mockBurnStats: BurnStats = {
   })),
 };
 
-export const mockBoostEvents: BoostEvent[] = [
-  {
-    id: 'profile',
-    title: 'Complete your profile',
-    badge: 'x2',
-    expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 12).toISOString(),
-    cta: { label: 'Go', href: '/settings/profile' },
-  },
-  {
-    id: 'rate-contribution',
-    title: 'Rate 1 contribution',
-    badge: 'x2',
-    expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 18).toISOString(),
-    cta: { label: 'Review', href: '/contributes' },
-  },
-  {
-    id: 'visual-insight',
-    title: 'Post a visual insight',
-    badge: 'x3',
-    expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(),
-    cta: { label: 'Compose', href: '/create' },
-  },
-];
-
 // Mock API functions
 export const fetchFeed = async (cursor?: string): Promise<FeedResponse> => {
   await new Promise((resolve) => setTimeout(resolve, 800));
@@ -157,7 +133,3 @@ export const fetchBurnStats = async (): Promise<BurnStats> => {
   return mockBurnStats;
 };
 
-export const fetchBoostEvents = async (): Promise<BoostEvent[]> => {
-  await new Promise((resolve) => setTimeout(resolve, 400));
-  return mockBoostEvents;
-};

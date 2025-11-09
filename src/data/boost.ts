@@ -1,34 +1,22 @@
-import type { BoostEvent } from '@/types/admin';
+import type { BoostConfig } from '@/types/rewards';
 
-export const boostEvents: BoostEvent[] = [
+export const boostEvents: BoostConfig[] = [
   {
-    id: 'profile-complete',
-    title: 'Complete your profile',
-    badge: 'x2',
-    expiresAt: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString(),
-    cta: {
-      label: 'Go',
-      href: '/settings/profile',
-    },
+    key: 'signup',
+    title: 'Üye ol',
+    reward: 2000,
+    href: '/signup',
   },
   {
-    id: 'rate-contribution',
-    title: 'Rate 1 contribution',
-    badge: 'x2',
-    expiresAt: new Date(Date.now() + 16 * 60 * 60 * 1000).toISOString(),
-    cta: {
-      label: 'Review',
-      href: '/contributes',
-    },
+    key: 'deposit',
+    title: 'Deposit NOP',
+    reward: 5000,
+    href: '/wallet?tab=deposit',
   },
   {
-    id: 'visual-insight',
-    title: 'Post a visual insight',
-    badge: 'x3',
-    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-    cta: {
-      label: 'Compose',
-      href: '/explore',
-    },
+    key: 'contribute',
+    title: 'Katkı yap',
+    reward: 3000,
+    href: '/contributes',
   },
 ];

@@ -6,6 +6,7 @@ import {
   SIDE_CARD_CLASS,
   SIDE_CARD_TITLE_CLASS,
   SIDE_SKELETON_CLASS,
+  SIDE_CARD_STYLE,
 } from '@/components/side/common';
 
 type LoadState = 'idle' | 'loading' | 'success' | 'error';
@@ -208,7 +209,7 @@ export const CryptoNews = () => {
   }, [hasContent, items, loadNews, status]);
 
   return (
-    <section className={SIDE_CARD_CLASS}>
+    <section className={SIDE_CARD_CLASS} style={SIDE_CARD_STYLE}>
       <header className="flex items-center justify-between">
         <h3 className={SIDE_CARD_TITLE_CLASS}>
           <Newspaper className="h-4 w-4 text-indigo-500" />

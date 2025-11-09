@@ -1,132 +1,155 @@
-import type { PropsWithChildren } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import type { MouseEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { Sparkles, ArrowUpRight } from 'lucide-react';
-import type { BoostEvent } from '@/types/admin';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import {
   SIDE_CARD_CLASS,
   SIDE_CARD_TITLE_CLASS,
+  SIDE_CARD_STYLE,
 } from '@/components/side/common';
+import { boostEvents } from '@/data/boost';
+import type { BoostConfig, BoostKey } from '@/types/rewards';
+import { hasClaimed, markClaimed } from '@/lib/rewards';
+import { useWalletStore } from '@/lib/store';
 
-const GOLD_CHIP_CLASS =
-  'inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-amber-700 ring-1 ring-amber-500/30';
-
-const LIST_ITEM_CLASS =
-  'flex items-center justify-between rounded-xl border border-slate-200/70 bg-slate-50 px-3 py-2 transition hover:border-indigo-400/70 hover:bg-indigo-50/60';
-
-const EMPTY_STATE_CLASS =
-  'rounded-xl border border-dashed border-slate-200/80 bg-slate-50 px-3 py-6 text-center text-xs text-slate-500';
+const CTA_LABELS: Record<BoostKey, string> = {
+  signup: 'Go',
+  deposit: 'Go',
+  contribute: 'Review',
+};
 
 export interface BoostEventCardProps {
   title?: string;
-  events?: BoostEvent[];
+  events?: BoostConfig[];
   className?: string;
 }
 
-const formatCountdown = (expiresAt: string) => {
-  const expires = new Date(expiresAt).getTime();
-  if (Number.isNaN(expires)) {
-    return null;
-  }
+type ClaimState = Record<BoostKey, boolean>;
 
-  const diffMinutes = Math.max(0, Math.round((expires - Date.now()) / 60_000));
-  if (diffMinutes === 0) {
-    return 'Ends soon';
-  }
+const rewardBadgeStyle = (claimed: boolean) => ({
+  background: claimed
+    ? 'color-mix(in srgb, var(--surface-subtle) 70%, transparent)'
+    : 'color-mix(in srgb, var(--brand-gold) 30%, transparent)',
+  color: claimed ? 'var(--menu-muted)' : 'var(--menu-item)',
+  border: claimed
+    ? '1px solid color-mix(in srgb, var(--ring) 35%, transparent)'
+    : '1px solid color-mix(in srgb, var(--brand-gold) 40%, transparent)',
+});
 
-  const hours = Math.floor(diffMinutes / 60);
-  const minutes = diffMinutes % 60;
-
-  if (hours === 0) {
-    return `Ends in ${minutes}m`;
-  }
-
-  if (minutes === 0) {
-    return `Ends in ${hours}h`;
-  }
-
-  return `Ends in ${hours}h ${minutes}m`;
+const actionRowStyle = {
+  background: 'color-mix(in srgb, var(--surface-subtle) 60%, transparent)',
+  border: '1px solid color-mix(in srgb, var(--ring) 30%, transparent)',
 };
 
-const BoostBadge = ({ children }: PropsWithChildren) => (
-  <span className={GOLD_CHIP_CLASS}>{children}</span>
-);
+const computeClaims = (user: string, items: BoostConfig[]): ClaimState =>
+  items.reduce<ClaimState>(
+    (acc, item) => ({
+      ...acc,
+      [item.key]: hasClaimed(user, item.key),
+    }),
+    { signup: false, deposit: false, contribute: false },
+  );
 
 export const BoostEventCard = ({
   title = 'Boosted Tasks',
-  events = [],
+  events = boostEvents,
   className,
 }: BoostEventCardProps) => {
-  const upcoming = events.slice(0, 3);
-  const nearestExpiry = upcoming.reduce<Date | null>((acc, item) => {
-    const expires = new Date(item.expiresAt);
-    if (Number.isNaN(expires.getTime())) {
-      return acc;
-    }
-    if (!acc) {
-      return expires;
-    }
-    return expires < acc ? expires : acc;
-  }, null);
+  const { connected, address, grantNop } = useWalletStore((state) => ({
+    connected: state.connected,
+    address: state.address,
+    grantNop: state.grantNop,
+  }));
 
-  const countdownLabel = nearestExpiry
-    ? formatCountdown(nearestExpiry.toISOString())
-    : null;
+  const userId = address ?? 'guest';
+
+  const [claimed, setClaimed] = useState<ClaimState>(() =>
+    computeClaims(userId, events),
+  );
+
+  useEffect(() => {
+    setClaimed(computeClaims(userId, events));
+  }, [userId, events]);
+
+  const activeEvents = useMemo(() => events.slice(0, 3), [events]);
+
+  const handleAction =
+    (item: BoostConfig) => (event: MouseEvent<HTMLAnchorElement>) => {
+      if (['deposit', 'contribute'].includes(item.key) && !connected) {
+        event.preventDefault();
+        toast.warning('Önce cüzdanını bağla');
+        return;
+      }
+
+      if (claimed[item.key]) {
+        toast.info('Bu ödül zaten alındı');
+        return;
+      }
+
+      grantNop?.(item.reward);
+      markClaimed(userId, item.key);
+      setClaimed((prev) => ({ ...prev, [item.key]: true }));
+      toast.success(`+${item.reward} NOP eklendi (tek seferlik)`);
+    };
 
   return (
-    <section className={cn(SIDE_CARD_CLASS, className)}>
-      <header className="mb-4 flex items-center justify-between">
+    <section className={cn(SIDE_CARD_CLASS, className)} style={SIDE_CARD_STYLE}>
+      <header className="mb-4 flex items-center justify-between text-[color:var(--text-primary)]">
         <h3 className={SIDE_CARD_TITLE_CLASS}>
-          <Sparkles className="h-4 w-4 text-indigo-500" />
+          <Sparkles className="h-4 w-4 text-[var(--brand-to)]" />
           {title}
         </h3>
-        <BoostBadge>x2 NOP</BoostBadge>
+        <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-[color:var(--menu-item)]" style={rewardBadgeStyle(false)}>
+          3 görev
+        </span>
       </header>
 
-      {upcoming.length === 0 ? (
-        <p className={EMPTY_STATE_CLASS}>
-          No active boost. Check back soon.
-        </p>
-      ) : (
-        <div className="space-y-2.5">
-          {upcoming.map((event) => (
-            <div key={event.id} className={LIST_ITEM_CLASS}>
-              <div className="flex items-center gap-3">
-                {event.icon ? (
-                  <span className="text-indigo-500">{event.icon}</span>
-                ) : (
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-100 text-[11px] font-semibold text-indigo-600">
-                    {event.badge ?? 'x2'}
-                  </span>
-                )}
-                <span className="text-sm font-medium text-slate-700">
-                  {event.title}
+      <div className="space-y-2.5">
+        {activeEvents.map((item) => {
+          const isClaimed = claimed[item.key];
+          return (
+            <div
+              key={item.key}
+              className="flex items-center justify-between gap-3 rounded-xl border px-3 py-3 transition"
+              style={actionRowStyle}
+            >
+              <div className="flex flex-col">
+                <span className="text-sm font-medium text-[color:var(--text-primary)]">
+                  {item.title}
                 </span>
+                {isClaimed ? (
+                  <span className="text-xs text-[color:var(--menu-muted)]">Ödül alındı</span>
+                ) : (
+                  <span className="text-xs text-[color:var(--menu-muted)]">Tek seferlik bonus</span>
+                )}
               </div>
-              <Button
-                asChild
-                variant="ghost"
-                size="sm"
-                className="gap-1 text-indigo-600 hover:bg-indigo-100/70"
-              >
-                <Link to={event.cta.href} aria-label={event.cta.label}>
-                  {event.cta.label}
-                  <ArrowUpRight className="h-3.5 w-3.5" />
-                </Link>
-              </Button>
-            </div>
-          ))}
-        </div>
-      )}
 
-      <footer className="mt-4 text-xs text-slate-500">
-        {countdownLabel ? (
-          <span>{countdownLabel}</span>
-        ) : (
-          <span className="text-slate-400">Boost timers update hourly</span>
-        )}
-      </footer>
+              <div className="flex items-center gap-3">
+                <span
+                  className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold"
+                  style={rewardBadgeStyle(isClaimed)}
+                >
+                  +{item.reward.toLocaleString('tr-TR')} NOP
+                </span>
+                <Button
+                  asChild
+                  variant="ghost"
+                  size="sm"
+                  className="gap-1 text-[color:var(--menu-active)]"
+                >
+                  <Link to={item.href} onClick={handleAction(item)}>
+                    {isClaimed ? 'View' : CTA_LABELS[item.key]}
+                    <ArrowUpRight className="h-3.5 w-3.5" />
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </section>
   );
 };

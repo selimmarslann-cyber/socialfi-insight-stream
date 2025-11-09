@@ -1,6 +1,5 @@
-import { useState } from 'react';
-import { User, Moon, Sun, Monitor, Bell, Copy } from 'lucide-react';
-import { useTheme } from 'next-themes';
+import { useEffect, useState } from 'react';
+import { User, Moon, Sun, Bell, Copy } from 'lucide-react';
 import { Container } from '@/components/layout/Container';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,11 +9,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { useWalletStore } from '@/lib/store';
+import { getTheme, setTheme, subscribeTheme, type ThemeMode } from '@/lib/theme';
 
 export default function Settings() {
-  const { theme, setTheme } = useTheme();
   const { refCode } = useWalletStore();
   const displayRefCode = refCode || 'nop00000';
+  const [mode, setMode] = useState<ThemeMode>(() => getTheme());
   const [notifications, setNotifications] = useState({
     posts: true,
     mentions: true,
@@ -23,6 +23,22 @@ export default function Settings() {
 
   const handleSave = () => {
     toast.success('Settings saved successfully');
+  };
+
+  useEffect(() => {
+    setMode(getTheme());
+    const unsubscribe = subscribeTheme(setMode);
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
+  const handleThemeSelection = (next: ThemeMode) => {
+    setTheme(next);
+    setMode(next);
+    toast.success(
+      next === 'dark' ? 'Koyu mod etkinleştirildi' : 'Açık mod etkinleştirildi',
+    );
   };
 
   return (
@@ -101,29 +117,21 @@ export default function Settings() {
           <CardContent>
             <Label className="mb-3 block">Theme</Label>
             <div className="grid grid-cols-3 gap-3">
-              <Button
-                variant={theme === 'light' ? 'default' : 'outline'}
-                onClick={() => setTheme('light')}
-                className="gap-2"
-              >
+                <Button
+                  variant={mode === 'light' ? 'default' : 'outline'}
+                  onClick={() => handleThemeSelection('light')}
+                  className="gap-2"
+                >
                 <Sun className="h-4 w-4" />
                 Light
               </Button>
               <Button
-                variant={theme === 'dark' ? 'default' : 'outline'}
-                onClick={() => setTheme('dark')}
-                className="gap-2"
-              >
+                  variant={mode === 'dark' ? 'default' : 'outline'}
+                  onClick={() => handleThemeSelection('dark')}
+                  className="gap-2"
+                >
                 <Moon className="h-4 w-4" />
                 Dark
-              </Button>
-              <Button
-                variant={theme === 'system' ? 'default' : 'outline'}
-                onClick={() => setTheme('system')}
-                className="gap-2"
-              >
-                <Monitor className="h-4 w-4" />
-                System
               </Button>
             </div>
           </CardContent>

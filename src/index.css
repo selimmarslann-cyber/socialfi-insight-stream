@@ -10,121 +10,22 @@
 
 @layer base {
   :root {
-    --background: 222 100% 98%;
-    --foreground: 222.2 47.4% 11.2%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 47.4% 11.2%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 47.4% 11.2%;
-
-    --primary: 243.4 75.4% 58.6%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 215.3 19.3% 34.5%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 215.3 36% 90%;
-    --muted-foreground: 215.3 19.3% 34.5%;
-
-    --accent: 188.7 94.5% 42.7%;
-    --accent-foreground: 210 40% 98%;
-
-    --positive: 148 63% 45%;
-    --positive-foreground: 0 0% 100%;
-
-    --negative: 0 84% 60%;
-    --negative-foreground: 0 0% 100%;
-
-    --warning: 40.1 87.4% 68.8%;
-    --warning-foreground: 25 86% 30%;
-
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 222 56% 94%;
-    --input: 222 56% 94%;
-    --ring: 243.4 75.4% 58.6%;
-
+    color-scheme: light;
     --radius: 0.75rem;
-
-    --shadow-sm: 0 20px 40px -15px rgb(15 23 42 / 0.18);
-    --shadow-card: 0 8px 24px rgba(17, 24, 39, 0.08);
-    --brand-gradient: linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%);
-    --brand-gradient-soft: linear-gradient(140deg, rgba(79, 70, 229, 0.12), rgba(6, 182, 212, 0.12));
-    --ring-soft: rgba(79, 70, 229, 0.15);
-
-    --sidebar-background: 222 100% 98%;
-    --sidebar-foreground: 222.2 47.4% 11.2%;
-    --sidebar-primary: 243.4 75.4% 58.6%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 100%;
-    --sidebar-accent-foreground: 222.2 47.4% 11.2%;
-    --sidebar-border: 222 56% 94%;
-    --sidebar-ring: 243.4 75.4% 58.6%;
   }
 
-  .dark {
-    --background: 222.2 47.4% 5.2%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 47.4% 7.4%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 47.4% 7.4%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 243.4 75.4% 58.6%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 215 27% 15%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 222.2 19% 14%;
-    --muted-foreground: 215 20% 65%;
-
-    --accent: 188.7 94.5% 42.7%;
-    --accent-foreground: 222.2 47.4% 5.2%;
-
-    --positive: 148 63% 52%;
-    --positive-foreground: 222.2 47.4% 5.2%;
-
-    --negative: 0 84% 63%;
-    --negative-foreground: 210 40% 98%;
-
-    --warning: 40.1 87.4% 60%;
-    --warning-foreground: 25 86% 20%;
-
-    --border: 222.2 36% 18%;
-    --input: 222.2 36% 18%;
-    --ring: 243.4 75.4% 58.6%;
-
-    --shadow-sm: 0 20px 40px -15px rgb(15 23 42 / 0.6);
-    --shadow-card: 0 15px 35px rgba(15, 23, 42, 0.55);
-    --brand-gradient-soft: linear-gradient(140deg, rgba(79, 70, 229, 0.3), rgba(6, 182, 212, 0.28));
-    --ring-soft: rgba(79, 70, 229, 0.25);
-
-    --sidebar-background: 222.2 47.4% 7.4%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 243.4 75.4% 58.6%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 222.2 47.4% 12%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 222.2 36% 18%;
-    --sidebar-ring: 243.4 75.4% 58.6%;
+  :root[data-theme='dark'] {
+    color-scheme: dark;
   }
-}
 
-@layer base {
   * {
     @apply border-border;
   }
 
   body {
     @apply font-sans antialiased;
-    background-color: #F5F8FF;
-    color: #0F172A;
+    background-color: var(--bg-base);
+    color: var(--text-primary);
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
   
