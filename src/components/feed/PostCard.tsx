@@ -30,8 +30,13 @@ export const PostCard = ({ post }: PostCardProps) => {
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="font-medium text-sm">@{post.author.username}</span>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-1">
+              <div>
+                <p className="font-medium text-sm">@{post.author.username}</p>
+                <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                  {post.author.refCode}
+                </p>
+              </div>
               <span className="text-xs text-muted-foreground">
                 {timeAgo(post.createdAt)}
               </span>
@@ -42,6 +47,16 @@ export const PostCard = ({ post }: PostCardProps) => {
               )}
             </div>
             <p className="text-sm mb-3 whitespace-pre-wrap">{post.content}</p>
+            {post.imageUrl && (
+              <div className="mb-3 rounded-lg border bg-muted/30 overflow-hidden">
+                <img
+                  src={post.imageUrl}
+                  alt={`Contribution visual from ${post.author.username}`}
+                  className="w-full h-full object-cover max-h-72"
+                  loading="lazy"
+                />
+              </div>
+            )}
             <div className="flex items-center gap-4 text-muted-foreground">
               <Button variant="ghost" size="sm" className="h-8 gap-1">
                 <ArrowUp className="h-4 w-4" />
