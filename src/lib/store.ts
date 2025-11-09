@@ -18,6 +18,7 @@ type LegacyConnectOptions =
       provider?: WalletProvider;
       inviterCode?: string;
       nop?: number;
+      chainId?: number;
     };
 
 interface WalletState {
@@ -26,12 +27,14 @@ interface WalletState {
   provider?: WalletProvider;
   refCode: string;
   inviterCode?: string;
+  chainId?: number;
   usdt: number;
   nop: number;
   connect: (address: string, options?: LegacyConnectOptions) => void;
   disconnect: () => void;
   updateBalance: (usdt: number, nop: number) => void;
   setRefCode: (code: string) => void;
+  setChainId: (chainId?: number) => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -49,6 +52,7 @@ export const useWalletStore = create<WalletState>((set) => ({
   provider: undefined,
   refCode: generateRefCode(),
   inviterCode: undefined,
+  chainId: undefined,
   usdt: 0,
   nop: 0,
   connect: (address, options) =>
@@ -61,7 +65,9 @@ export const useWalletStore = create<WalletState>((set) => ({
           ? options?.inviterCode ?? state.inviterCode
           : state.inviterCode;
       const nop =
-        isNumberOption ? options ?? state.nop : typeof options === 'object' && options?.nop !== undefined ? options.nop : state.nop;
+        typeof options === 'object' && options?.nop !== undefined ? options.nop : state.nop;
+      const chainId =
+        isNumberOption ? options : typeof options === 'object' && options?.chainId !== undefined ? options.chainId : state.chainId;
 
       return {
         ...state,
@@ -71,6 +77,7 @@ export const useWalletStore = create<WalletState>((set) => ({
       inviterCode,
         refCode: state.refCode || generateRefCode(),
         nop,
+        chainId,
       };
     }),
   disconnect: () =>
@@ -81,8 +88,10 @@ export const useWalletStore = create<WalletState>((set) => ({
       provider: undefined,
       inviterCode: undefined,
       refCode: state.refCode || generateRefCode(),
+      chainId: undefined,
     })),
   updateBalance: (usdt, nop) => set({ usdt, nop }),
   setRefCode: (code) =>
     set({ refCode: code.startsWith('nop') ? code : `nop${code}` }),
+  setChainId: (chainId) => set({ chainId }),
 }));
