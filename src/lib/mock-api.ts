@@ -97,29 +97,36 @@ export const mockTrendingUsers: TrendingUser[] = [
 ];
 
 export const mockBurnStats: BurnStats = {
-  totalBurned: 125000000,
-  last24h: 450000,
-  lastUpdate: new Date().toISOString(),
+  total: 125_000_000,
+  last24h: 450_000,
+  updatedAt: new Date().toISOString(),
+  series: Array.from({ length: 14 }).map((_, index) => ({
+    t: Date.now() - (13 - index) * 60 * 60 * 1000,
+    v: 250_000 + Math.sin(index / 2) * 50_000 + Math.random() * 20_000,
+  })),
 };
 
 export const mockBoostEvents: BoostEvent[] = [
   {
-    id: '1',
-    title: 'Complete Your Profile',
-    description: 'Add bio and avatar for 50 bonus points',
-    multiplier: 1.5,
-    startDate: new Date().toISOString(),
-    endDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7).toISOString(),
-    active: true,
+    id: 'profile',
+    title: 'Complete your profile',
+    badge: 'x2',
+    expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 12).toISOString(),
+    cta: { label: 'Go', href: '/settings/profile' },
   },
   {
-    id: '2',
-    title: 'Rate 5 Contributions',
-    description: '2x points for rating quality content',
-    multiplier: 2.0,
-    startDate: new Date().toISOString(),
-    endDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 3).toISOString(),
-    active: true,
+    id: 'rate-contribution',
+    title: 'Rate 1 contribution',
+    badge: 'x2',
+    expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 18).toISOString(),
+    cta: { label: 'Review', href: '/contributes' },
+  },
+  {
+    id: 'visual-insight',
+    title: 'Post a visual insight',
+    badge: 'x3',
+    expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(),
+    cta: { label: 'Compose', href: '/create' },
   },
 ];
 

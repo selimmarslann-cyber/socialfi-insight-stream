@@ -1,9 +1,14 @@
 import { Home, Compass, Wallet, Settings, Shield, Menu, LineChart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { TopGainers } from '@/components/widgets/TopGainers';
 import { SidebarNav } from '@/components/navigation/SidebarNav';
 import { useAuthStore } from '@/lib/store';
+import { BoostEventCard } from '@/components/side/BoostEventCard';
+import { boostEvents } from '@/data/boost';
+import { SidebarNav } from '@/components/navigation/SidebarNav';
+import { useAuthStore } from '@/lib/store';
+import { BoostEventCard } from '@/components/side/BoostEventCard';
+import { boostEvents } from '@/data/boost';
 
 const navItems = [
   { label: 'Home', href: '/', icon: Home },
@@ -29,7 +34,7 @@ export const LeftRail = () => {
       <aside className="sticky top-20 hidden h-[calc(100vh-5rem)] w-[280px] space-y-6 overflow-y-auto rounded-3xl border border-indigo-500/10 bg-white/80 p-4 shadow-md backdrop-blur lg:block">
         <div className="space-y-6">
           <SidebarNav items={allNavItems} />
-          <TopGainers />
+          <BoostEventCard events={boostEvents} />
         </div>
       </aside>
 
@@ -48,7 +53,7 @@ export const LeftRail = () => {
         <SheetContent side="left" className="w-[280px] overflow-y-auto">
           <div className="space-y-6 pt-6">
             <SidebarNav items={allNavItems} />
-            <TopGainers />
+            <BoostEventCard events={boostEvents} />
           </div>
         </SheetContent>
       </Sheet>
