@@ -10,48 +10,68 @@ export const mockPosts: Post[] = [
     id: '1',
     author: {
       username: 'crypto_analyst',
-      avatar: '',
+      displayName: 'Ayla Tok',
+      avatar: 'https://images.unsplash.com/photo-1544723795-3fb6469f5b39?auto=format&fit=crop&w=160&q=60',
       score: 1250,
       refCode: generateRefCode(12345),
+      verified: true,
     },
     content:
-      'Bitcoin showing strong support at $42k. Bullish divergence on 4h chart. 📈 #BTC',
-    imageUrl:
-      'https://images.unsplash.com/photo-1614034178878-5078c5dabe52?auto=format&fit=crop&w=800&q=80',
+      'BTC reclaiming weekly VWAP. Funding cooling, perp premium back to neutral. Accumulating spot from 41.8k with 43.6k target. #Bitcoin #OnChain',
+    images: [
+      'https://images.unsplash.com/photo-1614034178878-5078c5dabe52?auto=format&fit=crop&w=1200&q=80',
+      'https://images.unsplash.com/photo-1642104704075-10c2d3315327?auto=format&fit=crop&w=1200&q=80',
+    ],
     score: 89,
     createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-    engagement: { upvotes: 42, comments: 8 },
+    contributedAmount: 14500,
+    tags: ['#Bitcoin', '#FundingRates', '#Macro'],
+    engagement: { upvotes: 128, comments: 24, tips: 12, shares: 18 },
   },
   {
     id: '2',
     author: {
       username: 'defi_hunter',
-      avatar: '',
+      displayName: 'Emir Kaplan',
+      avatar: 'https://images.unsplash.com/photo-1573497491208-6b1acb260507?auto=format&fit=crop&w=160&q=60',
       score: 980,
       refCode: generateRefCode(24680),
+      verified: true,
     },
     content:
-      'Just completed task #420. New DeFi protocol analysis posted! Check out the yield opportunities. 🚀',
+      'zkSync ecosystem yield map updated. Sequencer fees trending down, Ethena vault now paying 18% delta-neutral. Dropping my spreadsheet + top 3 pools.',
     score: 65,
     taskId: '420',
-    imageUrl:
-      'https://images.unsplash.com/photo-1618005198919-d3d4b5a92eee?auto=format&fit=crop&w=800&q=80',
+    images: [
+      'https://images.unsplash.com/photo-1618005198919-d3d4b5a92eee?auto=format&fit=crop&w=1200&q=80',
+    ],
     createdAt: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
-    engagement: { upvotes: 28, comments: 5 },
+    contributedAmount: 0,
+    tags: ['#DeFi', '#Yield', '#zkSync'],
+    engagement: { upvotes: 86, comments: 19, tips: 6, shares: 11 },
   },
   {
     id: '3',
     author: {
       username: 'nft_collector',
-      avatar: '',
+      displayName: 'Mira Soyer',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=160&q=60',
       score: 750,
       refCode: generateRefCode(98765),
+      verified: false,
     },
     content:
-      'Market sentiment shifting. ETH gas fees dropping = good time for NFT trades',
+      'ETH gas back under 12 gwei. Rotating profits into curated NFT treasuries. Watch wallets currently hoarding ETH for airdrop farming. Thread below.',
+    images: [
+      'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80',
+      'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=1200&q=80',
+      'https://images.unsplash.com/photo-1517430816045-df4b7de11d1d?auto=format&fit=crop&w=1200&q=80',
+    ],
     score: 54,
     createdAt: new Date(Date.now() - 1000 * 60 * 90).toISOString(),
-    engagement: { upvotes: 19, comments: 3 },
+    contributedAmount: 6200,
+    tags: ['#NFT', '#ETH', '#Gas'],
+    engagement: { upvotes: 64, comments: 12, tips: 4, shares: 9 },
   },
 ];
 

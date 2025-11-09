@@ -1,21 +1,27 @@
-  export interface Post {
-    id: string;
-    author: {
-      username: string;
-      avatar?: string;
-      score: number;
-      refCode: string;
-    };
-    content: string;
-    imageUrl?: string;
+export interface Post {
+  id: string;
+  author: {
+    username: string;
+    displayName: string;
+    avatar?: string;
     score: number;
-    taskId?: string;
-    createdAt: string;
-    engagement: {
-      upvotes: number;
-      comments: number;
-    };
-  }
+    refCode: string;
+    verified?: boolean;
+  };
+  content: string;
+  images?: string[];
+  score: number;
+  taskId?: string;
+  createdAt: string;
+  contributedAmount?: number;
+  tags?: string[];
+  engagement: {
+    upvotes: number;
+    comments: number;
+    tips: number;
+    shares: number;
+  };
+}
 
 export interface FeedResponse {
   items: Post[];

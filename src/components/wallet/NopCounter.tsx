@@ -3,7 +3,6 @@ import { Coins } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useWalletStore } from '@/lib/store';
-import { cn } from '@/lib/utils';
 
 export const NopCounter = () => {
   const navigate = useNavigate();
@@ -23,14 +22,16 @@ export const NopCounter = () => {
     <Button
       variant="ghost"
       onClick={() => navigate('/wallet')}
-      className="gap-2 hover:bg-accent/10"
+      className="h-9 gap-2 rounded-full border border-indigo-500/15 bg-white/80 px-4 text-xs font-semibold text-slate-600 shadow-sm backdrop-blur transition hover:border-indigo-500/30 hover:bg-white"
       aria-label="NOP balance"
     >
-      <Coins className="h-4 w-4 text-warning" />
-      <span className="font-mono font-medium text-sm">
+      <Coins className="h-4 w-4 text-[#F5C76A]" />
+      <span className="font-mono text-sm">
         {(data?.nop || nop).toLocaleString()}
       </span>
-      <span className="text-xs text-muted-foreground hidden md:inline">NOP</span>
+      <span className="hidden text-[11px] uppercase tracking-wide text-slate-400 md:inline">
+        NOP
+      </span>
     </Button>
   );
 };

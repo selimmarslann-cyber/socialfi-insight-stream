@@ -6,7 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import Index from "./pages/Index";
 import Explore from "./pages/Explore";
-import Wallet from "./pages/Wallet";
+import WalletPage from "./pages/WalletPage";
 import Settings from "./pages/Settings";
 import Admin from "./pages/Admin";
 import Contributes from "./pages/Contributes";
@@ -39,7 +39,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/explore" element={<Explore />} />
             <Route path="/contributes" element={<Contributes />} />
-            <Route path="/wallet" element={<Wallet />} />
+            <Route path="/wallet" element={<WalletPage />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/admin/contributes/:id" element={<AdminContributeDetail />} />

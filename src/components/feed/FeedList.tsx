@@ -1,14 +1,11 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { Loader2, Plus } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PostCard } from './PostCard';
 import { fetchFeed } from '@/lib/mock-api';
-import { useAppStore } from '@/lib/store';
 
 export const FeedList = () => {
-  const { setPostComposerOpen } = useAppStore();
-  
   const {
     data,
     isLoading,
@@ -26,12 +23,8 @@ export const FeedList = () => {
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <Button className="w-full" size="lg">
-          <Plus className="h-5 w-5 mr-2" />
-          New Contribution
-        </Button>
         {[1, 2, 3].map((i) => (
-          <Skeleton key={i} className="h-32 w-full" />
+          <Skeleton key={i} className="h-40 w-full rounded-3xl" />
         ))}
       </div>
     );
@@ -48,22 +41,10 @@ export const FeedList = () => {
   const posts = data?.pages.flatMap((page) => page.items) ?? [];
 
   return (
-    <div className="space-y-4">
-      <Button
-        className="w-full"
-        size="lg"
-        onClick={() => setPostComposerOpen(true)}
-      >
-        <Plus className="h-5 w-5 mr-2" />
-        New Contribution
-      </Button>
-
+    <div className="space-y-5">
       {posts.length === 0 ? (
-        <div className="text-center py-12 border rounded-lg bg-muted/20">
-          <p className="text-muted-foreground mb-4">No contributions yet</p>
-          <Button onClick={() => setPostComposerOpen(true)}>
-            Be the first to contribute
-          </Button>
+        <div className="rounded-3xl border border-indigo-500/10 bg-white p-12 text-center shadow-sm">
+          <p className="text-sm text-slate-500">No contributions yet. Be the first to publish an analysis.</p>
         </div>
       ) : (
         <>

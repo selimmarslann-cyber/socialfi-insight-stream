@@ -1,10 +1,6 @@
 import { create } from 'zustand';
 import { generateRefCode } from '@/lib/utils';
-
-interface AppState {
-  isPostComposerOpen: boolean;
-  setPostComposerOpen: (open: boolean) => void;
-}
+import type { WalletTx } from '@/types/wallet';
 
 const ADMIN_SESSION_KEY = "nop_admin_session";
 const ADMIN_USERNAME = "admin";
@@ -36,17 +32,14 @@ interface WalletState {
   chainId?: number;
   usdt: number;
   nop: number;
+  transactions: WalletTx[];
   connect: (address: string, options?: LegacyConnectOptions) => void;
   disconnect: () => void;
   updateBalance: (usdt: number, nop: number) => void;
   setRefCode: (code: string) => void;
   setChainId: (chainId?: number) => void;
+  addTx: (tx: WalletTx) => void;
 }
-
-export const useAppStore = create<AppState>((set) => ({
-  isPostComposerOpen: false,
-  setPostComposerOpen: (open) => set({ isPostComposerOpen: open }),
-}));
 
 const getInitialAdminState = () => {
   if (typeof window === "undefined") return false;
@@ -84,6 +77,42 @@ export const useWalletStore = create<WalletState>((set) => ({
   chainId: undefined,
   usdt: 0,
   nop: 0,
+  transactions: [
+    {
+      id: 'tx-1',
+      hash: '0x79fa...92c1',
+      type: 'deposit',
+      asset: 'USDT',
+      amount: 1200,
+      direction: 'in',
+      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
+      status: 'completed',
+      counterparty: 'Binance',
+    },
+    {
+      id: 'tx-2',
+      hash: '0xa93d...6b0f',
+      type: 'buy',
+      asset: 'NOP',
+      amount: 8600,
+      direction: 'in',
+      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(),
+      status: 'completed',
+      counterparty: 'NOP DEX',
+      note: 'Market buy',
+    },
+    {
+      id: 'tx-3',
+      hash: '0x4ceb...e66d',
+      type: 'send',
+      asset: 'USDT',
+      amount: 420,
+      direction: 'out',
+      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
+      status: 'pending',
+      counterparty: '0x6DFb...ee12',
+    },
+  ],
   connect: (address, options) =>
     set((state) => {
       const isNumberOption = typeof options === 'number';
@@ -136,4 +165,8 @@ export const useWalletStore = create<WalletState>((set) => ({
       refCode: code?.toLowerCase().startsWith('nop') ? code : `nop${code}`,
     }),
   setChainId: (chainId) => set({ chainId }),
+  addTx: (tx) =>
+    set((state) => ({
+      transactions: [tx, ...state.transactions].slice(0, 25),
+    })),
 }));
