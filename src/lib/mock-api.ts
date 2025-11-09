@@ -2,30 +2,53 @@ import { Post, FeedResponse } from '@/types/feed';
 import { TopGainer, MarketData } from '@/types/market';
 import { TrendingUser } from '@/types/user';
 import { BurnStats, BoostEvent } from '@/types/admin';
+import { generateRefCode } from '@/lib/utils';
 
 // Mock data generators
 export const mockPosts: Post[] = [
   {
     id: '1',
-    author: { username: 'crypto_analyst', avatar: '', score: 1250 },
-    content: 'Bitcoin showing strong support at $42k. Bullish divergence on 4h chart. 📈 #BTC',
+    author: {
+      username: 'crypto_analyst',
+      avatar: '',
+      score: 1250,
+      refCode: generateRefCode(12345),
+    },
+    content:
+      'Bitcoin showing strong support at $42k. Bullish divergence on 4h chart. 📈 #BTC',
+    imageUrl:
+      'https://images.unsplash.com/photo-1614034178878-5078c5dabe52?auto=format&fit=crop&w=800&q=80',
     score: 89,
     createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
     engagement: { upvotes: 42, comments: 8 },
   },
   {
     id: '2',
-    author: { username: 'defi_hunter', avatar: '', score: 980 },
-    content: 'Just completed task #420. New DeFi protocol analysis posted! Check out the yield opportunities. 🚀',
+    author: {
+      username: 'defi_hunter',
+      avatar: '',
+      score: 980,
+      refCode: generateRefCode(24680),
+    },
+    content:
+      'Just completed task #420. New DeFi protocol analysis posted! Check out the yield opportunities. 🚀',
     score: 65,
     taskId: '420',
+    imageUrl:
+      'https://images.unsplash.com/photo-1618005198919-d3d4b5a92eee?auto=format&fit=crop&w=800&q=80',
     createdAt: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
     engagement: { upvotes: 28, comments: 5 },
   },
   {
     id: '3',
-    author: { username: 'nft_collector', avatar: '', score: 750 },
-    content: 'Market sentiment shifting. ETH gas fees dropping = good time for NFT trades',
+    author: {
+      username: 'nft_collector',
+      avatar: '',
+      score: 750,
+      refCode: generateRefCode(98765),
+    },
+    content:
+      'Market sentiment shifting. ETH gas fees dropping = good time for NFT trades',
     score: 54,
     createdAt: new Date(Date.now() - 1000 * 60 * 90).toISOString(),
     engagement: { upvotes: 19, comments: 3 },
@@ -41,16 +64,16 @@ export const mockGainers: TopGainer[] = [
 ];
 
 export const mockTrendingUsers: TrendingUser[] = [
-  { username: 'crypto_analyst', score: 1250, rank: 1, trend: 'up' },
-  { username: 'defi_hunter', score: 980, rank: 2, trend: 'stable' },
-  { username: 'nft_collector', score: 750, rank: 3, trend: 'up' },
-  { username: 'whale_watcher', score: 680, rank: 4, trend: 'down' },
-  { username: 'chain_expert', score: 620, rank: 5, trend: 'up' },
-  { username: 'token_researcher', score: 590, rank: 6, trend: 'stable' },
-  { username: 'market_maker', score: 540, rank: 7, trend: 'up' },
-  { username: 'protocol_dev', score: 500, rank: 8, trend: 'stable' },
-  { username: 'yield_farmer', score: 480, rank: 9, trend: 'down' },
-  { username: 'smart_trader', score: 460, rank: 10, trend: 'stable' },
+  { username: 'crypto_analyst', score: 1250, rank: 1, refCode: generateRefCode(12345), trend: 'up' },
+  { username: 'defi_hunter', score: 980, rank: 2, refCode: generateRefCode(24680), trend: 'stable' },
+  { username: 'nft_collector', score: 750, rank: 3, refCode: generateRefCode(98765), trend: 'up' },
+  { username: 'whale_watcher', score: 680, rank: 4, refCode: generateRefCode(13579), trend: 'down' },
+  { username: 'chain_expert', score: 620, rank: 5, refCode: generateRefCode(19283), trend: 'up' },
+  { username: 'token_researcher', score: 590, rank: 6, refCode: generateRefCode(56473), trend: 'stable' },
+  { username: 'market_maker', score: 540, rank: 7, refCode: generateRefCode(90817), trend: 'up' },
+  { username: 'protocol_dev', score: 500, rank: 8, refCode: generateRefCode(72645), trend: 'stable' },
+  { username: 'yield_farmer', score: 480, rank: 9, refCode: generateRefCode(38495), trend: 'down' },
+  { username: 'smart_trader', score: 460, rank: 10, refCode: generateRefCode(11223), trend: 'stable' },
 ];
 
 export const mockBurnStats: BurnStats = {

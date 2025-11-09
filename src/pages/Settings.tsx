@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { User, Moon, Sun, Monitor, Bell } from 'lucide-react';
+import { User, Moon, Sun, Monitor, Bell, Copy } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { Container } from '@/components/layout/Container';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,9 +9,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
+import { useWalletStore } from '@/lib/store';
 
 export default function Settings() {
   const { theme, setTheme } = useTheme();
+  const { refCode } = useWalletStore();
+  const displayRefCode = refCode || 'nop00000';
   const [notifications, setNotifications] = useState({
     posts: true,
     mentions: true,
@@ -40,7 +43,11 @@ export default function Settings() {
           <CardContent className="space-y-4">
             <div>
               <Label htmlFor="username">Username</Label>
-              <Input id="username" placeholder="@username" defaultValue="crypto_analyst" />
+              <Input
+                id="username"
+                placeholder="@username"
+                defaultValue="crypto_analyst"
+              />
             </div>
             <div>
               <Label htmlFor="bio">Bio</Label>
@@ -54,6 +61,32 @@ export default function Settings() {
             <div>
               <Label htmlFor="avatar">Avatar URL</Label>
               <Input id="avatar" placeholder="https://..." />
+            </div>
+            <div>
+              <Label htmlFor="ref-code">Referral Code</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="ref-code"
+                  value={displayRefCode}
+                  readOnly
+                  className="uppercase font-mono"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="gap-2"
+                  onClick={() => {
+                    navigator.clipboard.writeText(displayRefCode);
+                    toast.success('Referral code copied');
+                  }}
+                >
+                  <Copy className="h-4 w-4" />
+                  Copy
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Share your code to invite new community members.
+              </p>
             </div>
           </CardContent>
         </Card>
