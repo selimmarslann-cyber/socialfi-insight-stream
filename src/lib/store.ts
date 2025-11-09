@@ -36,6 +36,7 @@ interface WalletState {
   connect: (address: string, options?: LegacyConnectOptions) => void;
   disconnect: () => void;
   updateBalance: (usdt: number, nop: number) => void;
+  grantNop: (amount: number) => void;
   setRefCode: (code: string) => void;
   setChainId: (chainId?: number) => void;
   addTx: (tx: WalletTx) => void;
@@ -160,6 +161,10 @@ export const useWalletStore = create<WalletState>((set) => ({
       chainId: undefined,
     })),
   updateBalance: (usdt, nop) => set({ usdt, nop }),
+  grantNop: (amount) =>
+    set((state) => ({
+      nop: Math.max(0, (state.nop ?? 0) + amount),
+    })),
   setRefCode: (code) =>
     set({
       refCode: code?.toLowerCase().startsWith('nop') ? code : `nop${code}`,

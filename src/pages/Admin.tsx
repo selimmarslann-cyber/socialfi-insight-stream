@@ -1,25 +1,17 @@
 import { FormEvent, useState } from "react";
-import { Shield, Flame, Zap } from "lucide-react";
+import { Shield } from "lucide-react";
 import { Container } from "@/components/layout/Container";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuthStore } from "@/lib/store";
 import { toast } from "sonner";
+import BurnPanel from "./admin/BurnPanel";
 
 export default function Admin() {
   const { isAdmin, login, logout } = useAuthStore();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-
-  const handleUpdateBurn = () => {
-    toast.success("Burn counter updated");
-  };
-
-  const handleBoostTask = () => {
-    toast.success("Task boosted successfully");
-  };
 
   const handleLogin = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -95,49 +87,7 @@ export default function Admin() {
           </Button>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Flame className="h-5 w-5 text-negative" />
-              Update Burn Counter
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="total-burned">Total Burned</Label>
-              <Input id="total-burned" type="number" placeholder="125000000" className="font-mono" />
-            </div>
-            <div>
-              <Label htmlFor="last-24h">Last 24 Hours</Label>
-              <Input id="last-24h" type="number" placeholder="450000" className="font-mono" />
-            </div>
-            <Button onClick={handleUpdateBurn}>Update Burn Stats</Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Zap className="h-5 w-5 text-warning" />
-              Boost Tasks
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="task-title">Task Title</Label>
-              <Input id="task-title" placeholder="Complete Your Profile" />
-            </div>
-            <div>
-              <Label htmlFor="task-desc">Description</Label>
-              <Input id="task-desc" placeholder="Add bio and avatar for bonus points" />
-            </div>
-            <div>
-              <Label htmlFor="multiplier">Multiplier</Label>
-              <Input id="multiplier" type="number" step="0.1" placeholder="1.5" />
-            </div>
-            <Button onClick={handleBoostTask}>Create Boosted Task</Button>
-          </CardContent>
-        </Card>
+        <BurnPanel />
       </div>
     </Container>
   );

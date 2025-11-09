@@ -14,6 +14,7 @@ import {
   SIDE_CARD_CLASS,
   SIDE_CARD_TITLE_CLASS,
   SIDE_SKELETON_CLASS,
+  SIDE_CARD_STYLE,
 } from '@/components/side/common';
 import { cn } from '@/lib/utils';
 
@@ -227,7 +228,7 @@ export const BurnWidget = () => {
   }, [stats]);
 
   return (
-    <section className={SIDE_CARD_CLASS}>
+    <section className={SIDE_CARD_CLASS} style={SIDE_CARD_STYLE}>
       <header className="flex items-start justify-between">
         <div>
           <h3 className={SIDE_CARD_TITLE_CLASS}>
