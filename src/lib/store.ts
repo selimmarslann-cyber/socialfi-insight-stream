@@ -5,8 +5,14 @@ interface AppState {
   setPostComposerOpen: (open: boolean) => void;
 }
 
+const ADMIN_SESSION_KEY = "nop_admin_session";
+const ADMIN_USERNAME = "admin";
+const ADMIN_PASSWORD = "adminadmin";
+
 interface AuthState {
   isAdmin: boolean;
+  login: (username: string, password: string) => boolean;
+  logout: () => void;
 }
 
 interface WalletState {
@@ -26,8 +32,31 @@ export const useAppStore = create<AppState>((set) => ({
   setPostComposerOpen: (open) => set({ isPostComposerOpen: open }),
 }));
 
-export const useAuthStore = create<AuthState>(() => ({
-  isAdmin: import.meta.env.VITE_IS_ADMIN === 'true',
+const getInitialAdminState = () => {
+  if (typeof window === "undefined") return false;
+  return window.localStorage.getItem(ADMIN_SESSION_KEY) === "true";
+};
+
+export const useAuthStore = create<AuthState>((set) => ({
+  isAdmin: getInitialAdminState(),
+  login: (username, password) => {
+    const success = username === ADMIN_USERNAME && password === ADMIN_PASSWORD;
+    if (success) {
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(ADMIN_SESSION_KEY, "true");
+      }
+      set({ isAdmin: true });
+    } else {
+      set({ isAdmin: false });
+    }
+    return success;
+  },
+  logout: () => {
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem(ADMIN_SESSION_KEY);
+    }
+    set({ isAdmin: false });
+  },
 }));
 
 export const useWalletStore = create<WalletState>((set) => ({
