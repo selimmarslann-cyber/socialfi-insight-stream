@@ -1,4 +1,4 @@
-import { Home, Compass, Wallet, Settings, Shield, Menu } from 'lucide-react';
+import { Home, Compass, Wallet, Settings, Shield, Menu, LineChart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +9,7 @@ import { useAuthStore } from '@/lib/store';
 const navItems = [
   { label: 'Home', href: '/', icon: Home },
   { label: 'Explore', href: '/explore', icon: Compass },
+  { label: 'Contributes', href: '/contributes', icon: LineChart },
   { label: 'Wallet', href: '/wallet', icon: Wallet },
   { label: 'Settings', href: '/settings', icon: Settings },
 ];

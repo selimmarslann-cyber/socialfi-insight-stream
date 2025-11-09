@@ -24,7 +24,7 @@ export const WalletConnectButton = () => {
   const handleConnect = (provider: string) => {
     if (provider === 'metamask') {
       const mockAddress = '0x742d35Cc6634C0532925a3b844Bc9e7595f0aB12';
-      connect(mockAddress);
+      connect(mockAddress, 324);
       toast.success('Wallet connected successfully');
       setModalOpen(false);
     }
