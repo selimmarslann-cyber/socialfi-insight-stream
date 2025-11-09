@@ -12,6 +12,14 @@ interface AuthState {
 
 type WalletProvider = 'metamask' | 'trust' | 'email';
 
+type LegacyConnectOptions =
+  | number
+  | {
+      provider?: WalletProvider;
+      inviterCode?: string;
+      nop?: number;
+    };
+
 interface WalletState {
   connected: boolean;
   address?: string;
@@ -20,7 +28,7 @@ interface WalletState {
   inviterCode?: string;
   usdt: number;
   nop: number;
-  connect: (payload: { address: string; provider: WalletProvider; inviterCode?: string }) => void;
+  connect: (address: string, options?: LegacyConnectOptions) => void;
   disconnect: () => void;
   updateBalance: (usdt: number, nop: number) => void;
   setRefCode: (code: string) => void;
@@ -43,16 +51,31 @@ export const useWalletStore = create<WalletState>((set) => ({
   inviterCode: undefined,
   usdt: 0,
   nop: 0,
-  connect: ({ address, provider, inviterCode }) =>
-    set((state) => ({
+  connect: (address, options) =>
+    set((state) => {
+      const isNumberOption = typeof options === 'number';
+      const provider =
+        !isNumberOption && typeof options === 'object' ? options?.provider ?? state.provider : state.provider;
+      const inviterCode =
+        !isNumberOption && typeof options === 'object'
+          ? options?.inviterCode ?? state.inviterCode
+          : state.inviterCode;
+      const nop =
+        isNumberOption ? options ?? state.nop : typeof options === 'object' && options?.nop !== undefined ? options.nop : state.nop;
+
+      return {
+        ...state,
       connected: true,
       address,
       provider,
       inviterCode,
-      refCode: state.refCode || generateRefCode(),
-    })),
+        refCode: state.refCode || generateRefCode(),
+        nop,
+      };
+    }),
   disconnect: () =>
     set((state) => ({
+      ...state,
       connected: false,
       address: undefined,
       provider: undefined,

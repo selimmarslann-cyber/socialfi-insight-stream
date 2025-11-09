@@ -82,8 +82,7 @@ export const WalletConnectButton = () => {
 
     const label = providerLabels[selectedProvider];
 
-    connect({
-      address: addresses[selectedProvider],
+    connect(addresses[selectedProvider], {
       provider: selectedProvider,
       inviterCode: normalizedRef || undefined,
     });
