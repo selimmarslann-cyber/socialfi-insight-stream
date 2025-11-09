@@ -1,40 +1,36 @@
 import { Header } from '@/components/layout/Header';
+import { LeftRail } from '@/components/layout/LeftRail';
 import { Container } from '@/components/layout/Container';
-import { TopGainers } from '@/components/widgets/TopGainers';
-import { EventsBoost } from '@/components/widgets/EventsBoost';
 import { TrendingUsers } from '@/components/widgets/TrendingUsers';
 import { BurnCounter } from '@/components/widgets/BurnCounter';
+import { CryptoNews } from '@/components/news/CryptoNews';
 import { FeedList } from '@/components/feed/FeedList';
 import { PostComposer } from '@/components/feed/PostComposer';
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <Header />
-      <main className="py-6">
-        <Container>
-          <div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)_320px] gap-6">
-            {/* Left Rail */}
-            <aside className="space-y-6 order-3 lg:order-1">
-              <TopGainers />
-              <EventsBoost />
-            </aside>
+      <Container>
+        <div className="grid lg:grid-cols-[280px_minmax(0,1fr)_320px] gap-6">
+          {/* Left Rail */}
+          <LeftRail />
 
-            {/* Main Feed */}
-            <section className="order-1 lg:order-2">
-              <FeedList />
-              <PostComposer />
-            </section>
+          {/* Main Feed */}
+          <main className="min-w-0">
+            <FeedList />
+          </main>
 
-            {/* Right Rail */}
-            <aside className="space-y-6 order-2 lg:order-3">
-              <TrendingUsers />
-              <BurnCounter />
-            </aside>
-          </div>
-        </Container>
-      </main>
-    </div>
+          {/* Right Rail */}
+          <aside className="hidden lg:block space-y-6 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto pb-8">
+            <TrendingUsers limit={5} />
+            <CryptoNews />
+            <BurnCounter />
+          </aside>
+        </div>
+      </Container>
+      <PostComposer />
+    </>
   );
 };
 

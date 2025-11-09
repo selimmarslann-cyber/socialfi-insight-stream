@@ -8,6 +8,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { WalletConnectButton } from '@/components/wallet/WalletConnectButton';
+import { NopCounter } from '@/components/wallet/NopCounter';
 
 export const Header = () => {
   const { theme, setTheme } = useTheme();
@@ -38,6 +40,8 @@ export const Header = () => {
 
         {/* Actions */}
         <div className="flex items-center gap-2">
+          <NopCounter />
+          
           <Button
             variant="ghost"
             size="icon"
@@ -47,6 +51,8 @@ export const Header = () => {
             <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
             <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
           </Button>
+
+          <WalletConnectButton />
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

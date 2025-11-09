@@ -5,11 +5,17 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { fetchTrendingUsers } from '@/lib/mock-api';
 
-export const TrendingUsers = () => {
+interface TrendingUsersProps {
+  limit?: number;
+}
+
+export const TrendingUsers = ({ limit = 10 }: TrendingUsersProps) => {
   const { data, isLoading } = useQuery({
     queryKey: ['trendingUsers'],
     queryFn: fetchTrendingUsers,
   });
+
+  const displayUsers = data?.slice(0, limit);
 
   if (isLoading) {
     return (
@@ -37,11 +43,11 @@ export const TrendingUsers = () => {
       <CardHeader>
         <CardTitle className="text-sm font-medium flex items-center gap-2">
           <Trophy className="h-4 w-4 text-accent" />
-          Top 10 Users
+          {limit === 5 ? 'Top 5 Users' : 'Top 10 Users'}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
-        {data?.map((user) => (
+        {displayUsers?.map((user) => (
           <div
             key={user.username}
             className={`flex items-center gap-3 p-2 rounded-md transition-colors hover:bg-secondary/50 ${
