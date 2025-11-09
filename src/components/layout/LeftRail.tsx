@@ -5,6 +5,10 @@ import { SidebarNav } from '@/components/navigation/SidebarNav';
 import { useAuthStore } from '@/lib/store';
 import { BoostEventCard } from '@/components/side/BoostEventCard';
 import { boostEvents } from '@/data/boost';
+import { SidebarNav } from '@/components/navigation/SidebarNav';
+import { useAuthStore } from '@/lib/store';
+import { BoostEventCard } from '@/components/side/BoostEventCard';
+import { boostEvents } from '@/data/boost';
 
 const navItems = [
   { label: 'Home', href: '/', icon: Home },
