@@ -25,24 +25,28 @@ export const SidebarNav = ({ items }: SidebarNavProps) => {
           key={item.href}
           to={item.href}
           end={item.href === '/'}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors hover:bg-accent/10 text-foreground/80"
-          activeClassName="font-medium text-accent bg-accent/10 border-l-2 border-accent"
+          className="group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm text-slate-600 transition hover:bg-indigo-50 hover:text-slate-900"
+          activeClassName="bg-white text-slate-900 shadow-sm ring-1 ring-indigo-500/20"
         >
-          <item.icon className="h-5 w-5 flex-shrink-0" />
+          <span className="flex h-9 w-9 items-center justify-center rounded-2xl border border-indigo-500/15 bg-white text-indigo-600 shadow-sm transition group-hover:border-indigo-500/30 group-hover:text-indigo-700">
+            <item.icon className="h-5 w-5" />
+          </span>
           <span className="text-sm">{item.label}</span>
         </NavLink>
       ))}
 
       {adminItems.length > 0 && (
-        <div className="pt-4 mt-4 border-t border-border">
+        <div className="mt-4 border-t border-border pt-4">
           {adminItems.map((item) => (
             <NavLink
               key={item.href}
               to={item.href}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors hover:bg-accent/10 text-foreground/70 opacity-90 hover:opacity-100"
-              activeClassName="font-medium text-accent bg-accent/10 border-l-2 border-accent opacity-100"
+              className="group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm text-slate-500 transition hover:bg-indigo-50 hover:text-slate-900"
+              activeClassName="bg-white text-slate-900 shadow-sm ring-1 ring-indigo-500/20"
             >
-              <item.icon className="h-5 w-5 flex-shrink-0" />
+              <span className="flex h-9 w-9 items-center justify-center rounded-2xl border border-indigo-500/15 bg-white text-indigo-600 shadow-sm transition group-hover:border-indigo-500/30 group-hover:text-indigo-700">
+                <item.icon className="h-5 w-5 flex-shrink-0" />
+              </span>
               <span className="text-sm">{item.label}</span>
               <Badge variant="secondary" className="ml-auto text-xs">
                 Admin

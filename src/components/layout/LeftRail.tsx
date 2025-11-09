@@ -1,7 +1,6 @@
 import { Home, Compass, Wallet, Settings, Shield, Menu, LineChart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Badge } from '@/components/ui/badge';
 import { TopGainers } from '@/components/widgets/TopGainers';
 import { SidebarNav } from '@/components/navigation/SidebarNav';
 import { useAuthStore } from '@/lib/store';
@@ -27,7 +26,7 @@ export const LeftRail = () => {
   return (
     <>
       {/* Desktop */}
-      <aside className="hidden lg:block w-[280px] space-y-6 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto pb-8">
+      <aside className="sticky top-20 hidden h-[calc(100vh-5rem)] w-[280px] space-y-6 overflow-y-auto rounded-3xl border border-indigo-500/10 bg-white/80 p-4 shadow-md backdrop-blur lg:block">
         <div className="space-y-6">
           <SidebarNav items={allNavItems} />
           <TopGainers />
@@ -40,7 +39,7 @@ export const LeftRail = () => {
           <Button
             variant="ghost"
             size="icon"
-            className="lg:hidden fixed bottom-4 right-4 z-50 h-14 w-14 rounded-full shadow-lg bg-primary text-primary-foreground"
+            className="fixed bottom-4 right-4 z-50 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg lg:hidden"
             aria-label="Open menu"
           >
             <Menu className="h-6 w-6" />
