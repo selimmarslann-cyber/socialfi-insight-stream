@@ -1,11 +1,11 @@
+import { Container } from '@/components/layout/Container';
 import { Header } from '@/components/layout/Header';
 import { LeftRail } from '@/components/layout/LeftRail';
-import { Container } from '@/components/layout/Container';
-import { TrendingUsers } from '@/components/widgets/TrendingUsers';
-import { BurnCounter } from '@/components/widgets/BurnCounter';
-import { CryptoNews } from '@/components/news/CryptoNews';
 import { FeedList } from '@/components/feed/FeedList';
 import { PostComposer } from '@/components/post/PostComposer';
+import { BurnWidget } from '@/components/side/BurnWidget';
+import { CryptoNews } from '@/components/side/CryptoNews';
+import { TrendingUsers } from '@/components/widgets/TrendingUsers';
 
 const Index = () => {
   return (
@@ -23,8 +23,14 @@ const Index = () => {
           <aside className="sticky top-20 hidden h-[calc(100vh-5rem)] space-y-6 overflow-y-auto pb-10 lg:block">
             <TrendingUsers limit={5} />
             <CryptoNews />
-            <BurnCounter />
+            <BurnWidget />
           </aside>
+
+          <div className="space-y-6 lg:hidden">
+            <TrendingUsers limit={5} />
+            <CryptoNews />
+            <BurnWidget />
+          </div>
         </div>
       </Container>
     </>

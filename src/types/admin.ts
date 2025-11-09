@@ -1,15 +1,25 @@
+import type { ReactNode } from 'react';
+
+export interface BurnSeriesPoint {
+  t: number;
+  v: number;
+}
+
 export interface BurnStats {
-  totalBurned: number;
+  total: number;
   last24h: number;
-  lastUpdate: string;
+  series?: BurnSeriesPoint[];
+  updatedAt?: string;
 }
 
 export interface BoostEvent {
   id: string;
   title: string;
-  description: string;
-  multiplier: number;
-  startDate: string;
-  endDate: string;
-  active: boolean;
+  badge?: 'x2' | 'x3';
+  expiresAt: string;
+  cta: {
+    label: string;
+    href: string;
+  };
+  icon?: ReactNode;
 }
