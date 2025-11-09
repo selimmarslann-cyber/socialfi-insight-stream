@@ -65,51 +65,31 @@ export const WalletConnectButton = () => {
     }
   };
 
-const handleConnect = (selectedProvider: 'metamask' | 'trust' | 'email') => {
-  const trimmed = referralInput.trim();
-  const normalizedRef = trimmed?.trim().toLowerCase();
+  const handleConnect = (selectedProvider: 'metamask' | 'trust' | 'email') => {
+    const trimmed = referralInput.trim();
+    const normalizedRef = trimmed ? trimmed.toLowerCase() : undefined;
 
-  // ✅ Referans kodu doğrulama (senin eklediğin kısım)
-  if (normalizedRef && !/^nop\d{5}$/i.test(normalizedRef)) {
-    toast.error('Ref kodu "nop" ile başlayıp 5 rakamla devam etmelidir.');
-    return;
-  }
-
-  // ✅ Provider’a göre bağlantı (main branch’ten gelen kısım)
-  if (selectedProvider === 'metamask') {
-    const mockAddress = '0x74243D5C...7595F0aB12';
-    connect(mockAddress, 324);
-    toast.success('Wallet connected successfully!');
-    setModalOpen(false);
-    return;
-  }
-
-  if (selectedProvider === 'trust') {
-    const trustAddress = '0x3f05a019...FeeA42c35';
-    connect(trustAddress, 324);
-    toast.success('Wallet connected successfully!');
-    setModalOpen(false);
-    return;
-  }
-
-  if (selectedProvider === 'email') {
-    window.location.href = 'mailto:user@nop.network';
-  }
-};
-
+    if (normalizedRef && !/^nop\d{5}$/i.test(normalizedRef)) {
+      toast.error('Ref kodu "nop" ile başlayıp 5 rakamla devam etmelidir.');
+      return;
     }
 
-    const addresses: Record<typeof selectedProvider, string> = {
+    if (selectedProvider === 'email') {
+      window.location.href = 'mailto:user@nop.network';
+      return;
+    }
+
+    const addresses: Record<'metamask' | 'trust', string> = {
       metamask: '0x742d35Cc6634C0532925a3b844Bc9e7595f0aB12',
       trust: '0x3fD5a019867d8bB6d1A7f0d9033B4F2F4eAaC345',
-      email: 'mail:user@nop.network',
     };
 
     const label = providerLabels[selectedProvider];
 
     connect(addresses[selectedProvider], {
       provider: selectedProvider,
-      inviterCode: normalizedRef || undefined,
+      inviterCode: normalizedRef,
+      chainId: 324,
     });
 
     toast.success(`${label} bağlantısı hazır!`);
