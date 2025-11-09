@@ -14,9 +14,11 @@ interface WalletState {
   address?: string;
   usdt: number;
   nop: number;
-  connect: (address: string) => void;
+  chainId?: number;
+  connect: (address: string, chainId?: number) => void;
   disconnect: () => void;
   updateBalance: (usdt: number, nop: number) => void;
+  setChainId: (chainId?: number) => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -33,7 +35,9 @@ export const useWalletStore = create<WalletState>((set) => ({
   address: undefined,
   usdt: 0,
   nop: 0,
-  connect: (address) => set({ connected: true, address }),
-  disconnect: () => set({ connected: false, address: undefined }),
+  chainId: undefined,
+  connect: (address, chainId) => set({ connected: true, address, chainId }),
+  disconnect: () => set({ connected: false, address: undefined, chainId: undefined }),
   updateBalance: (usdt, nop) => set({ usdt, nop }),
+  setChainId: (chainId) => set({ chainId }),
 }));

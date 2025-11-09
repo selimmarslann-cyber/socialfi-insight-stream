@@ -9,6 +9,12 @@ import Explore from "./pages/Explore";
 import Wallet from "./pages/Wallet";
 import Settings from "./pages/Settings";
 import Admin from "./pages/Admin";
+import Contributes from "./pages/Contributes";
+import AdminContributeDetail from "./pages/admin/ContributeDetail";
+import PoolOverview from "./pages/pool/PoolOverview";
+import PoolBuy from "./pages/pool/PoolBuy";
+import PoolSell from "./pages/pool/PoolSell";
+import PoolChart from "./pages/pool/PoolChart";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -32,9 +38,15 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/explore" element={<Explore />} />
+            <Route path="/contributes" element={<Contributes />} />
             <Route path="/wallet" element={<Wallet />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/admin/contributes/:id" element={<AdminContributeDetail />} />
+            <Route path="/pool/:postId" element={<PoolOverview />} />
+            <Route path="/pool/:postId/chart" element={<PoolChart />} />
+            <Route path="/pool/:postId/buy" element={<PoolBuy />} />
+            <Route path="/pool/:postId/sell" element={<PoolSell />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
