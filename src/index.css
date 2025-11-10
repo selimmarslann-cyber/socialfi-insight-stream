@@ -39,3 +39,7 @@
     text-wrap: balance;
   }
 }
+
+[data-overlay-hidden="true"] {
+  pointer-events: none !important;
+}
