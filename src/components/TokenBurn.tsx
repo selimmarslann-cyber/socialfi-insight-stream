@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Card from "@/components/Card";
-import { supabase } from "@/lib/supabaseClient";
+import { getSupabase } from "@/lib/supabaseClient";
 
 type BurnRow = {
   total_burn: number;
@@ -8,19 +8,25 @@ type BurnRow = {
 };
 
 export default function TokenBurn({ admin = false }: { admin?: boolean }) {
+  const sb = getSupabase();
+  if (!sb) {
+    return (
+      <div className="p-3 rounded-xl border bg-white/70 text-[13px]">
+        <div className="text-rose-600 font-medium">Supabase yapılandırılmadı.</div>
+        <div className="text-[#475569]">
+          Yönetici: <code>NEXT_PUBLIC_SUPABASE_URL</code> ve <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code> ekleyin.
+        </div>
+      </div>
+    );
+  }
+
   const [val, setVal] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
-  const supabaseReady = Boolean(supabase);
 
   const load = async () => {
-    if (!supabase) {
-      setVal(null);
-      return;
-    }
-
     try {
-      const { data, error } = await supabase
+      const { data, error } = await sb
         .from("burn_widget")
         .select("*")
         .eq("id", 1)
@@ -46,11 +52,11 @@ export default function TokenBurn({ admin = false }: { admin?: boolean }) {
   };
 
   const save = async () => {
-    if (!admin || val === null || !supabase) return;
+    if (!admin || val === null) return;
     setSaving(true);
     try {
       const isoTimestamp = new Date().toISOString();
-      const { error } = await supabase
+      const { error } = await sb
         .from("burn_widget")
         .update({ total_burn: val, last_update: isoTimestamp })
         .eq("id", 1);
@@ -67,20 +73,9 @@ export default function TokenBurn({ admin = false }: { admin?: boolean }) {
   };
 
   useEffect(() => {
-    if (supabase) {
-      void load();
-    }
+    void load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  if (!supabaseReady) {
-    return (
-      <Card
-        title="Token Burn"
-        error="Supabase yapılandırılmadı. Yönetici: VITE_SUPABASE_URL ve VITE_SUPABASE_ANON_KEY ekleyin."
-      />
-    );
-  }
 
   if (val === null) {
     return <Card title="Token Burn" subtitle="Loading…" onRetry={load} />;
