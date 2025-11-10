@@ -3,8 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { SidebarNav } from '@/components/navigation/SidebarNav';
 import { useAuthStore } from '@/lib/store';
-import { BoostEventCard } from '@/components/side/BoostEventCard';
-import { boostEvents } from '@/data/boost';
+import BoostedTasks from '@/components/BoostedTasks';
 
 const navItems = [
   { label: 'Home', href: '/', icon: Home },
@@ -28,17 +27,17 @@ export const LeftRail = () => {
   return (
     <>
       {/* Desktop */}
-        <aside
-          className="sticky top-20 hidden h-[calc(100vh-5rem)] w-[280px] space-y-6 overflow-y-auto rounded-2xl p-3 backdrop-blur lg:block"
-          style={{
-            background: 'var(--bg-card)',
-            border: '1px solid var(--ring)',
-            boxShadow: 'var(--shadow-card)',
-          }}
-        >
+      <aside
+        className="sticky top-20 hidden h-[calc(100vh-5rem)] w-[280px] space-y-6 overflow-y-auto rounded-2xl p-3 backdrop-blur lg:block"
+        style={{
+          background: 'var(--bg-card)',
+          border: '1px solid var(--ring)',
+          boxShadow: 'var(--shadow-card)',
+        }}
+      >
         <div className="space-y-6">
           <SidebarNav items={allNavItems} />
-          <BoostEventCard events={boostEvents} />
+          <BoostedTasks />
         </div>
       </aside>
 
@@ -54,18 +53,18 @@ export const LeftRail = () => {
             <Menu className="h-6 w-6" />
           </Button>
         </SheetTrigger>
-          <SheetContent
-            side="left"
-            className="w-[280px] overflow-y-auto"
-            style={{
-              background: 'var(--bg-card)',
-              borderRight: '1px solid var(--ring)',
-              boxShadow: 'var(--shadow-card)',
-            }}
-          >
+        <SheetContent
+          side="left"
+          className="w-[280px] overflow-y-auto"
+          style={{
+            background: 'var(--bg-card)',
+            borderRight: '1px solid var(--ring)',
+            boxShadow: 'var(--shadow-card)',
+          }}
+        >
           <div className="space-y-6 pt-6">
             <SidebarNav items={allNavItems} />
-            <BoostEventCard events={boostEvents} />
+            <BoostedTasks />
           </div>
         </SheetContent>
       </Sheet>
