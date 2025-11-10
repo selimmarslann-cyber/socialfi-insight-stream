@@ -11,8 +11,14 @@ export default function TokenBurn({ admin = false }: { admin?: boolean }) {
   const [val, setVal] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  const supabaseReady = Boolean(supabase);
 
   const load = async () => {
+    if (!supabase) {
+      setVal(null);
+      return;
+    }
+
     try {
       const { data, error } = await supabase
         .from("burn_widget")
@@ -40,7 +46,7 @@ export default function TokenBurn({ admin = false }: { admin?: boolean }) {
   };
 
   const save = async () => {
-    if (!admin || val === null) return;
+    if (!admin || val === null || !supabase) return;
     setSaving(true);
     try {
       const isoTimestamp = new Date().toISOString();
@@ -61,9 +67,20 @@ export default function TokenBurn({ admin = false }: { admin?: boolean }) {
   };
 
   useEffect(() => {
-    void load();
+    if (supabase) {
+      void load();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  if (!supabaseReady) {
+    return (
+      <Card
+        title="Token Burn"
+        error="Supabase yapılandırılmadı. Yönetici: VITE_SUPABASE_URL ve VITE_SUPABASE_ANON_KEY ekleyin."
+      />
+    );
+  }
 
   if (val === null) {
     return <Card title="Token Burn" subtitle="Loading…" onRetry={load} />;

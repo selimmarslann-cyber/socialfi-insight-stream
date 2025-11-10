@@ -12,6 +12,10 @@ export default function PostList() {
   const [posts, setPosts] = useState<Post[]>([])
 
   useEffect(() => {
+    if (!supabase) {
+      return
+    }
+
     supabase
       .from('posts')
       .select('*')

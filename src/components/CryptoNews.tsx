@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import Card from "@/components/Card";
 import { fetchRssFeed } from "@/lib/rss";
-import { supabase } from "@/lib/supabaseClient";
+import { supabase, isSupabaseConfigured } from "@/lib/supabaseClient";
 
 type NewsRow = {
   title: string;
@@ -51,7 +51,7 @@ export default function CryptoNews() {
       const data = await fetchRssFeed(FEEDS, 8);
       setRows(data);
 
-      if (data.length > 0) {
+      if (data.length > 0 && supabase) {
         const payload = data.map((item) => ({
           title: item.title,
           url: item.url,
@@ -75,6 +75,10 @@ export default function CryptoNews() {
       setErr(message);
 
       try {
+        if (!supabase) {
+          return;
+        }
+
         const { data } = await supabase
           .from("news_cache")
           .select("*")
@@ -103,6 +107,10 @@ export default function CryptoNews() {
   };
 
   useEffect(() => {
+    if (!isSupabaseConfigured() && typeof window !== "undefined") {
+      // eslint-disable-next-line no-console
+      console.warn("CryptoNews cache disabled: configure Supabase to persist results.");
+    }
     void load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

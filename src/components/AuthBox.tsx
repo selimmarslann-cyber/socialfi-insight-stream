@@ -11,6 +11,11 @@ export default function AuthBox({ onAuthed }: AuthBoxProps) {
   const [pass, setPass] = useState('')
 
   const signup = async () => {
+    if (!supabase) {
+      alert('Supabase yapılandırması eksik. Yönetici: VITE_SUPABASE_URL ve VITE_SUPABASE_ANON_KEY ekleyin.')
+      return
+    }
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password: pass,
@@ -24,6 +29,11 @@ export default function AuthBox({ onAuthed }: AuthBoxProps) {
   }
 
   const signin = async () => {
+    if (!supabase) {
+      alert('Supabase yapılandırması eksik. Yönetici: VITE_SUPABASE_URL ve VITE_SUPABASE_ANON_KEY ekleyin.')
+      return
+    }
+
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password: pass,
