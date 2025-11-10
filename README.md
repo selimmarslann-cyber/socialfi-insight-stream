@@ -44,6 +44,8 @@ VITE_SUPABASE_ANON_KEY=<your-anon-key>
 
 If the values are missing the composer will disable file attachments and show an admin tooltip.
 
+> Netlify/Loveable: add `NEXT_PUBLIC_ENABLE_CLOUD_SCORES=true` in the project environment settings to activate cloud score syncing.
+
 ---
 
 ## Included Sample Content
