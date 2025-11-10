@@ -1,7 +1,10 @@
-import { getSupabaseClient } from "@/lib/supabaseClient";
+import { getSupabase } from "@/lib/supabaseClient";
 
 export async function createPost(text: string) {
-  const supabase = getSupabaseClient();
+  const supabase = getSupabase();
+  if (!supabase) {
+    throw new Error("Supabase yapılandırılmadı.");
+  }
   const { data: authData, error: authError } = await supabase.auth.getUser();
 
   if (authError) {
@@ -27,7 +30,10 @@ export async function createPost(text: string) {
 }
 
 export async function ratePost(post_id: number, score: number) {
-  const supabase = getSupabaseClient();
+  const supabase = getSupabase();
+  if (!supabase) {
+    throw new Error("Supabase yapılandırılmadı.");
+  }
   const { data: authData, error: authError } = await supabase.auth.getUser();
 
   if (authError) {
