@@ -127,3 +127,97 @@ using (
       and p.is_admin = true
   )
 );
+
+-- Post bazlı yatırım modeli
+do $$
+begin
+  if not exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'posts'
+      and column_name = 'is_investable'
+  ) then
+    alter table public.posts
+      add column is_investable boolean not null default false;
+  end if;
+
+  if not exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'posts'
+      and column_name = 'invest_open'
+  ) then
+    alter table public.posts
+      add column invest_open boolean not null default false;
+  end if;
+end
+$$;
+
+create table if not exists public.investment_items (
+  id bigserial primary key,
+  post_id bigint not null references public.posts(id) on delete cascade,
+  title text,
+  min_buy numeric(38,8) default 0,
+  created_at timestamptz default now(),
+  unique (post_id)
+);
+
+alter table public.investment_items enable row level security;
+
+create policy if not exists "inv_items_read_all" on public.investment_items
+for select using (true);
+
+create policy if not exists "inv_items_admin_write" on public.investment_items
+for insert
+with check (
+  exists (
+    select 1
+    from public.profiles p
+    where p.id = auth.uid()
+      and p.is_admin = true
+  )
+);
+
+create policy if not exists "inv_items_admin_update" on public.investment_items
+for update
+using (
+  exists (
+    select 1
+    from public.profiles p
+    where p.id = auth.uid()
+      and p.is_admin = true
+  )
+);
+
+create table if not exists public.investment_orders (
+  id bigserial primary key,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  post_id bigint not null references public.posts(id) on delete cascade,
+  type text not null,
+  amount_nop numeric(38,8) not null,
+  tx_hash text,
+  created_at timestamptz default now()
+);
+
+alter table public.investment_orders enable row level security;
+
+create policy if not exists "inv_orders_select_own_or_admin" on public.investment_orders
+for select
+using (
+  auth.uid() = user_id
+  or exists (
+    select 1
+    from public.profiles p
+    where p.id = auth.uid()
+      and p.is_admin = true
+  )
+);
+
+create policy if not exists "inv_orders_insert_own" on public.investment_orders
+for insert
+with check (auth.uid() = user_id);
+
+create index if not exists idx_inv_orders_user_post on public.investment_orders (user_id, post_id);
+create index if not exists idx_inv_orders_user_type on public.investment_orders (user_id, type);

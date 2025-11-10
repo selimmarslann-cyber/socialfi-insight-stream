@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,13 +17,21 @@ import {
   CREATOR_BPS_UI,
   MIN_BUY_NOP,
 } from "@/lib/config";
+import { postPoolBuy } from "@/backend/pool";
+import { logInvestmentBuy } from "@/lib/orders";
 
 const MIN_BUY_VALUE = Number(MIN_BUY_NOP);
 const MIN_BUY_TEXT = MIN_BUY_VALUE.toLocaleString();
 
 const PoolBuy = () => {
   const { postId } = useParams<{ postId: string }>();
-  const { contribute, postState, contributeLoading, postStateLoading } = usePoolAccess(postId);
+  const {
+    contribute,
+    postState,
+    contributeLoading,
+    postStateLoading,
+    refetchPostState,
+  } = usePoolAccess(postId);
   const { connected, chainId } = useWalletStore();
   const [sharesInput, setSharesInput] = useState("");
 
@@ -55,6 +63,49 @@ const PoolBuy = () => {
     postState?.active !== true;
 
   const showMinWarning = cost > 0n && cost < MIN_BUY_NOP;
+  const postIdNumeric = postId ? Number.parseInt(postId, 10) : NaN;
+
+  const buyMutation = useMutation({
+    mutationFn: async () => {
+      if (!postId) throw new Error("Eksik post bilgisi");
+      if (sharesAmount <= 0n) throw new Error("Geçersiz pay miktarı");
+      const payload = {
+        shares: sharesAmount.toString(),
+        maxCost: maxCost.toString(),
+      };
+      const response = await postPoolBuy(postId, payload);
+      const txHash =
+        typeof response?.data === "object" && response.data
+          ? (response.data as { txHash?: string }).txHash
+          : undefined;
+
+      if (!Number.isFinite(postIdNumeric)) {
+        console.warn("Investment log skipped: geçersiz postId");
+      } else {
+        const amountValue = Number(cost);
+        if (Number.isFinite(amountValue) && amountValue > 0) {
+          try {
+            await logInvestmentBuy(postIdNumeric, amountValue, txHash);
+          } catch (error) {
+            console.warn("Investment log failed", error);
+          }
+        }
+      }
+
+      return response;
+    },
+    onSuccess: () => {
+      toast.success("Buy işlemi gönderildi");
+      refetchPostState();
+    },
+    onError: (error: unknown) => {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "İşlem başarısız, lütfen tekrar deneyin";
+      toast.error(message);
+    },
+  });
 
   return (
     <Container>
@@ -102,45 +153,50 @@ const PoolBuy = () => {
                   />
                 </div>
 
-                <div className="space-y-2 rounded-md border border-dashed border-border p-4">
-                  <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Preview</h3>
-                  <div className="space-y-1 text-sm">
-                    <div className="flex justify-between">
-                      <span>Maliyet</span>
-                      <span>{formatTokenAmount(cost)} NOP</span>
+                  <div className="space-y-2 rounded-md border border-dashed border-border p-4">
+                    <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Preview</h3>
+                    <div className="space-y-1 text-sm">
+                      <div className="flex justify-between">
+                        <span>Maliyet</span>
+                        <span>{formatTokenAmount(cost)} NOP</span>
+                      </div>
+                      <div className="flex justify-between text-muted-foreground">
+                        <span>Creator payı</span>
+                        <span>{formatTokenAmount(creatorShare)} NOP</span>
+                      </div>
+                      <div className="flex justify-between text-muted-foreground">
+                        <span>Rezerv katkısı</span>
+                        <span>{formatTokenAmount(reserveShare)} NOP</span>
+                      </div>
+                      <div className="flex justify-between text-muted-foreground">
+                        <span>Max (slippage {Math.round((BUY_SLIPPAGE - 1) * 100)}%)</span>
+                        <span>{formatTokenAmount(maxCost)} NOP</span>
+                      </div>
                     </div>
-                    <div className="flex justify-between text-muted-foreground">
-                      <span>Creator payı</span>
-                      <span>{formatTokenAmount(creatorShare)} NOP</span>
-                    </div>
-                    <div className="flex justify-between text-muted-foreground">
-                      <span>Rezerv katkısı</span>
-                      <span>{formatTokenAmount(reserveShare)} NOP</span>
-                    </div>
-                    <div className="flex justify-between text-muted-foreground">
-                      <span>Max (slippage {Math.round((BUY_SLIPPAGE - 1) * 100)}%)</span>
-                      <span>{formatTokenAmount(maxCost)} NOP</span>
-                    </div>
+                    {showMinWarning && <p className="muted">Min: {MIN_BUY_TEXT} NOP</p>}
                   </div>
-                  {showMinWarning && <p className="muted">Min: {MIN_BUY_TEXT} NOP</p>}
-                </div>
 
-                <div className="rounded-md bg-muted/40 p-4 text-sm space-y-2">
-                  <p className="font-semibold">Ekonomi Notu</p>
-                  <p>
-                    Creator payı ≈ cost × ({CREATOR_BPS_UI} / 10,000). Rezerv = cost - paylar.
+                  <div className="rounded-md bg-muted/40 p-4 text-sm space-y-2">
+                    <p className="font-semibold">Ekonomi Notu</p>
+                    <p>
+                      Creator payı ≈ cost × ({CREATOR_BPS_UI} / 10,000). Rezerv = cost - paylar.
+                    </p>
+                    <p>Kâr hesaplaması: realized = netSell - maliyet; unrealized = netNow - maliyet (hodl).</p>
+                  </div>
+
+                  <div className="flex flex-col gap-3">
+                    <Button disabled={!connected || networkMismatch}>Approve NOP</Button>
+                    <Button
+                      disabled={buyDisabled || buyMutation.isPending}
+                      onClick={() => buyMutation.mutate()}
+                    >
+                      {buyMutation.isPending ? "Buying..." : "Buy"}
+                    </Button>
+                  </div>
+
+                  <p className="muted">
+                    yatırım nop yönetimi tarafından garanti edilmez. bütçenize uygun küçük miktarlarla yatırım öneririz.
                   </p>
-                  <p>Kâr hesaplaması: realized = netSell - maliyet; unrealized = netNow - maliyet (hodl).</p>
-                </div>
-
-                <div className="flex flex-col gap-3">
-                  <Button disabled={!connected || networkMismatch}>Approve NOP</Button>
-                  <Button disabled={buyDisabled}>Buy</Button>
-                </div>
-
-                <p className="muted">
-                  yatırım nop yönetimi tarafından garanti edilmez. bütçenize uygun küçük miktarlarla yatırım öneririz.
-                </p>
               </>
             )}
           </CardContent>
