@@ -13,16 +13,24 @@ const AlertDialogPortal = AlertDialogPrimitive.Portal;
 const AlertDialogOverlay = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Overlay>
->(({ className, ...props }, ref) => (
-  <AlertDialogPrimitive.Overlay
-    className={cn(
-      "fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
-      className,
-    )}
-    {...props}
-    ref={ref}
-  />
-));
+  >(({ className, ...props }, ref) => {
+    const dataState = (props as { "data-state"?: string })["data-state"];
+    const ariaHidden = (props as { "aria-hidden"?: string | boolean })["aria-hidden"];
+    const overlayHidden =
+      dataState === "closed" || ariaHidden === true || ariaHidden === "true" ? "true" : undefined;
+
+    return (
+      <AlertDialogPrimitive.Overlay
+        className={cn(
+          "fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+          className,
+        )}
+        data-overlay-hidden={overlayHidden}
+        {...props}
+        ref={ref}
+      />
+    );
+  });
 AlertDialogOverlay.displayName = AlertDialogPrimitive.Overlay.displayName;
 
 const AlertDialogContent = React.forwardRef<

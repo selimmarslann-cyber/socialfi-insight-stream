@@ -17,9 +17,21 @@ const DrawerClose = DrawerPrimitive.Close;
 const DrawerOverlay = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Overlay>
->(({ className, ...props }, ref) => (
-  <DrawerPrimitive.Overlay ref={ref} className={cn("fixed inset-0 z-50 bg-black/80", className)} {...props} />
-));
+  >(({ className, ...props }, ref) => {
+    const ariaHidden = (props as { "aria-hidden"?: string | boolean })["aria-hidden"];
+    const dataState = (props as { "data-state"?: string })["data-state"];
+    const overlayHidden =
+      ariaHidden === true || ariaHidden === "true" || dataState === "closed" ? "true" : undefined;
+
+    return (
+      <DrawerPrimitive.Overlay
+        ref={ref}
+        data-overlay-hidden={overlayHidden}
+        className={cn("fixed inset-0 z-50 bg-black/80", className)}
+        {...props}
+      />
+    );
+  });
 DrawerOverlay.displayName = DrawerPrimitive.Overlay.displayName;
 
 const DrawerContent = React.forwardRef<

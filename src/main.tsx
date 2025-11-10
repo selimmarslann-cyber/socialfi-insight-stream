@@ -3,7 +3,18 @@ import App from "./App.tsx";
 import "./styles/design-tokens.css";
 import "./index.css";
 import { initTheme } from "@/lib/theme";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 initTheme();
 
-createRoot(document.getElementById("root")!).render(<App />);
+if (typeof window !== "undefined") {
+  void import("./utils/clickGuard").then((module) => {
+    module.installClickGuard();
+  });
+}
+
+createRoot(document.getElementById("root")!).render(
+  <ErrorBoundary>
+    <App />
+  </ErrorBoundary>,
+);
