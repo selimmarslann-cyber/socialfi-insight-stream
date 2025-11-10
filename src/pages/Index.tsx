@@ -3,8 +3,8 @@ import { Header } from '@/components/layout/Header';
 import { LeftRail } from '@/components/layout/LeftRail';
 import { FeedList } from '@/components/feed/FeedList';
 import { PostComposer } from '@/components/post/PostComposer';
-import { BurnWidget } from '@/components/side/BurnWidget';
-import { CryptoNews } from '@/components/side/CryptoNews';
+import CryptoNews from '@/components/CryptoNews';
+import TokenBurn from '@/components/TokenBurn';
 import { TrendingUsers } from '@/components/widgets/TrendingUsers';
 
 const Index = () => {
@@ -23,13 +23,13 @@ const Index = () => {
           <aside className="sticky top-20 hidden h-[calc(100vh-5rem)] space-y-6 overflow-y-auto pb-10 lg:block">
             <TrendingUsers limit={5} />
             <CryptoNews />
-            <BurnWidget />
+            <TokenBurn />
           </aside>
 
           <div className="space-y-6 lg:hidden">
             <TrendingUsers limit={5} />
             <CryptoNews />
-            <BurnWidget />
+            <TokenBurn />
           </div>
         </div>
       </Container>
