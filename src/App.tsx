@@ -21,6 +21,17 @@ import PoolBuy from "./pages/pool/PoolBuy";
 import PoolSell from "./pages/pool/PoolSell";
 import PoolChart from "./pages/pool/PoolChart";
 import NotFound from "./pages/NotFound";
+import About from "./pages/About";
+import Whitepaper from "./pages/Whitepaper";
+import Tokenomics from "./pages/Tokenomics";
+import Burn from "./pages/Burn";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
+import Cookies from "./pages/Cookies";
+import Security from "./pages/Security";
+import Guidelines from "./pages/Guidelines";
+import Contact from "./pages/Contact";
+import Support from "./pages/Support";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -50,6 +61,17 @@ const App = () => (
           <Route path="/games/runner" element={<Runner />} />
           <Route path="/games/memory" element={<Memory />} />
           <Route path="/games/reaction" element={<Reaction />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/whitepaper" element={<Whitepaper />} />
+          <Route path="/tokenomics" element={<Tokenomics />} />
+          <Route path="/burn" element={<Burn />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/cookies" element={<Cookies />} />
+          <Route path="/security" element={<Security />} />
+          <Route path="/guidelines" element={<Guidelines />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/support" element={<Support />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/admin/games" element={<GamesAdmin />} />
           <Route path="/admin/contributes/:id" element={<AdminContributeDetail />} />

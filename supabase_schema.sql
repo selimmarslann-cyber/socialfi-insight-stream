@@ -99,3 +99,31 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
 after insert on auth.users
 for each row execute function public.handle_new_user();
+
+-- Contact form support
+create table if not exists public.contact_messages (
+  id bigserial primary key,
+  name text,
+  email text,
+  subject text,
+  message text not null,
+  created_at timestamptz default now(),
+  reporter_id uuid references auth.users(id)
+);
+
+alter table public.contact_messages enable row level security;
+
+create policy "contact insert self or anon" on public.contact_messages
+for insert
+with check (auth.uid() = reporter_id or auth.uid() is null);
+
+create policy "contact read admin only" on public.contact_messages
+for select
+using (
+  exists (
+    select 1
+    from public.profiles p
+    where p.id = auth.uid()
+      and p.is_admin = true
+  )
+);
