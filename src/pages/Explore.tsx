@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react';
-import { Search, Sparkles, LineChart, Flame, TrendingUp } from 'lucide-react';
+import { Search, Sparkles, LineChart, TrendingUp } from 'lucide-react';
 import { Container } from '@/components/layout/Container';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { PostCard } from '@/components/feed/PostCard';
-import { mockPosts, mockGainers, mockTrendingUsers } from '@/lib/mock-api';
+import { mockPosts, mockGainers } from '@/lib/mock-api';
+import TopUsersCard from '@/components/TopUsersCard';
 
 type ExploreTab = 'all' | 'funded' | 'trending';
 
@@ -118,7 +119,7 @@ const Explore = () => {
           </Tabs>
         </section>
 
-        <aside className="space-y-6">
+          <aside className="space-y-6">
           <Card className="rounded-3xl border border-indigo-500/10 bg-white p-5 shadow-lg">
             <div className="flex items-center gap-3">
               <LineChart className="h-5 w-5 text-indigo-500" />
@@ -145,33 +146,7 @@ const Explore = () => {
             </div>
           </Card>
 
-          <Card className="rounded-3xl border border-indigo-500/10 bg-white p-5 shadow-lg">
-            <div className="flex items-center gap-3">
-              <Flame className="h-5 w-5 text-rose-500" />
-              <div>
-                <p className="text-sm font-semibold text-slate-800">Top 5 Users</p>
-                <p className="text-xs text-slate-500">Based on engagement velocity</p>
-              </div>
-            </div>
-            <div className="mt-4 space-y-3">
-              {mockTrendingUsers.slice(0, 5).map((user) => (
-                <div
-                  key={user.username}
-                  className="flex items-center justify-between rounded-2xl border border-indigo-500/10 bg-slate-50 px-3 py-2 text-sm"
-                >
-                  <div>
-                    <p className="font-semibold text-slate-800">{user.username}</p>
-                    <p className="text-xs text-slate-500">{user.refCode}</p>
-                  </div>
-                  <Badge
-                    className="rounded-full bg-white text-xs font-semibold text-indigo-500 ring-1 ring-indigo-100"
-                  >
-                    {user.score}
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          </Card>
+            <TopUsersCard title="Top 5 Users" period="weekly" limit={5} />
 
           <Card className="rounded-3xl border border-indigo-500/10 bg-white p-5 shadow-lg">
             <div className="flex items-center gap-3">
