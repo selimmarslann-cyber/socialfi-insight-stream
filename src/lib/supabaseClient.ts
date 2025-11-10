@@ -1,11 +1,10 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
-import { readEnv, isSupabaseConfigured } from '@/lib/safeEnv'
+import { readEnv } from '@/lib/safeEnv'
 
 let client: SupabaseClient | null = null
 
 export function getSupabase(): SupabaseClient | null {
   if (client) return client
-  if (!isSupabaseConfigured()) return null
   const { url, anon } = readEnv()
   if (!url || !anon) return null
   client = createClient(url as string, anon as string, {
