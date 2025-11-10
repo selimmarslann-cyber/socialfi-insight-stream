@@ -1,5 +1,4 @@
 import { Container } from '@/components/layout/Container';
-import { Header } from '@/components/layout/Header';
 import { LeftRail } from '@/components/layout/LeftRail';
 import { FeedList } from '@/components/feed/FeedList';
 import { PostComposer } from '@/components/post/PostComposer';
@@ -8,9 +7,7 @@ import TokenBurn from '@/components/TokenBurn';
 import { TrendingUsers } from '@/components/widgets/TrendingUsers';
 
 const Index = () => {
-  return (
-    <>
-      <Header />
+    return (
       <Container>
         <div className="grid gap-8 lg:grid-cols-[280px_minmax(0,1fr)_320px]">
           <LeftRail />
@@ -33,8 +30,7 @@ const Index = () => {
           </div>
         </div>
       </Container>
-    </>
-  );
+    );
 };
 
 export default Index;
