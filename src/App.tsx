@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import AppShell from "@/components/layout/AppShell";
 import Index from "./pages/Index";
 import Explore from "./pages/Explore";
 import WalletPage from "./pages/WalletPage";
@@ -47,41 +48,43 @@ const queryClient = new QueryClient({
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/explore" element={<Explore />} />
-          <Route path="/contributes" element={<Contributes />} />
-          <Route path="/wallet" element={<WalletPage />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/games" element={<Games />} />
-          <Route path="/games/flappy" element={<Flappy />} />
-          <Route path="/games/runner" element={<Runner />} />
-          <Route path="/games/memory" element={<Memory />} />
-          <Route path="/games/reaction" element={<Reaction />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/whitepaper" element={<Whitepaper />} />
-          <Route path="/tokenomics" element={<Tokenomics />} />
-          <Route path="/burn" element={<Burn />} />
-          <Route path="/privacy" element={<Privacy />} />
-          <Route path="/terms" element={<Terms />} />
-          <Route path="/cookies" element={<Cookies />} />
-          <Route path="/security" element={<Security />} />
-          <Route path="/guidelines" element={<Guidelines />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/support" element={<Support />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="/admin/games" element={<GamesAdmin />} />
-          <Route path="/admin/contributes/:id" element={<AdminContributeDetail />} />
-          <Route path="/pool/:postId" element={<PoolOverview />} />
-          <Route path="/pool/:postId/chart" element={<PoolChart />} />
-          <Route path="/pool/:postId/buy" element={<PoolBuy />} />
-          <Route path="/pool/:postId/sell" element={<PoolSell />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route element={<AppShell />}>
+              <Route path="/" element={<Index />} />
+              <Route path="/explore" element={<Explore />} />
+              <Route path="/contributes" element={<Contributes />} />
+              <Route path="/wallet" element={<WalletPage />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/games" element={<Games />} />
+              <Route path="/games/flappy" element={<Flappy />} />
+              <Route path="/games/runner" element={<Runner />} />
+              <Route path="/games/memory" element={<Memory />} />
+              <Route path="/games/reaction" element={<Reaction />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/whitepaper" element={<Whitepaper />} />
+              <Route path="/tokenomics" element={<Tokenomics />} />
+              <Route path="/burn" element={<Burn />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/cookies" element={<Cookies />} />
+              <Route path="/security" element={<Security />} />
+              <Route path="/guidelines" element={<Guidelines />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/support" element={<Support />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="/admin/games" element={<GamesAdmin />} />
+              <Route path="/admin/contributes/:id" element={<AdminContributeDetail />} />
+              <Route path="/pool/:postId" element={<PoolOverview />} />
+              <Route path="/pool/:postId/chart" element={<PoolChart />} />
+              <Route path="/pool/:postId/buy" element={<PoolBuy />} />
+              <Route path="/pool/:postId/sell" element={<PoolSell />} />
+              <Route path="*" element={<NotFound />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
 );

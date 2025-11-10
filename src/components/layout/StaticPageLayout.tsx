@@ -10,7 +10,7 @@ interface StaticPageLayoutProps {
 export const StaticPageLayout = ({ children }: StaticPageLayoutProps) => {
   return (
     <div className="min-h-screen bg-[#F5F8FF] text-[#475569]">
-      <div className="border-b border-slate-200 bg-white/85 backdrop-blur">
+      <div className="border-b border-slate-200 bg-white/85 backdrop-blur md:sticky md:top-16 md:z-40 md:shadow-sm">
         <Container>
           <div className="flex flex-col gap-3 py-4 text-sm text-[#475569] md:flex-row md:items-center md:justify-between">
             <Link
