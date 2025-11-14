@@ -1,81 +1,134 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { computeAIFromRules, type AIRuleInput } from "@/lib/ai/ruleBasedEngine";
+import { PUBLIC_ENV } from "@/config/env";
+import { ArrowDownRight, ArrowUpRight, Minus } from "lucide-react";
 
-type SentimentTone = "bullish" | "mild-bullish" | "neutral" | "bearish";
-
-type MarketPill = {
+type MarketSignal = {
   symbol: string;
-  outlook: string;
-  tone: SentimentTone;
+  price: number;
+  change24h: number;
+  signal: "Bullish" | "Neutral" | "Bearish";
+  volatility: "Low" | "Medium" | "High";
+  mmActivity: "Positive" | "Neutral" | "Negative";
   score: number;
 };
 
-const MARKET_SNAPSHOTS: Array<{ symbol: string; context: AIRuleInput }> = [
-  {
-    symbol: "BTC",
-    context: {
-      priceChange24h: 3.4,
-      volumeChange24h: 11.5,
-      fundingRate: 0.018,
-      sentimentHint: "bullish",
-    },
-  },
-  {
-    symbol: "ETH",
-    context: {
-      priceChange24h: 0.8,
-      volumeChange24h: 4.2,
-      fundingRate: 0.005,
-      sentimentHint: "neutral",
-    },
-  },
-  {
-    symbol: "SOL",
-    context: {
-      priceChange24h: -2.7,
-      volumeChange24h: 9.1,
-      fundingRate: -0.012,
-      sentimentHint: "bearish",
-    },
-  },
-  {
-    symbol: "NOP",
-    context: {
-      priceChange24h: 1.9,
-      volumeChange24h: 6.4,
-      fundingRate: 0.011,
-      sentimentHint: "bullish",
-    },
-  },
-];
+const API_BASE = PUBLIC_ENV.apiBase || "/api";
+const FALLBACK_SIGNALS: MarketSignal[] = [];
 
-const resolveTone = (signal: string, score: number): SentimentTone => {
-  if (signal === "Bullish" && score >= 75) return "bullish";
-  if (signal === "Bullish") return "mild-bullish";
-  if (signal === "Bearish") return "bearish";
-  return "neutral";
+const toneClasses: Record<MarketSignal["signal"], string> = {
+  Bullish: "bg-emerald-50 text-emerald-600 border-emerald-100",
+  Neutral: "bg-slate-50 text-slate-600 border-slate-100",
+  Bearish: "bg-rose-50 text-rose-600 border-rose-100",
 };
 
-const derivedMarket: MarketPill[] = MARKET_SNAPSHOTS.map(
-  ({ symbol, context }) => {
-    const ai = computeAIFromRules(context);
-    return {
-      symbol,
-      outlook: `${ai.aiSignal} · ${ai.aiVolatility}`,
-      tone: resolveTone(ai.aiSignal, ai.aiScore),
-      score: ai.aiScore,
-    };
-  },
-);
+const iconForSignal: Record<MarketSignal["signal"], JSX.Element> = {
+  Bullish: <ArrowUpRight className="h-3.5 w-3.5" />,
+  Neutral: <Minus className="h-3.5 w-3.5" />,
+  Bearish: <ArrowDownRight className="h-3.5 w-3.5" />,
+};
 
-const toneClassMap: Record<SentimentTone, string> = {
-  bullish: "text-emerald-600 bg-emerald-50/70 border-emerald-100",
-  "mild-bullish": "text-teal-600 bg-teal-50/70 border-teal-100",
-  neutral: "text-slate-600 bg-slate-50/80 border-slate-100",
-  bearish: "text-rose-600 bg-rose-50/70 border-rose-100",
+const formatPrice = (value: number) =>
+  new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: value >= 1000 ? 0 : 2,
+  }).format(value);
+
+const formatChange = (value: number) => {
+  const sign = value > 0 ? "+" : "";
+  return `${sign}${value.toFixed(2)}%`;
 };
 
 export const AIMarketBar = () => {
+  const [signals, setSignals] = useState<MarketSignal[]>(FALLBACK_SIGNALS);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const controllerRef = useRef<AbortController | null>(null);
+
+  const load = useCallback(async () => {
+    controllerRef.current?.abort();
+    const controller = new AbortController();
+    controllerRef.current = controller;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`${API_BASE}/ai-signals`, {
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error(`ai_signals_${response.status}`);
+      }
+
+      const payload = (await response.json()) as { items?: MarketSignal[] };
+      setSignals(payload.items ?? FALLBACK_SIGNALS);
+    } catch (err) {
+      if ((err as { name?: string })?.name === "AbortError") {
+        return;
+      }
+      console.warn("AI signals fetch failed", err);
+      setSignals(FALLBACK_SIGNALS);
+      setError("No signals right now. Retry in a minute.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void load();
+    return () => {
+      controllerRef.current?.abort();
+    };
+  }, [load]);
+
+  const hasSignals = signals.length > 0;
+  const gridContent = useMemo(() => {
+    if (!hasSignals) {
+      return (
+        <p className="text-sm text-slate-500">
+          NOP scanners are warming up. Signals will appear shortly.
+        </p>
+      );
+    }
+
+    return (
+      <div className="grid gap-3 md:grid-cols-2">
+        {signals.map((signal) => (
+          <div
+            key={signal.symbol}
+            className="flex items-center justify-between rounded-xl border border-slate-100 bg-white/80 px-3 py-2 shadow-sm"
+          >
+            <div>
+              <p className="text-sm font-semibold text-slate-800">
+                {signal.symbol}
+              </p>
+              <p className="text-xs text-slate-500">
+                {formatPrice(signal.price)} · {formatChange(signal.change24h)}
+              </p>
+            </div>
+            <div className="flex flex-col items-end gap-2 text-xs font-semibold">
+              <span
+                className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 ${toneClasses[signal.signal]}`}
+              >
+                {iconForSignal[signal.signal]}
+                {signal.signal}
+              </span>
+              <span className="rounded-full bg-indigo-50 px-3 py-1 text-indigo-700">
+                Score {signal.score}/100
+              </span>
+              <span className="text-[11px] uppercase tracking-wide text-slate-400">
+                Vol {signal.volatility} · MM {signal.mmActivity}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }, [hasSignals, signals]);
+
   return (
     <section className="rounded-2xl border border-indigo-500/10 bg-white/80 p-4 shadow-sm ring-1 ring-indigo-500/5 backdrop-blur">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -87,20 +140,39 @@ export const AIMarketBar = () => {
             NOP Intelligence Layer · AI Market Scanner
           </span>
         </div>
-        <div className="flex flex-wrap gap-2">
-          {derivedMarket.map((pill) => (
-            <span
-              key={pill.symbol}
-              className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold ${toneClassMap[pill.tone]}`}
-            >
-              <span className="text-slate-800">{pill.symbol}</span>
-              <span className="text-[11px] uppercase tracking-wide">
-                {pill.outlook}
-              </span>
-              <span className="text-[11px] text-slate-400">· {pill.score}</span>
-            </span>
-          ))}
+        <div className="text-xs font-semibold text-slate-500">
+          {loading ? "Refreshing markets…" : "Live 24h delta"}
         </div>
+      </div>
+
+      <div className="mt-4 space-y-3">
+        {loading && !hasSignals ? (
+          <div className="grid gap-3 md:grid-cols-2">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div
+                key={index}
+                className="h-20 rounded-xl border border-dashed border-slate-100 bg-slate-50 animate-pulse"
+              />
+            ))}
+          </div>
+        ) : null}
+
+        {!loading ? gridContent : null}
+
+        {error ? (
+          <div className="rounded-xl border border-amber-100 bg-amber-50/70 px-3 py-2 text-xs text-amber-700">
+            <div className="flex items-center justify-between gap-3">
+              <span className="font-semibold">{error}</span>
+              <button
+                type="button"
+                className="font-semibold text-amber-800 underline-offset-2 hover:underline"
+                onClick={() => void load()}
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+        ) : null}
       </div>
     </section>
   );

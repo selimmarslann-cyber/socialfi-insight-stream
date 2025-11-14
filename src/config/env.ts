@@ -24,14 +24,6 @@ const readEnvValue = (...keys: string[]): string | undefined => {
   return undefined;
 };
 
-const parseCsvList = (value?: string): string[] =>
-  value
-    ? value
-        .split(",")
-        .map((entry) => entry.trim())
-        .filter(Boolean)
-    : [];
-
 const runtimeMode =
   importMetaEnv?.MODE ??
   processEnv?.NODE_ENV ??
@@ -55,7 +47,6 @@ export const PUBLIC_ENV = {
       "NEXT_PUBLIC_SUPABASE_ANON_KEY",
       "REACT_APP_SUPABASE_ANON_KEY",
     ) ?? "",
-  newsRss: readEnvValue("VITE_NEWS_RSS", "NEXT_PUBLIC_NEWS_RSS") ?? "",
   apiBase: readEnvValue("VITE_API_BASE") ?? "/api",
   adminToken: readEnvValue("VITE_ADMIN_TOKEN") ?? "",
 };
@@ -80,24 +71,12 @@ export const SUPABASE_REQUIRED_VARS = [
   SUPABASE_PUBLIC_ANON_KEY,
 ] as const;
 
-export const NEWS_REQUIRED_VARS = ["VITE_NEWS_RSS"] as const;
-
 export const supabaseAdminHint = `Supabase yapılandırması eksik. Yönetici: ${SUPABASE_REQUIRED_VARS.join(
   " ve ",
 )} değerlerini .env dosyanıza ekleyin.`;
 
-export const newsEnvHint =
-  "AI News kartı için VITE_NEWS_RSS (CSV formatında RSS listesi) çevresel değişkenini tanımlayın.";
-
 export const isSupabaseConfigured = (): boolean =>
   Boolean(PUBLIC_ENV.supabaseUrl && PUBLIC_ENV.supabaseAnonKey);
-
-export const isNewsConfigured = (): boolean =>
-  PUBLIC_ENV.newsRss.trim().length > 0;
-
-export const PUBLIC_ENV_ARRAYS = {
-  newsRssList: parseCsvList(PUBLIC_ENV.newsRss),
-};
 
 const emitDevWarnings = () => {
   if (!isDevelopment) {
@@ -110,9 +89,6 @@ const emitDevWarnings = () => {
   }
   if (!PUBLIC_ENV.supabaseAnonKey) {
     missing.push(SUPABASE_PUBLIC_ANON_KEY);
-  }
-  if (!PUBLIC_ENV.newsRss) {
-    missing.push(NEWS_REQUIRED_VARS[0]);
   }
 
   if (missing.length > 0 && typeof console !== "undefined") {

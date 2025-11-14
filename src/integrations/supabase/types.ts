@@ -10,26 +10,143 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "13.0.5"
-  }
+    PostgrestVersion: "13.0.5";
+  };
   public: {
     Tables: {
-      [_ in never]: never
-    }
+      boosted_tasks: {
+        Row: {
+          id: string;
+          code: string;
+          title: string;
+          description: string | null;
+          reward_nop: number | null;
+          order_index: number | null;
+          is_active: boolean | null;
+          created_at: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          code: string;
+          title: string;
+          description?: string | null;
+          reward_nop?: number | null;
+          order_index?: number | null;
+          is_active?: boolean | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          code?: string;
+          title?: string;
+          description?: string | null;
+          reward_nop?: number | null;
+          order_index?: number | null;
+          is_active?: boolean | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+      };
+      user_tasks: {
+        Row: {
+          id: string;
+          user_id: string;
+          task_id: string;
+          status: "pending" | "completed" | "claimed";
+          completed_at: string | null;
+          claimed_at: string | null;
+          created_at: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          task_id: string;
+          status?: "pending" | "completed" | "claimed";
+          completed_at?: string | null;
+          claimed_at?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          task_id?: string;
+          status?: "pending" | "completed" | "claimed";
+          completed_at?: string | null;
+          claimed_at?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+      };
+      profiles: {
+        Row: {
+          id: string;
+          wallet_address: string | null;
+          nop_points: number | null;
+        };
+        Insert: {
+          id: string;
+          wallet_address?: string | null;
+          nop_points?: number | null;
+        };
+        Update: {
+          id?: string;
+          wallet_address?: string | null;
+          nop_points?: number | null;
+        };
+      };
+      investment_orders: {
+        Row: {
+          id: string;
+          user_id: string | null;
+          amount_nop: number | null;
+          type: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string | null;
+          amount_nop?: number | null;
+          type?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string | null;
+          amount_nop?: number | null;
+          type?: string | null;
+        };
+      };
+      posts: {
+        Row: {
+          id: string;
+          author_id: string | null;
+        };
+        Insert: {
+          id?: string;
+          author_id?: string | null;
+        };
+        Update: {
+          id?: string;
+          author_id?: string | null;
+        };
+      };
+    };
     Views: {
-      [_ in never]: never
-    }
+      [_ in never]: never;
+    };
     Functions: {
-      [_ in never]: never
-    }
+      [_ in never]: never;
+    };
     Enums: {
-      [_ in never]: never
-    }
+      [_ in never]: never;
+    };
     CompositeTypes: {
-      [_ in never]: never
-    }
-  }
-}
+      [_ in never]: never;
+    };
+  };
+};
 
 type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
