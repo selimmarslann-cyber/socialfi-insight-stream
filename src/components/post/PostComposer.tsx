@@ -1,21 +1,41 @@
-import { ChangeEvent, DragEvent, useEffect, useMemo, useRef, useState } from 'react';
-import { Paperclip, Smile, Loader2, Trash2, Upload } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Card } from '@/components/ui/card';
-import { toast } from 'sonner';
-import { uploadPostImage, isSupabaseConfigured } from '@/lib/upload';
-import { useWalletStore } from '@/lib/store';
-import { ImageGrid } from './ImageGrid';
+import {
+  ChangeEvent,
+  DragEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { Paperclip, Smile, Loader2, Trash2, Upload } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Card } from "@/components/ui/card";
+import { toast } from "sonner";
+import { uploadPostImage, isSupabaseConfigured } from "@/lib/upload";
+import { useWalletStore } from "@/lib/store";
+import { ImageGrid } from "./ImageGrid";
 
-const hashtagSuggestions = ['#Bitcoin', '#Ethereum', '#NOP', '#DeFi', '#Airdrop', '#Layer2', '#zkSync'];
-const emojiOptions = ['🚀', '🔥', '🧠', '💎', '📊', '🤝', '🪙', '✨'];
+const hashtagSuggestions = [
+  "#Bitcoin",
+  "#Ethereum",
+  "#NOP",
+  "#DeFi",
+  "#Airdrop",
+  "#Layer2",
+  "#zkSync",
+];
+const emojiOptions = ["🚀", "🔥", "🧠", "💎", "📊", "🤝", "🪙", "✨"];
 const MAX_FILES = 4;
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
-const sanitizeContent = (value: string) => value.replace(/[<>]/g, '');
+const sanitizeContent = (value: string) => value.replace(/[<>]/g, "");
 
 export const PostComposer = () => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -23,7 +43,7 @@ export const PostComposer = () => {
 
   const { address } = useWalletStore();
 
-  const [content, setContent] = useState('');
+  const [content, setContent] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -42,7 +62,7 @@ export const PostComposer = () => {
   useEffect(() => {
     const textarea = textareaRef.current;
     if (!textarea) return;
-    textarea.style.height = 'auto';
+    textarea.style.height = "auto";
     textarea.style.height = `${Math.min(textarea.scrollHeight, 320)}px`;
   }, [content]);
 
@@ -58,8 +78,8 @@ export const PostComposer = () => {
     const nextPreviews: string[] = [];
 
     for (const file of selectedFiles) {
-      if (!file.type.startsWith('image/')) {
-        toast.error('Only image files are allowed');
+      if (!file.type.startsWith("image/")) {
+        toast.error("Only image files are allowed");
         continue;
       }
       if (file.size > MAX_FILE_SIZE) {
@@ -67,7 +87,7 @@ export const PostComposer = () => {
         continue;
       }
       if (files.length + nextFiles.length >= MAX_FILES) {
-        toast.error('Maximum 4 images allowed per post');
+        toast.error("Maximum 4 images allowed per post");
         break;
       }
       nextFiles.push(file);
@@ -81,7 +101,7 @@ export const PostComposer = () => {
   const handleDrop = (event: DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     if (!supabaseReady) {
-      toast.info('Admin: NEXT_PUBLIC_SUPABASE_URL/ANON_KEY ekleyin.');
+      toast.info("Admin: NEXT_PUBLIC_SUPABASE_URL/ANON_KEY ekleyin.");
       return;
     }
     const dropped = Array.from(event.dataTransfer.files);
@@ -107,7 +127,9 @@ export const PostComposer = () => {
   const handleContentChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
     const value = event.target.value;
     setContent(value);
-    const match = value.slice(0, event.target.selectionStart).match(/#([\p{L}\d_]{0,24})$/u);
+    const match = value
+      .slice(0, event.target.selectionStart)
+      .match(/#([\p{L}\d_]{0,24})$/u);
     setHashtagQuery(match ? `#${match[1]}` : null);
     setError(null);
   };
@@ -116,7 +138,9 @@ export const PostComposer = () => {
     const textarea = textareaRef.current;
     if (!textarea) return;
     const { selectionStart } = textarea;
-    const before = content.slice(0, selectionStart).replace(/#([\p{L}\d_]{0,24})$/u, tag + ' ');
+    const before = content
+      .slice(0, selectionStart)
+      .replace(/#([\p{L}\d_]{0,24})$/u, tag + " ");
     const after = content.slice(selectionStart);
     const nextContent = before + after;
     setContent(nextContent);
@@ -151,7 +175,7 @@ export const PostComposer = () => {
   const canSubmit = content.trim().length >= 3 || files.length > 0;
 
   const resetComposer = () => {
-    setContent('');
+    setContent("");
     setFiles([]);
     previews.forEach((url) => URL.revokeObjectURL(url));
     setPreviews([]);
@@ -159,13 +183,13 @@ export const PostComposer = () => {
     setShowEmojiPanel(false);
     setError(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   };
 
   const handleSubmit = async () => {
     if (!canSubmit) {
-      setError('Add at least 3 characters or an image');
+      setError("Add at least 3 characters or an image");
       return;
     }
 
@@ -174,33 +198,33 @@ export const PostComposer = () => {
       setError(null);
 
       const sanitized = sanitizeContent(content.trim());
-      const userId = address ?? 'guest';
+      const userId = address ?? "guest";
 
       let uploadedUrls: string[] = [];
       if (files.length > 0) {
         if (!supabaseReady) {
-          toast.error('Image upload requires Supabase configuration');
+          toast.error("Image upload requires Supabase configuration");
           setIsSubmitting(false);
           return;
         }
         uploadedUrls = await Promise.all(
-          files.map((file) => uploadPostImage(file, userId))
+          files.map((file) => uploadPostImage(file, userId)),
         );
       }
 
       await new Promise((resolve) => setTimeout(resolve, 800));
 
-      console.info('Post published', {
+      console.info("Post published", {
         content: sanitized,
         images: uploadedUrls,
         reward: estimatedReward,
       });
 
-      toast.success('Contribution shared with the network');
+      toast.success("Contribution shared with the network");
       resetComposer();
     } catch (err) {
       console.error(err);
-      toast.error('Failed to publish contribution');
+      toast.error("Failed to publish contribution");
     } finally {
       setIsSubmitting(false);
     }
@@ -217,7 +241,9 @@ export const PostComposer = () => {
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-slate-800">Share your alpha</p>
+                <p className="text-sm font-medium text-slate-800">
+                  Share your alpha
+                </p>
                 <p className="text-xs text-slate-500">
                   Market outlooks, trading ideas, on-chain insights
                 </p>
@@ -239,7 +265,9 @@ export const PostComposer = () => {
           {hashtagQuery && (
             <div className="flex flex-wrap gap-2">
               {hashtagSuggestions
-                .filter((tag) => tag.toLowerCase().startsWith(hashtagQuery.toLowerCase()))
+                .filter((tag) =>
+                  tag.toLowerCase().startsWith(hashtagQuery.toLowerCase()),
+                )
                 .slice(0, 5)
                 .map((tag) => (
                   <button
@@ -317,7 +345,11 @@ export const PostComposer = () => {
 
           {previews.length > 0 && (
             <div className="space-y-3">
-              <ImageGrid images={previews} onRemove={handleRemoveImage} editable />
+              <ImageGrid
+                images={previews}
+                onRemove={handleRemoveImage}
+                editable
+              />
               <div className="flex flex-wrap gap-2 text-xs text-slate-500">
                 {files.map((file) => (
                   <span
@@ -339,10 +371,14 @@ export const PostComposer = () => {
 
         <aside className="flex w-full max-w-sm flex-col gap-4 rounded-2xl border border-indigo-500/10 bg-slate-50/70 p-4 shadow-inner">
           <div>
-            <h3 className="text-sm font-semibold text-slate-800">Est. NOP reward</h3>
+            <h3 className="text-sm font-semibold text-slate-800">
+              Est. NOP reward
+            </h3>
             <p className="mt-2 text-3xl font-bold text-indigo-600">
               {estimatedReward}
-              <span className="ml-1 text-base font-medium text-slate-500">NOP</span>
+              <span className="ml-1 text-base font-medium text-slate-500">
+                NOP
+              </span>
             </p>
             <p className="mt-2 text-xs text-slate-500">
               Based on content depth, visual signals and community traction.
@@ -357,6 +393,10 @@ export const PostComposer = () => {
               <li>Keep sensitive data masked.</li>
             </ul>
           </div>
+          <p className="text-[11px] text-slate-400">
+            AI will later analyze high-quality insights for risk and signal
+            scoring.
+          </p>
 
           <div className="mt-auto flex flex-col gap-2">
             <Button
@@ -370,7 +410,7 @@ export const PostComposer = () => {
                   Publishing…
                 </>
               ) : (
-                'Publish insight'
+                "Publish insight"
               )}
             </Button>
             <Button

@@ -3,6 +3,7 @@ import Card from "@/components/Card";
 import { fetchRssFeed } from "@/lib/rss";
 import { supabase, isSupabaseConfigured } from "@/lib/supabaseClient";
 import { readNewsConfig } from "@/lib/safeEnv";
+import { Badge } from "@/components/ui/badge";
 
 type NewsRow = {
   title: string;
@@ -95,31 +96,46 @@ export default function CryptoNews() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (!rows && (isLoading || !err)) {
-    return <Card title="Crypto News" subtitle="Loading…" />;
-  }
-
-  if (err && (!rows || rows.length === 0)) {
-    return (
-      <Card
-        title="Crypto News"
-        error={err}
-        onRetry={
-          feedsMissing
-            ? undefined
-            : () => {
-                void load();
-              }
-        }
-      />
-    );
-  }
+  const hasRows = Boolean(rows && rows.length > 0);
+  const showLoadingState = isLoading && !hasRows;
 
   return (
     <Card
-      title="Crypto News"
+      title="Crypto News · AI Signals"
       right={
-        err ? (
+        <Badge className="rounded-full bg-indigo-50 text-[11px] font-semibold uppercase tracking-wide text-indigo-700">
+          AI
+        </Badge>
+      }
+    >
+      <div className="space-y-2 text-sm text-slate-700">
+        {showLoadingState && (
+          <div className="h-24 w-full rounded-xl bg-slate-100/80 animate-pulse" />
+        )}
+
+        {hasRows &&
+          rows?.map((item, index) => (
+            <a
+              key={`${item.url}-${index}`}
+              href={item.url}
+              target="_blank"
+              rel="noreferrer"
+              className="block rounded-xl border border-transparent px-3 py-2 text-sm text-slate-700 transition hover:border-indigo-100 hover:text-indigo-600"
+            >
+              {item.title}
+            </a>
+          ))}
+
+        {!hasRows && !showLoadingState && (
+          <div className="rounded-xl border border-dashed border-indigo-200/70 bg-indigo-50/40 px-3 py-2 text-xs text-slate-500">
+            AI-curated headlines will populate once the feed refreshes.
+          </div>
+        )}
+      </div>
+
+      {err && (
+        <div className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50/80 px-3 py-2 text-xs text-amber-800">
+          <span>{err || "Temporarily unavailable. Retry."}</span>
           <button
             type="button"
             onClick={() => {
@@ -127,25 +143,13 @@ export default function CryptoNews() {
                 void load();
               }
             }}
-            className="text-xs font-semibold text-indigo-600 underline-offset-4 hover:underline disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-full border border-amber-300 px-3 py-1 text-[11px] font-semibold text-amber-800 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
             disabled={feedsMissing}
           >
             Retry
           </button>
-        ) : undefined
-      }
-    >
-      {rows?.map((item, index) => (
-        <a
-          key={`${item.url}-${index}`}
-          href={item.url}
-          target="_blank"
-          rel="noreferrer"
-          className="block py-2 text-sm text-slate-700 transition hover:text-indigo-600 hover:underline"
-        >
-          {item.title}
-        </a>
-      ))}
+        </div>
+      )}
     </Card>
   );
 }

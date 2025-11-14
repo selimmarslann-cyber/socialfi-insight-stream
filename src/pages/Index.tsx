@@ -1,10 +1,11 @@
-import { Container } from '@/components/layout/Container';
-import { LeftRail } from '@/components/layout/LeftRail';
-import { FeedList } from '@/components/feed/FeedList';
-import { PostComposer } from '@/components/post/PostComposer';
-import CryptoNews from '@/components/CryptoNews';
-import TokenBurn from '@/components/TokenBurn';
-import TopUsersCard from '@/components/TopUsersCard';
+import { Container } from "@/components/layout/Container";
+import { LeftRail } from "@/components/layout/LeftRail";
+import { FeedList } from "@/components/feed/FeedList";
+import { PostComposer } from "@/components/post/PostComposer";
+import CryptoNews from "@/components/CryptoNews";
+import TokenBurn from "@/components/TokenBurn";
+import TopUsersCard from "@/components/TopUsersCard";
+import { AIMarketBar } from "@/components/ai/AIMarketBar";
 
 const Index = () => {
   return (
@@ -13,6 +14,7 @@ const Index = () => {
         <LeftRail />
 
         <main className="min-w-0 space-y-6">
+          <AIMarketBar />
           <PostComposer />
           <FeedList />
         </main>
