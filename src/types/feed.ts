@@ -15,6 +15,10 @@ export interface Post {
   createdAt: string;
   contributedAmount?: number;
   tags?: string[];
+  aiSignal?: string;
+  aiVolatility?: string;
+  aiMmActivity?: string;
+  aiScore?: number;
   engagement: {
     upvotes: number;
     comments: number;

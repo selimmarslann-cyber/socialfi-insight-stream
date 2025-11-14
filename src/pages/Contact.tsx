@@ -1,7 +1,8 @@
 import { FormEvent, useEffect, useState } from "react";
 import StaticPageLayout from "@/components/layout/StaticPageLayout";
 import { usePageMetadata } from "@/hooks/usePageMetadata";
-import { supabase } from "@/lib/supabaseClient";
+import { getSupabase } from "@/lib/supabaseClient";
+import SupabaseConfigAlert from "@/components/SupabaseConfigAlert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,6 +24,7 @@ const initialState: ContactFormState = {
 };
 
 const Contact = () => {
+  const supabase = getSupabase();
   usePageMetadata({
     title: "Contact — NOP Intelligence Layer",
     description:
@@ -34,6 +36,9 @@ const Contact = () => {
   const [reporterId, setReporterId] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!supabase) {
+      return;
+    }
     const loadUser = async () => {
       const { data, error } = await supabase.auth.getUser();
       if (!error) {
@@ -42,7 +47,7 @@ const Contact = () => {
     };
 
     void loadUser();
-  }, []);
+  }, [supabase]);
 
   const handleChange = (key: keyof ContactFormState) => (value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -50,6 +55,12 @@ const Contact = () => {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!supabase) {
+      toast.error(
+        "Supabase is not configured. Please notify an administrator.",
+      );
+      return;
+    }
     if (!form.message.trim()) {
       toast.error("Please add a message.");
       return;
@@ -78,14 +89,31 @@ const Contact = () => {
     }
   };
 
+  if (!supabase) {
+    return (
+      <StaticPageLayout>
+        <section className="space-y-6">
+          <header className="space-y-3">
+            <h1 className="text-2xl font-semibold text-[#0F172A]">Contact</h1>
+            <p className="leading-relaxed text-[#475569]">
+              Messaging is temporarily disabled because Supabase credentials are
+              missing.
+            </p>
+          </header>
+          <SupabaseConfigAlert context="Contact form submissions are stored in Supabase." />
+        </section>
+      </StaticPageLayout>
+    );
+  }
+
   return (
     <StaticPageLayout>
       <section className="space-y-8">
         <header className="space-y-3">
           <h1 className="text-2xl font-semibold text-[#0F172A]">Contact</h1>
           <p className="leading-relaxed text-[#475569]">
-            Reach the NOP Intelligence Layer core team for partnerships, press enquiries, and protocol
-            support. We aim to respond within 72 hours.
+            Reach the NOP Intelligence Layer core team for partnerships, press
+            enquiries, and protocol support. We aim to respond within 72 hours.
           </p>
         </header>
 
@@ -112,7 +140,9 @@ const Contact = () => {
                   type="email"
                   placeholder="you@example.com"
                   value={form.email}
-                  onChange={(event) => handleChange("email")(event.target.value)}
+                  onChange={(event) =>
+                    handleChange("email")(event.target.value)
+                  }
                   autoComplete="email"
                 />
               </div>
@@ -124,7 +154,9 @@ const Contact = () => {
                 id="contact-subject"
                 placeholder="How can we help?"
                 value={form.subject}
-                onChange={(event) => handleChange("subject")(event.target.value)}
+                onChange={(event) =>
+                  handleChange("subject")(event.target.value)
+                }
               />
             </div>
 
@@ -135,7 +167,9 @@ const Contact = () => {
                 placeholder="Share your request, feedback, or report…"
                 rows={6}
                 value={form.message}
-                onChange={(event) => handleChange("message")(event.target.value)}
+                onChange={(event) =>
+                  handleChange("message")(event.target.value)
+                }
                 required
               />
             </div>
@@ -159,7 +193,9 @@ const Contact = () => {
 
           <aside className="space-y-4 rounded-2xl bg-white p-6 shadow-sm leading-relaxed text-[#475569]">
             <div>
-              <h2 className="text-lg font-semibold text-[#0F172A]">Direct Email</h2>
+              <h2 className="text-lg font-semibold text-[#0F172A]">
+                Direct Email
+              </h2>
               <p className="mt-2">
                 Prefer your own client? Write to{" "}
                 <a
@@ -172,8 +208,12 @@ const Contact = () => {
               </p>
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-[#0F172A]">Knowledge Base</h2>
-              <p className="mt-2">A self-serve FAQ and incident history is coming soon.</p>
+              <h2 className="text-lg font-semibold text-[#0F172A]">
+                Knowledge Base
+              </h2>
+              <p className="mt-2">
+                A self-serve FAQ and incident history is coming soon.
+              </p>
             </div>
           </aside>
         </div>

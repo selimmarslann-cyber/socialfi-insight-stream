@@ -35,16 +35,21 @@ npm ci && npm run build
 
 ## Environment Variables
 
-Media uploads rely on Supabase Storage. Create a `posts` bucket and provide the public client credentials:
+All client-side keys now share the Next.js-style prefix so they are compatible with both Vercel and Vite (`envPrefix` exposes `NEXT_PUBLIC_*`). Minimum set:
 
 ```env
-VITE_SUPABASE_URL=<your-supabase-url>
-VITE_SUPABASE_ANON_KEY=<your-anon-key>
+NEXT_PUBLIC_SUPABASE_URL=<your-supabase-url>
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-anon-key>
+SUPABASE_SERVICE_ROLE_KEY=<service-role-only-used-on-serverless>
+
+NEXT_PUBLIC_API_BASE_URL=/api
+NEXT_PUBLIC_NEWS_RSS="https://cryptopanic.com/feed/rss/,https://www.coindesk.com/arc/outboundfeeds/rss/,https://cointelegraph.com/rss"
+NEWS_API_KEY=<cryptopanic-or-newsapi-token>
 ```
 
-If the values are missing the composer will disable file attachments and show an admin tooltip.
+Missing Supabase values disable auth, storage, and burn widgets with an inline warning card. News feeds fall back to cached rows when the RSS or API key is missing.
 
-> Netlify/Loveable: add `NEXT_PUBLIC_ENABLE_CLOUD_SCORES=true` in the project environment settings to activate cloud score syncing.
+> Netlify/Loveable/Vercel: define the same names for Production, Preview, and Development environments, then redeploy so the build picks up the new values.
 
 ---
 

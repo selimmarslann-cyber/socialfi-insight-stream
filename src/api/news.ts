@@ -96,9 +96,18 @@ const dedupeByUrl = (items: NewsItem[]) => {
   });
 };
 
+const readServerEnv = (...keys: string[]) => {
+  for (const key of keys) {
+    const value = process.env[key];
+    if (typeof value === 'string' && value.length > 0) {
+      return value;
+    }
+  }
+  return undefined;
+};
+
 const fetchCryptoPanic = async (limit: number): Promise<NewsItem[]> => {
-  const token =
-    process.env.VITE_CRYPTOPANIC_KEY ?? process.env.CRYPTOPANIC_API_KEY;
+  const token = readServerEnv('NEWS_API_KEY', 'CRYPTOPANIC_API_KEY', 'VITE_CRYPTOPANIC_KEY');
   if (!token) {
     return [];
   }

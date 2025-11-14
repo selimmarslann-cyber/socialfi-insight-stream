@@ -12,9 +12,9 @@ export default function TokenBurn({ admin = false }: { admin?: boolean }) {
   if (!sb) {
     return (
       <div className="p-3 rounded-xl border bg-white/70 text-[13px]">
-        <div className="text-rose-600 font-medium">Supabase yapılandırılmadı.</div>
+        <div className="text-rose-600 font-medium">Supabase configuration missing.</div>
         <div className="text-[#475569]">
-          Yönetici: <code>NEXT_PUBLIC_SUPABASE_URL</code> ve <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code> ekleyin.
+          Admin: add <code>NEXT_PUBLIC_SUPABASE_URL</code> and <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code>.
         </div>
       </div>
     );

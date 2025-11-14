@@ -1,4 +1,12 @@
-import { supabase } from '@/lib/supabaseClient'
+import { getSupabase, SUPABASE_ENV_WARNING } from '@/lib/supabaseClient'
+
+function requireSupabase() {
+  const client = getSupabase()
+  if (!client) {
+    throw new Error(SUPABASE_ENV_WARNING)
+  }
+  return client
+}
 
 export const BOOST_TASKS = [
   { key: 'signup', title: 'Üye ol', reward: 2000 },
@@ -17,6 +25,7 @@ type TaskRecord = {
 }
 
 export async function getUserId() {
+  const supabase = requireSupabase()
   const {
     data: { user },
     error,
@@ -27,6 +36,7 @@ export async function getUserId() {
 }
 
 export async function detectCompletion(task: TaskKey, userId?: string) {
+  const supabase = requireSupabase()
   const uid = userId ?? (await getUserId())
 
   if (task === 'signup') {
@@ -55,6 +65,7 @@ export async function detectCompletion(task: TaskKey, userId?: string) {
 }
 
 export async function fetchTaskStates() {
+  const supabase = requireSupabase()
   const uid = await getUserId()
   const { data, error } = await supabase
     .from('user_task_rewards')
@@ -71,6 +82,7 @@ export async function fetchTaskStates() {
 }
 
 export async function ensureCompleted(task: TaskKey, reward: number) {
+  const supabase = requireSupabase()
   const uid = await getUserId()
   const { completed, ts } = await detectCompletion(task, uid)
   if (!completed || !ts) return null
@@ -93,6 +105,7 @@ export async function ensureCompleted(task: TaskKey, reward: number) {
 }
 
 export async function claimTask(task: TaskKey) {
+  const supabase = requireSupabase()
   const uid = await getUserId()
 
   const { data: rec, error: fetchError } = await supabase
