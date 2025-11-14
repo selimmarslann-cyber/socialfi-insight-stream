@@ -1,150 +1,147 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Card from "@/components/Card";
-import { fetchRssFeed } from "@/lib/rss";
-import { supabase, isSupabaseConfigured } from "@/lib/supabaseClient";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { PUBLIC_ENV, PUBLIC_ENV_ARRAYS, newsEnvHint } from "@/config/env";
+import { PUBLIC_ENV } from "@/config/env";
 
-type NewsRow = {
+type RemoteNewsItem = {
+  id: string;
   title: string;
   url: string;
-  source?: string;
-  published_at?: string;
+  source: string;
+  sentiment: string;
+  imageUrl: string;
+  published_at: string;
 };
 
-const FEED_SOURCES = PUBLIC_ENV_ARRAYS.newsRssList;
-const FEEDS_CSV = PUBLIC_ENV.newsRss;
+const API_BASE = PUBLIC_ENV.apiBase || "/api";
+const MAX_NEWS_ITEMS = 4;
+const FALLBACK_IMAGE = "/placeholder.svg";
+
+const timeFormatter = new Intl.RelativeTimeFormat("en", {
+  numeric: "auto",
+});
+
+const toRelativeTime = (value: string): string => {
+  const published = new Date(value).getTime();
+  if (Number.isNaN(published)) {
+    return "just now";
+  }
+  const diffMs = published - Date.now();
+  const diffMinutes = Math.round(diffMs / (1000 * 60));
+  const diffHours = Math.round(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+  if (Math.abs(diffMinutes) < 60) {
+    return timeFormatter.format(diffMinutes, "minute");
+  }
+  if (Math.abs(diffHours) < 24) {
+    return timeFormatter.format(diffHours, "hour");
+  }
+  return timeFormatter.format(diffDays, "day");
+};
+
+const SentimentChip = ({ sentiment }: { sentiment: string }) => {
+  const label = sentiment ? sentiment.replace(/^\w/, (c) => c.toUpperCase()) : "Neutral";
+  const tone =
+    sentiment === "bullish"
+      ? "text-emerald-600 bg-emerald-50"
+      : sentiment === "bearish"
+        ? "text-rose-600 bg-rose-50"
+        : "text-slate-500 bg-slate-100";
+  return (
+    <span className={`rounded-full px-3 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${tone}`}>
+      {label}
+    </span>
+  );
+};
 
 export default function CryptoNews() {
-  const [rows, setRows] = useState<NewsRow[] | null>(null);
-  const [err, setErr] = useState<string | null>(null);
+  const [items, setItems] = useState<RemoteNewsItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const controllerRef = useRef<AbortController | null>(null);
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      console.log("NEWS_FEEDS", FEED_SOURCES);
-    }
-  }, []);
+  const load = useCallback(async () => {
+    controllerRef.current?.abort();
+    const controller = new AbortController();
+    controllerRef.current = controller;
 
-  const load = async () => {
-    if (!FEEDS_CSV) {
-      setErr(newsEnvHint);
-      return;
-    }
-
-    setErr(null);
+    setLoading(true);
+    setError(null);
 
     try {
-      const data = await fetchRssFeed(FEEDS_CSV, 8);
-      setRows(data);
+      const response = await fetch(`${API_BASE}/crypto-news`, {
+        signal: controller.signal,
+      });
 
-      if (data.length > 0 && supabase) {
-        const payload = data.map((item) => ({
-          title: item.title,
-          url: item.url,
-          source: item.source,
-          published_at: item.published_at,
-        }));
-
-        const insertResult = await supabase
-          .from("news_cache")
-          .insert(payload)
-          .select("*")
-          .limit(1);
-
-        if (typeof window !== "undefined") {
-          console.log("NEWS_CACHE_INSERT_SELECT", insertResult.data);
-        }
+      if (!response.ok) {
+        throw new Error(`crypto_news_${response.status}`);
       }
-    } catch (error) {
-      const message =
-        (error as { message?: string } | null)?.message || "Feed unavailable";
-      setErr(message);
 
-      try {
-        if (!supabase) {
-          return;
-        }
+      const payload = (await response.json()) as {
+        items?: RemoteNewsItem[];
+      };
 
-        const { data } = await supabase
-          .from("news_cache")
-          .select("*")
-          .order("published_at", { ascending: false })
-          .limit(8);
-
-          if (typeof window !== "undefined") {
-            console.log("NEWS_CACHE_FALLBACK_SELECT", data);
-          }
-
-        if (data && data.length > 0) {
-          setRows(
-            data.map((item) => ({
-              title: item.title,
-              url: item.url,
-              source: item.source,
-              published_at: item.published_at,
-            })),
-          );
-        }
-      } catch (fallbackError) {
-        console.warn("News cache fallback failed", fallbackError);
+      setItems((payload.items ?? []).slice(0, MAX_NEWS_ITEMS));
+    } catch (err) {
+      if ((err as { name?: string })?.name === "AbortError") {
+        return;
       }
+      console.warn("Crypto news fetch failed", err);
+      setItems([]);
+      setError("Temporarily unavailable. Retry.");
+    } finally {
+      setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    if (!isSupabaseConfigured() && typeof window !== "undefined") {
-      console.warn(
-        "CryptoNews cache disabled: configure Supabase to persist results.",
-      );
-    }
-    void load();
   }, []);
 
-  const isLoading = !rows && !err;
-  const hasRows = (rows?.length ?? 0) > 0;
+  useEffect(() => {
+    void load();
+    return () => {
+      controllerRef.current?.abort();
+    };
+  }, [load]);
 
-  const renderHeadlines = () => {
-    if (isLoading) {
-      return (
-        <div className="space-y-2">
-          {Array.from({ length: 4 }).map((_, index) => (
-            <div
-              key={index}
-              className="h-3.5 w-full rounded-full bg-slate-100/80 animate-pulse"
-            />
-          ))}
+  const hasItems = items.length > 0;
+  const headlineList = useMemo(() => {
+    if (!hasItems) {
+      return null;
+    }
+    return items.map((item) => (
+      <a
+        key={item.id}
+        href={item.url}
+        target="_blank"
+        rel="noreferrer"
+        className="group flex items-center gap-3 rounded-xl border border-transparent px-2 py-2 transition hover:border-indigo-100 hover:bg-white"
+      >
+        <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl border border-slate-100 bg-slate-50">
+          <img
+            src={item.imageUrl || FALLBACK_IMAGE}
+            alt={item.source}
+            className="h-full w-full object-cover"
+            loading="lazy"
+            onError={(event) => {
+              event.currentTarget.onerror = null;
+              event.currentTarget.src = FALLBACK_IMAGE;
+            }}
+          />
         </div>
-      );
-    }
-
-    if (hasRows) {
-      return rows?.map((item, index) => (
-        <a
-          key={`${item.url}-${index}`}
-          href={item.url}
-          target="_blank"
-          rel="noreferrer"
-          className="block rounded-xl border border-transparent px-3 py-2 text-sm text-slate-700 transition hover:border-indigo-100 hover:bg-indigo-50/40 hover:text-indigo-600"
-        >
-          <div className="flex items-center justify-between gap-3">
-            <span className="font-medium">{item.title}</span>
-            {item.source ? (
-              <span className="text-[11px] uppercase tracking-wide text-slate-400">
-                {item.source}
-              </span>
-            ) : null}
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-slate-800 line-clamp-2 group-hover:text-indigo-600">
+            {item.title}
+          </p>
+          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+            <span className="font-medium text-slate-600">{item.source}</span>
+            <span className="text-slate-400">·</span>
+            <span>{toRelativeTime(item.published_at)}</span>
           </div>
-        </a>
-      ));
-    }
-
-    return (
-      <p className="text-sm text-slate-500">
-        No AI-curated signals yet. Check back shortly.
-      </p>
-    );
-  };
+        </div>
+        <SentimentChip sentiment={item.sentiment} />
+      </a>
+    ));
+  }, [hasItems, items]);
 
   return (
     <Card
@@ -156,18 +153,40 @@ export default function CryptoNews() {
         </Badge>
       }
     >
-      <div className="space-y-2">{renderHeadlines()}</div>
-      {err ? (
+      {loading && !hasItems ? (
+        <div className="space-y-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+            Loading crypto news…
+          </p>
+          {Array.from({ length: MAX_NEWS_ITEMS }).map((_, index) => (
+            <div key={index} className="flex items-center gap-3">
+              <div className="h-14 w-14 rounded-xl bg-slate-100 animate-pulse" />
+              <div className="flex-1 space-y-2">
+                <div className="h-3 w-3/4 rounded-full bg-slate-100 animate-pulse" />
+                <div className="h-3 w-1/2 rounded-full bg-slate-100 animate-pulse" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : null}
+
+      {!loading && hasItems ? (
+        <div className="space-y-3">{headlineList}</div>
+      ) : null}
+
+      {!loading && !hasItems && !error ? (
+        <p className="text-sm text-slate-500">No AI-curated signals yet. Check back shortly.</p>
+      ) : null}
+
+      {error ? (
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50/80 px-3 py-2 text-xs text-amber-700">
-          <span className="font-semibold" title={err ?? undefined}>
-            Temporarily unavailable. Retry.
-          </span>
+          <span className="font-semibold">{error}</span>
           <Button
             type="button"
             variant="ghost"
             size="sm"
             className="h-8 rounded-full px-3 text-amber-700 hover:bg-amber-100 hover:text-amber-900"
-            onClick={load}
+            onClick={() => void load()}
           >
             Retry
           </Button>

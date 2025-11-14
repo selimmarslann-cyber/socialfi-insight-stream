@@ -5,36 +5,46 @@ import { getSupabase, supabaseAdminHint } from "@/lib/supabaseClient";
 import { getUserSafe } from "@/lib/safeAuth";
 import type { Database } from "@/integrations/supabase/types";
 
-type Task = {
-  key: "signup" | "deposit" | "contribute";
-  title: string;
-  desc: string;
-  reward: number;
-  icon: string;
+// SQL:
+// create table if not exists public.boosted_tasks (
+//   id uuid primary key default gen_random_uuid(),
+//   code text unique not null,
+//   title text not null,
+//   description text,
+//   reward_nop integer not null default 0,
+//   order_index integer not null default 0,
+//   is_active boolean not null default true,
+//   created_at timestamptz default now(),
+//   updated_at timestamptz default now()
+// );
+//
+// create table if not exists public.user_tasks (
+//   id uuid primary key default gen_random_uuid(),
+//   user_id uuid not null references auth.users(id) on delete cascade,
+//   task_id uuid not null references public.boosted_tasks(id) on delete cascade,
+//   status text not null default 'pending',
+//   completed_at timestamptz,
+//   claimed_at timestamptz,
+//   created_at timestamptz default now(),
+//   updated_at timestamptz default now(),
+//   unique (user_id, task_id)
+// );
+
+type BoostedTaskRow = Database["public"]["Tables"]["boosted_tasks"]["Row"];
+type UserTaskRow = Database["public"]["Tables"]["user_tasks"]["Row"];
+type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
+type InvestmentOrderRow =
+  Database["public"]["Tables"]["investment_orders"]["Row"];
+type PostRow = Database["public"]["Tables"]["posts"]["Row"];
+
+type TaskState = "locked" | "ready" | "claimed";
+type TaskView = BoostedTaskRow & { icon: string; state: TaskState };
+
+const iconMap: Record<string, string> = {
+  signup: "👤",
+  deposit: "🔗🛒",
+  contribute: "✍️",
 };
-const TASKS: Task[] = [
-  {
-    key: "signup",
-    title: "Üye ol",
-    desc: "Hesabını oluştur ve giriş yap.",
-    reward: 2000,
-    icon: "👤",
-  },
-  {
-    key: "deposit",
-    title: "Deposit / Buy NOP",
-    desc: "Cüzdanını bağla ve ≥ 5.000 NOP BUY işlemi yap.",
-    reward: 5000,
-    icon: "🔗🛒",
-  },
-  {
-    key: "contribute",
-    title: "Katkı yap",
-    desc: "Bir gönderi paylaş, topluluk puanlasın.",
-    reward: 3000,
-    icon: "✍️",
-  },
-];
 
 function GoldChip({ children }: { children: ReactNode }) {
   return (
@@ -62,15 +72,6 @@ function Pill({
   );
 }
 
-type TaskState = "locked" | "ready" | "claimed";
-type TaskView = Task & { state: TaskState };
-type UserTaskRewardRow =
-  Database["public"]["Tables"]["user_task_rewards"]["Row"];
-type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
-type InvestmentOrderRow =
-  Database["public"]["Tables"]["investment_orders"]["Row"];
-type PostRow = Database["public"]["Tables"]["posts"]["Row"];
-
 const getErrorMessage = (error: unknown, fallback: string) =>
   error instanceof Error ? error.message : fallback;
 
@@ -83,6 +84,38 @@ export default function BoostedTasks() {
   const claimedCount = useMemo(
     () => state.filter((r) => r.state === "claimed").length,
     [state],
+  );
+  const totalTasks = state.length || 3;
+
+  const syncCompletions = useCallback(
+    async (
+      userId: string,
+      tasksToSync: Array<{ task: BoostedTaskRow; userTask?: UserTaskRow }>,
+    ): Promise<UserTaskRow[]> => {
+      if (!sb || tasksToSync.length === 0) {
+        return [];
+      }
+      const now = new Date().toISOString();
+      const payload = tasksToSync.map(({ task, userTask }) => ({
+        user_id: userId,
+        task_id: task.id,
+        status: "completed" as UserTaskRow["status"],
+        completed_at: userTask?.completed_at ?? now,
+      }));
+
+      const { data, error } = await sb
+        .from("user_tasks")
+        .upsert(payload, { onConflict: "user_id,task_id" })
+        .select("*");
+
+      if (error) {
+        console.warn("user_tasks sync failed", error);
+        return [];
+      }
+
+      return (data ?? []) as UserTaskRow[];
+    },
+    [sb],
   );
 
   const refresh = useCallback(async () => {
@@ -100,32 +133,40 @@ export default function BoostedTasks() {
         return;
       }
 
-      const { data: recs } = await sb
-        .from<UserTaskRewardRow>("user_task_rewards")
-        .select("*")
-        .eq("user_id", user.id);
-      const rewardMap = new Map<Task["key"], UserTaskRewardRow>();
-      (recs ?? []).forEach((row) => {
-        if (row.task_key) {
-          rewardMap.set(row.task_key as Task["key"], row);
-        }
-      });
+      const [{ data: tasks, error: tasksError }, { data: userTasks }] =
+        await Promise.all([
+          sb
+            .from<BoostedTaskRow>("boosted_tasks")
+            .select("*")
+            .eq("is_active", true)
+            .order("order_index", { ascending: true }),
+          sb
+            .from<UserTaskRow>("user_tasks")
+            .select("*")
+            .eq("user_id", user.id),
+        ]);
 
-      const { data: pf } = await sb
+      if (tasksError) {
+        throw tasksError;
+      }
+
+      const { data: profile } = await sb
         .from<ProfileRow>("profiles")
-        .select("wallet_address,nop_points")
+        .select("wallet_address")
         .eq("id", user.id)
         .single();
+
       const { data: orders } = await sb
         .from<InvestmentOrderRow>("investment_orders")
         .select("amount_nop")
         .eq("user_id", user.id)
         .eq("type", "buy");
-      const sum = (orders ?? []).reduce(
-        (acc, order) => acc + Number(order.amount_nop ?? 0),
+
+      const buyVolume = (orders ?? []).reduce(
+        (acc, order) => acc + Number(order?.amount_nop ?? 0),
         0,
       );
-      const depositReady = Boolean(pf?.wallet_address) && sum >= 5000;
+      const depositReady = Boolean(profile?.wallet_address) && buyVolume >= 5000;
 
       const { data: posts } = await sb
         .from<PostRow>("posts")
@@ -134,63 +175,87 @@ export default function BoostedTasks() {
         .limit(1);
       const contributeReady = Boolean(posts?.length);
 
-      const merged: TaskView[] = TASKS.map((task) => {
-        const rec = rewardMap.get(task.key);
-        if (task.key === "signup") {
-          if (rec?.claimed_at) return { ...task, state: "claimed" };
-          if (rec?.completed_at || user) return { ...task, state: "ready" };
-          return { ...task, state: "locked" };
-        }
-        if (task.key === "deposit") {
-          if (rec?.claimed_at) return { ...task, state: "claimed" };
-          if (depositReady) return { ...task, state: "ready" };
-          return { ...task, state: "locked" };
-        }
-        if (task.key === "contribute") {
-          if (rec?.claimed_at) return { ...task, state: "claimed" };
-          if (contributeReady) return { ...task, state: "ready" };
-          return { ...task, state: "locked" };
-        }
-        return { ...task, state: "locked" };
+      const progressMap: Record<string, boolean> = {
+        signup: Boolean(user),
+        deposit: depositReady,
+        contribute: contributeReady,
+      };
+
+      const userTaskMap = new Map<string, UserTaskRow>();
+      (userTasks ?? []).forEach((record) => {
+        userTaskMap.set(record.task_id, record);
       });
-      setState(merged);
+
+      const needSync: Array<{ task: BoostedTaskRow; userTask?: UserTaskRow }> =
+        [];
+
+      (tasks ?? []).forEach((task) => {
+        const code = task.code ?? "";
+        const progress = progressMap[code] ?? false;
+        const record = userTaskMap.get(task.id);
+        if (progress && (!record || record.status === "pending")) {
+          needSync.push({ task, userTask: record });
+        }
+      });
+
+      const synced = await syncCompletions(user.id, needSync);
+      synced.forEach((record) => {
+        userTaskMap.set(record.task_id, record);
+      });
+
+      const nextState: TaskView[] = (tasks ?? []).map((task) => {
+        const record = userTaskMap.get(task.id);
+        const code = task.code ?? "";
+        const icon = iconMap[code] ?? "✨";
+
+        if (record?.status === "claimed") {
+          return { ...task, icon, state: "claimed" };
+        }
+        if (record?.status === "completed") {
+          return { ...task, icon, state: "ready" };
+        }
+        if (progressMap[code]) {
+          return { ...task, icon, state: "ready" };
+        }
+        return { ...task, icon, state: "locked" };
+      });
+
+      setState(nextState);
     } catch (error) {
       setErr(getErrorMessage(error, "Görevler yüklenemedi."));
       setState([]);
     }
-  }, [sb]);
+  }, [sb, syncCompletions]);
 
   useEffect(() => {
     void refresh();
   }, [refresh]);
 
-  async function claim(task: "signup" | "deposit" | "contribute") {
+  async function claim(taskId: string) {
     if (!sb) return;
-    setBusy(task);
+    setBusy(taskId);
     try {
       const { user } = await getUserSafe();
       if (!user) throw new Error("Giriş yapmalısın.");
-      const rec = state.find((r) => r.key === task);
-      if (!rec || rec.state !== "ready") {
+      const task = state.find((entry) => entry.id === taskId);
+      if (!task || task.state !== "ready") {
         throw new Error("Şartlar henüz sağlanmadı.");
       }
-      const { data: cur } = await sb
-        .from<ProfileRow>("profiles")
-        .select("nop_points")
-        .eq("id", user.id)
-        .single();
-      const next = Number(cur?.nop_points ?? 0) + rec.reward;
-      await sb.from("profiles").update({ nop_points: next }).eq("id", user.id);
-      await sb.from("user_task_rewards").upsert(
+
+      const now = new Date().toISOString();
+      const { error } = await sb.from("user_tasks").upsert(
         {
           user_id: user.id,
-          task_key: task,
-          reward_nop: rec.reward,
-          completed_at: new Date().toISOString(),
-          claimed_at: new Date().toISOString(),
+          task_id: taskId,
+          status: "claimed",
+          completed_at: now,
+          claimed_at: now,
         },
-        { onConflict: "user_id,task_key" },
+        { onConflict: "user_id,task_id" },
       );
+      if (error) {
+        throw error;
+      }
       await refresh();
     } catch (error) {
       setErr(getErrorMessage(error, "Claim başarısız."));
@@ -209,40 +274,46 @@ export default function BoostedTasks() {
     >
       <div className="flex items-center justify-between">
         <div className="font-semibold text-[#0F172A]">Boosted Tasks</div>
-        <div className="text-xs text-[#475569]">{claimedCount}/3 claimed</div>
+        <div className="text-xs text-[#475569]">
+          {claimedCount}/{totalTasks} claimed
+        </div>
       </div>
       {err && <div className="mt-2 text-[13px] text-rose-600">{err}</div>}
       <div className="mt-3 space-y-2">
         {state.length === 0 && !err && (
           <div className="text-xs text-[#475569]">Görevler yükleniyor…</div>
         )}
-        {state.map((r) => (
+        {state.map((task) => (
           <div
-            key={r.key}
+            key={task.id}
             className="flex items-center justify-between p-3 rounded-xl border bg-white/70"
           >
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 grid place-items-center rounded-lg bg-[#F5F8FF] border">
-                {r.icon}
+                {task.icon}
               </div>
               <div>
-                <div className="font-medium text-[#0F172A]">{r.title}</div>
-                <div className="text-xs text-[#475569]">{r.desc}</div>
+                <div className="font-medium text-[#0F172A]">{task.title}</div>
+                <div className="text-xs text-[#475569]">
+                  {task.description ?? "Detaylar yakında eklenecek."}
+                </div>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <GoldChip>+{r.reward.toLocaleString()} NOP</GoldChip>
-              {r.state === "locked" && <Pill>Complete to unlock</Pill>}
-              {r.state === "ready" && (
+            <div className="flex flex-wrap items-center gap-3">
+              <GoldChip>
+                +{Number(task.reward_nop ?? 0).toLocaleString()} NOP
+              </GoldChip>
+              {task.state === "locked" && <Pill>Complete to unlock</Pill>}
+              {task.state === "ready" && (
                 <button
-                  disabled={busy === r.key}
-                  onClick={() => claim(r.key)}
+                  disabled={busy === task.id}
+                  onClick={() => claim(task.id)}
                   className="px-3 py-1.5 rounded-lg border hover:shadow-sm"
                 >
-                  {busy === r.key ? "Claiming…" : "Claim"}
+                  {busy === task.id ? "Claiming…" : "Claim"}
                 </button>
               )}
-              {r.state === "claimed" && <Pill tone="green">Claimed ✓</Pill>}
+              {task.state === "claimed" && <Pill tone="green">Claimed ✓</Pill>}
             </div>
           </div>
         ))}

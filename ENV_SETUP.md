@@ -10,7 +10,7 @@ This project runs on **Vite + React**, so every frontend environment variable mu
 | --- | --- | --- |
 | Frontend (public) | `VITE_SUPABASE_URL` | Supabase project URL (Project Settings → API → Project URL) |
 | Frontend (public) | `VITE_SUPABASE_ANON_KEY` | Supabase anon/public key (Project Settings → API → `anon` key) |
-| Frontend (public) | `VITE_NEWS_RSS` | Comma-separated RSS feed list for the Crypto News card |
+| Frontend (public) | `VITE_NEWS_RSS` | _(Optional)_ Legacy RSS list (serverless feed now uses CryptoPanic directly) |
 | Frontend (public) | `VITE_API_BASE` | Optional override for HTTP client base URL (defaults to `/api`) |
 | Frontend (public) | `VITE_ADMIN_TOKEN` | Token used by the internal burn admin panel to call `/api/burn` |
 | Server-only | `SUPABASE_URL` | Same as `VITE_SUPABASE_URL` but scoped to backend functions (optional if identical) |
@@ -36,21 +36,17 @@ The UI checks these variables via `src/config/env.ts`. When a value is missing, 
 
 ## 3. Crypto + AI data sources
 
-### RSS feeds
-
-Populate `VITE_NEWS_RSS` with a CSV list. Example:
-
-```
-VITE_NEWS_RSS="https://cryptopanic.com/feed/rss/,https://www.coindesk.com/arc/outboundfeeds/rss/,https://cointelegraph.com/rss"
-```
-
-The Crypto News card will automatically parse the list. Missing values surface the `newsEnvHint` warning.
-
-### CryptoPanic API
+### Crypto News API (serverless)
 
 1. Create an account at [cryptopanic.com/developers/api/](https://cryptopanic.com/developers/api/).
 2. Generate an API token and store it as `CRYPTOPANIC_API_KEY` (server).
-3. Netlify function `src/api/news.ts` will enrich RSS headlines only when this token exists; otherwise it gracefully falls back to pure RSS.
+3. Serverless endpoint `/api/crypto-news` (see `src/api/crypto-news.ts`) fetches hot posts, maps thumbnails, and caches the result for 60s. Missing/invalid tokens return an empty list with a warning banner in the UI.
+
+### AI Signals API
+
+- Endpoint: `/api/ai-signals` (`src/api/ai-signals.ts`)
+- Data source: CoinGecko `coins/markets` (no API key required)
+- Logic: applies the rule-based engine from `src/lib/ai/ruleBasedEngine.ts` to determine signal/volatility/market-maker activity and returns 40–90 scores for BTC/ETH/SOL/AVAX every request (cached for 60s).
 
 ---
 
