@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Post } from '@/types/feed';
 import { ImageGrid } from '@/components/post/ImageGrid';
+import { AIInsightStrip } from '@/components/ai/AIInsightStrip';
 
 interface PostCardProps {
   post: Post;
@@ -45,7 +46,7 @@ export const PostCard = ({ post }: PostCardProps) => {
               {post.author.displayName.slice(0, 2).toUpperCase()}
             </AvatarFallback>
           </Avatar>
-          <div className="flex-1 min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-1 text-sm">
               <span className="font-semibold text-slate-900">{post.author.displayName}</span>
               {post.author.verified && <BadgeCheck className="h-4 w-4 text-cyan-500" />}
@@ -71,17 +72,12 @@ export const PostCard = ({ post }: PostCardProps) => {
       <div className="mt-4 space-y-4">
         <p className="whitespace-pre-wrap text-sm text-slate-800">{post.content}</p>
 
-        {post.images && post.images.length > 0 && (
-          <ImageGrid images={post.images} />
-        )}
+        {post.images && post.images.length > 0 && <ImageGrid images={post.images} />}
 
         {hashtags.length > 0 && (
           <div className="flex flex-wrap gap-2 text-xs text-indigo-600">
             {hashtags.map((tag) => (
-              <span
-                key={tag}
-                className="rounded-full bg-indigo-50 px-3 py-1 font-semibold"
-              >
+              <span key={tag} className="rounded-full bg-indigo-50 px-3 py-1 font-semibold">
                 {tag}
               </span>
             ))}
@@ -89,26 +85,50 @@ export const PostCard = ({ post }: PostCardProps) => {
         )}
       </div>
 
-      <footer className="mt-5 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
-        <div className="flex flex-wrap gap-3">
-          <Button variant="ghost" size="sm" className="h-9 gap-2 rounded-full text-slate-600 hover:bg-indigo-50">
-            <Heart className="h-4 w-4" />
-            {post.engagement.upvotes}
-          </Button>
-          <Button variant="ghost" size="sm" className="h-9 gap-2 rounded-full text-slate-600 hover:bg-indigo-50">
-            <MessageCircle className="h-4 w-4" />
-            {post.engagement.comments}
-          </Button>
-          <Button variant="ghost" size="sm" className="h-9 gap-2 rounded-full text-slate-600 hover:bg-indigo-50">
-            <Share2 className="h-4 w-4" />
-            {post.engagement.shares}
-          </Button>
-          <Button variant="ghost" size="sm" className="h-9 gap-2 rounded-full text-slate-600 hover:bg-indigo-50">
-            <Coins className="h-4 w-4 text-[#F5C76A]" />
-            {post.engagement.tips}
-          </Button>
+      <footer className="mt-5 space-y-4 text-xs text-slate-500">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap gap-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-9 gap-2 rounded-full text-slate-600 hover:bg-indigo-50"
+            >
+              <Heart className="h-4 w-4" />
+              {post.engagement.upvotes}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-9 gap-2 rounded-full text-slate-600 hover:bg-indigo-50"
+            >
+              <MessageCircle className="h-4 w-4" />
+              {post.engagement.comments}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-9 gap-2 rounded-full text-slate-600 hover:bg-indigo-50"
+            >
+              <Share2 className="h-4 w-4" />
+              {post.engagement.shares}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-9 gap-2 rounded-full text-slate-600 hover:bg-indigo-50"
+            >
+              <Coins className="h-4 w-4 text-[#F5C76A]" />
+              {post.engagement.tips}
+            </Button>
+          </div>
+          <div className="text-xs font-semibold text-indigo-600">+{post.score} pts</div>
         </div>
-        <div className="text-xs font-semibold text-indigo-600">+{post.score} pts</div>
+        <AIInsightStrip
+          signal={post.aiSignal}
+          volatility={post.aiVolatility}
+          mmActivity={post.aiMmActivity}
+          score={post.aiScore}
+        />
       </footer>
     </article>
   );

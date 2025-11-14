@@ -33,8 +33,11 @@ export default function TopUsersCard({ title = 'Top Users', period = 'weekly', l
   return (
     <div className="relative rounded-2xl border p-3" style={{ background: '#FFFFFF', boxShadow: '0 8px 24px rgba(79,70,229,.08)' }}>
       <div className="absolute -top-2 -right-2 w-16 h-16 rounded-full blur-xl opacity-40 pointer-events-none" style={{ background: 'linear-gradient(120deg,#4F46E5,#06B6D4)' }} />
-      <div className="flex items-center justify-between mb-2">
-        <div className="font-semibold text-[#0F172A]">{title}</div>
+        <div className="flex items-center justify-between mb-2">
+          <div>
+            <div className="font-semibold text-[#0F172A]">{title}</div>
+            <p className="text-[12px] text-[#64748B]">Curated by NOP AI Engine</p>
+          </div>
         <div className="flex items-center gap-2 text-[12px] text-[#475569]">
           <button onClick={() => setTab('daily')} className={`px-2 py-0.5 rounded ${tab === 'daily' ? 'bg-indigo-50 text-indigo-700' : ''}`}>Daily</button>
           <button onClick={() => setTab('weekly')} className={`px-2 py-0.5 rounded ${tab === 'weekly' ? 'bg-indigo-50 text-indigo-700' : ''}`}>Weekly</button>
