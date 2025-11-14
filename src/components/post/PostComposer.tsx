@@ -337,52 +337,55 @@ export const PostComposer = () => {
           )}
         </div>
 
-        <aside className="flex w-full max-w-sm flex-col gap-4 rounded-2xl border border-indigo-500/10 bg-slate-50/70 p-4 shadow-inner">
-          <div>
-            <h3 className="text-sm font-semibold text-slate-800">Est. NOP reward</h3>
-            <p className="mt-2 text-3xl font-bold text-indigo-600">
-              {estimatedReward}
-              <span className="ml-1 text-base font-medium text-slate-500">NOP</span>
-            </p>
-            <p className="mt-2 text-xs text-slate-500">
-              Based on content depth, visual signals and community traction.
-            </p>
-          </div>
+          <aside className="flex w-full max-w-sm flex-col gap-4 rounded-2xl border border-indigo-500/10 bg-slate-50/70 p-4 shadow-inner">
+            <div>
+              <h3 className="text-sm font-semibold text-slate-800">Est. NOP reward</h3>
+              <p className="mt-2 text-3xl font-bold text-indigo-600">
+                {estimatedReward}
+                <span className="ml-1 text-base font-medium text-slate-500">NOP</span>
+              </p>
+              <p className="mt-2 text-xs text-slate-500">
+                Based on content depth, visual signals and community traction.
+              </p>
+            </div>
 
-          <div className="rounded-xl bg-white/80 p-3 text-xs text-slate-500 shadow">
-            <p className="font-semibold text-slate-700">Tips</p>
-            <ul className="mt-2 list-disc space-y-1 pl-4">
-              <li>Tag relevant assets using #hashtags.</li>
-              <li>Attach up to 4 charts, on-chain screenshots or decks.</li>
-              <li>Keep sensitive data masked.</li>
-            </ul>
-          </div>
+            <div className="rounded-xl bg-white/80 p-3 text-xs text-slate-500 shadow">
+              <p className="font-semibold text-slate-700">Tips</p>
+              <ul className="mt-2 list-disc space-y-1 pl-4">
+                <li>Tag relevant assets using #hashtags.</li>
+                <li>Attach up to 4 charts, on-chain screenshots or decks.</li>
+                <li>Keep sensitive data masked.</li>
+              </ul>
+              <p className="mt-3 text-[11px] text-slate-400">
+                AI will later analyze high-quality insights for risk and signal scoring.
+              </p>
+            </div>
 
-          <div className="mt-auto flex flex-col gap-2">
-            <Button
-              onClick={handleSubmit}
-              disabled={!canSubmit || isSubmitting}
-              className="h-11 rounded-full bg-gradient-to-r from-indigo-600 to-cyan-500 text-sm font-semibold shadow-lg transition hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Publishing…
-                </>
-              ) : (
-                'Publish insight'
-              )}
-            </Button>
-            <Button
-              variant="ghost"
-              className="h-10 text-sm text-slate-500 hover:text-slate-700"
-              onClick={resetComposer}
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Clear draft
-            </Button>
-          </div>
-        </aside>
+            <div className="mt-auto flex flex-col gap-2">
+              <Button
+                onClick={handleSubmit}
+                disabled={!canSubmit || isSubmitting}
+                className="h-11 rounded-full bg-gradient-to-r from-indigo-600 to-cyan-500 text-sm font-semibold shadow-lg transition hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Publishing…
+                  </>
+                ) : (
+                  'Publish insight'
+                )}
+              </Button>
+              <Button
+                variant="ghost"
+                className="h-10 text-sm text-slate-500 hover:text-slate-700"
+                onClick={resetComposer}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Clear draft
+              </Button>
+            </div>
+          </aside>
       </div>
     </Card>
   );

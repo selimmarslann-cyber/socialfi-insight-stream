@@ -26,6 +26,10 @@ export const mockPosts: Post[] = [
     createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
     contributedAmount: 14500,
     tags: ['#Bitcoin', '#FundingRates', '#Macro'],
+    aiSignal: 'Bullish',
+    aiVolatility: 'Low',
+    aiMmActivity: 'Accumulating',
+    aiScore: 78,
     engagement: { upvotes: 128, comments: 24, tips: 12, shares: 18 },
   },
   {
@@ -48,6 +52,10 @@ export const mockPosts: Post[] = [
     createdAt: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
     contributedAmount: 0,
     tags: ['#DeFi', '#Yield', '#zkSync'],
+    aiSignal: 'Neutral',
+    aiVolatility: 'Moderate',
+    aiMmActivity: 'Stable',
+    aiScore: 64,
     engagement: { upvotes: 86, comments: 19, tips: 6, shares: 11 },
   },
   {
@@ -71,6 +79,10 @@ export const mockPosts: Post[] = [
     createdAt: new Date(Date.now() - 1000 * 60 * 90).toISOString(),
     contributedAmount: 6200,
     tags: ['#NFT', '#ETH', '#Gas'],
+    aiSignal: undefined,
+    aiVolatility: undefined,
+    aiMmActivity: undefined,
+    aiScore: undefined,
     engagement: { upvotes: 64, comments: 12, tips: 4, shares: 9 },
   },
 ];

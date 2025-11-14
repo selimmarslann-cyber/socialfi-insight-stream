@@ -17,8 +17,8 @@ export default function Card({ title, subtitle, right, error, onRetry, children 
           <div className="font-semibold text-slate-800">{title}</div>
           {subtitle ? <div className="text-xs text-slate-500">{subtitle}</div> : null}
         </div>
-        <div className="flex items-center gap-2">
-          {right ? <div className="text-sm text-slate-500">{right}</div> : null}
+        <div className="flex items-center gap-2 text-sm">
+          {right ? <div>{right}</div> : null}
           {error && onRetry ? (
             <button
               type="button"

@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import Card from "@/components/Card";
 import { fetchRssFeed } from "@/lib/rss";
 import { supabase, isSupabaseConfigured } from "@/lib/supabaseClient";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 type NewsRow = {
   title: string;
@@ -115,29 +117,69 @@ export default function CryptoNews() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (!rows && !err) {
-    return <Card title="Crypto News" subtitle="Loading..." />;
-  }
+  const isLoading = !rows && !err;
+  const hasRows = (rows?.length ?? 0) > 0;
 
-  if (err && (!rows || rows.length === 0)) {
-    return (
-      <Card title="Crypto News" error="Temporarily unavailable. Retry." onRetry={load} />
-    );
-  }
+  const renderHeadlines = () => {
+    if (isLoading) {
+      return (
+        <div className="space-y-2">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div key={index} className="h-3.5 w-full rounded-full bg-slate-100/80 animate-pulse" />
+          ))}
+        </div>
+      );
+    }
 
-  return (
-    <Card title="Crypto News">
-      {rows?.map((item, index) => (
+    if (hasRows) {
+      return rows?.map((item, index) => (
         <a
           key={`${item.url}-${index}`}
           href={item.url}
           target="_blank"
           rel="noreferrer"
-          className="block py-2 text-sm text-slate-700 transition hover:text-indigo-600 hover:underline"
+          className="block rounded-xl border border-transparent px-3 py-2 text-sm text-slate-700 transition hover:border-indigo-100 hover:bg-indigo-50/40 hover:text-indigo-600"
         >
-          {item.title}
+          <div className="flex items-center justify-between gap-3">
+            <span className="font-medium">{item.title}</span>
+            {item.source ? (
+              <span className="text-[11px] uppercase tracking-wide text-slate-400">{item.source}</span>
+            ) : null}
+          </div>
         </a>
-      ))}
+      ));
+    }
+
+    return <p className="text-sm text-slate-500">No AI-curated signals yet. Check back shortly.</p>;
+  };
+
+  return (
+    <Card
+      title="Crypto News · AI Signals"
+      subtitle="Realtime feeds scored by the NOP AI engine"
+      right={
+        <Badge className="rounded-full border border-indigo-200 bg-indigo-50 text-[11px] font-semibold uppercase tracking-wide text-indigo-600">
+          AI
+        </Badge>
+      }
+    >
+      <div className="space-y-2">{renderHeadlines()}</div>
+        {err ? (
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50/80 px-3 py-2 text-xs text-amber-700">
+            <span className="font-semibold" title={err ?? undefined}>
+              Temporarily unavailable. Retry.
+            </span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-8 rounded-full px-3 text-amber-700 hover:bg-amber-100 hover:text-amber-900"
+            onClick={load}
+          >
+            Retry
+          </Button>
+        </div>
+      ) : null}
     </Card>
   );
 }
