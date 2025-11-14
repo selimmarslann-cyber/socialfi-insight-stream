@@ -1,111 +1,238 @@
-import { Post, FeedResponse } from '@/types/feed';
-import { TopGainer, MarketData } from '@/types/market';
-import { TrendingUser } from '@/types/user';
-import { BurnStats } from '@/types/admin';
-import { generateRefCode } from '@/lib/utils';
+import { Post, FeedResponse } from "@/types/feed";
+import { TopGainer, MarketData } from "@/types/market";
+import { TrendingUser } from "@/types/user";
+import { BurnStats } from "@/types/admin";
+import { generateRefCode } from "@/lib/utils";
+import { computeAIFromRules, type AIRuleInput } from "@/lib/ai/ruleBasedEngine";
 
-// Mock data generators
-export const mockPosts: Post[] = [
+type MockPostSeed = Post & { aiContext?: AIRuleInput };
+
+const mockPostSeeds: MockPostSeed[] = [
   {
-    id: '1',
+    id: "1",
     author: {
-      username: 'crypto_analyst',
-      displayName: 'Ayla Tok',
-      avatar: 'https://images.unsplash.com/photo-1544723795-3fb6469f5b39?auto=format&fit=crop&w=160&q=60',
+      username: "crypto_analyst",
+      displayName: "Ayla Tok",
+      avatar:
+        "https://images.unsplash.com/photo-1544723795-3fb6469f5b39?auto=format&fit=crop&w=160&q=60",
       score: 1250,
       refCode: generateRefCode(12345),
       verified: true,
     },
     content:
-      'BTC reclaiming weekly VWAP. Funding cooling, perp premium back to neutral. Accumulating spot from 41.8k with 43.6k target. #Bitcoin #OnChain',
+      "BTC reclaiming weekly VWAP. Funding cooling, perp premium back to neutral. Accumulating spot from 41.8k with 43.6k target. #Bitcoin #OnChain",
     images: [
-      'https://images.unsplash.com/photo-1614034178878-5078c5dabe52?auto=format&fit=crop&w=1200&q=80',
-      'https://images.unsplash.com/photo-1642104704075-10c2d3315327?auto=format&fit=crop&w=1200&q=80',
+      "https://images.unsplash.com/photo-1614034178878-5078c5dabe52?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1642104704075-10c2d3315327?auto=format&fit=crop&w=1200&q=80",
     ],
     score: 89,
     createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
     contributedAmount: 14500,
-    tags: ['#Bitcoin', '#FundingRates', '#Macro'],
-    aiSignal: 'Bullish',
-    aiVolatility: 'Low',
-    aiMmActivity: 'Accumulating',
+    tags: ["#Bitcoin", "#FundingRates", "#Macro"],
+    aiSignal: "Bullish",
+    aiVolatility: "Low",
+    aiMmActivity: "Positive",
     aiScore: 78,
+    aiContext: {
+      symbol: "BTC",
+      priceChange24h: 3.8,
+      volumeChange24h: 12.5,
+      fundingRate: 0.018,
+      sentimentHint: "bullish",
+    },
     engagement: { upvotes: 128, comments: 24, tips: 12, shares: 18 },
   },
   {
-    id: '2',
+    id: "2",
     author: {
-      username: 'defi_hunter',
-      displayName: 'Emir Kaplan',
-      avatar: 'https://images.unsplash.com/photo-1573497491208-6b1acb260507?auto=format&fit=crop&w=160&q=60',
+      username: "defi_hunter",
+      displayName: "Emir Kaplan",
+      avatar:
+        "https://images.unsplash.com/photo-1573497491208-6b1acb260507?auto=format&fit=crop&w=160&q=60",
       score: 980,
       refCode: generateRefCode(24680),
       verified: true,
     },
     content:
-      'zkSync ecosystem yield map updated. Sequencer fees trending down, Ethena vault now paying 18% delta-neutral. Dropping my spreadsheet + top 3 pools.',
+      "zkSync ecosystem yield map updated. Sequencer fees trending down, Ethena vault now paying 18% delta-neutral. Dropping my spreadsheet + top 3 pools.",
     score: 65,
-    taskId: '420',
+    taskId: "420",
     images: [
-      'https://images.unsplash.com/photo-1618005198919-d3d4b5a92eee?auto=format&fit=crop&w=1200&q=80',
+      "https://images.unsplash.com/photo-1618005198919-d3d4b5a92eee?auto=format&fit=crop&w=1200&q=80",
     ],
     createdAt: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
     contributedAmount: 0,
-    tags: ['#DeFi', '#Yield', '#zkSync'],
-    aiSignal: 'Neutral',
-    aiVolatility: 'Moderate',
-    aiMmActivity: 'Stable',
+    tags: ["#DeFi", "#Yield", "#zkSync"],
+    aiSignal: "Neutral",
+    aiVolatility: "Medium",
+    aiMmActivity: "Neutral",
     aiScore: 64,
+    aiContext: {
+      symbol: "ZKS",
+      priceChange24h: 1.4,
+      volumeChange24h: 5.2,
+      fundingRate: -0.003,
+      sentimentHint: "neutral",
+    },
     engagement: { upvotes: 86, comments: 19, tips: 6, shares: 11 },
   },
   {
-    id: '3',
+    id: "3",
     author: {
-      username: 'nft_collector',
-      displayName: 'Mira Soyer',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=160&q=60',
+      username: "nft_collector",
+      displayName: "Mira Soyer",
+      avatar:
+        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=160&q=60",
       score: 750,
       refCode: generateRefCode(98765),
       verified: false,
     },
     content:
-      'ETH gas back under 12 gwei. Rotating profits into curated NFT treasuries. Watch wallets currently hoarding ETH for airdrop farming. Thread below.',
+      "ETH gas back under 12 gwei. Rotating profits into curated NFT treasuries. Watch wallets currently hoarding ETH for airdrop farming. Thread below.",
     images: [
-      'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80',
-      'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=1200&q=80',
-      'https://images.unsplash.com/photo-1517430816045-df4b7de11d1d?auto=format&fit=crop&w=1200&q=80',
+      "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1517430816045-df4b7de11d1d?auto=format&fit=crop&w=1200&q=80",
     ],
     score: 54,
     createdAt: new Date(Date.now() - 1000 * 60 * 90).toISOString(),
     contributedAmount: 6200,
-    tags: ['#NFT', '#ETH', '#Gas'],
+    tags: ["#NFT", "#ETH", "#Gas"],
     aiSignal: undefined,
     aiVolatility: undefined,
     aiMmActivity: undefined,
     aiScore: undefined,
+    aiContext: {
+      symbol: "ETH",
+      priceChange24h: -2.1,
+      volumeChange24h: 7.8,
+      fundingRate: -0.01,
+      sentimentHint: "bearish",
+    },
     engagement: { upvotes: 64, comments: 12, tips: 4, shares: 9 },
   },
 ];
 
+const inferSentimentHint = (content: string): AIRuleInput["sentimentHint"] => {
+  const normalized = content.toLowerCase();
+  if (normalized.includes("bear") || normalized.includes("sell")) {
+    return "bearish";
+  }
+  if (normalized.includes("bull") || normalized.includes("accum")) {
+    return "bullish";
+  }
+  return "neutral";
+};
+
+const buildPostWithAI = (seed: MockPostSeed): Post => {
+  const aiInput: AIRuleInput = {
+    symbol:
+      seed.aiContext?.symbol ?? seed.tags?.[0]?.replace("#", "").toUpperCase(),
+    priceChange24h: seed.aiContext?.priceChange24h ?? (seed.score - 50) / 2,
+    volumeChange24h:
+      seed.aiContext?.volumeChange24h ??
+      (seed.engagement.upvotes + seed.engagement.tips) / 6,
+    fundingRate: seed.aiContext?.fundingRate ?? 0,
+    sentimentHint:
+      seed.aiContext?.sentimentHint ?? inferSentimentHint(seed.content),
+  };
+
+  const ai = computeAIFromRules(aiInput);
+
+  return {
+    ...seed,
+    aiSignal: seed.aiSignal ?? ai.aiSignal,
+    aiVolatility: seed.aiVolatility ?? ai.aiVolatility,
+    aiMmActivity: seed.aiMmActivity ?? ai.aiMmActivity,
+    aiScore: seed.aiScore ?? ai.aiScore,
+    aiLastUpdatedAt: seed.aiLastUpdatedAt ?? ai.aiLastUpdatedAt,
+  };
+};
+
+const buildMockPosts = (): Post[] => mockPostSeeds.map(buildPostWithAI);
+
+// Mock data generators
+export const mockPosts: Post[] = buildMockPosts();
+
 export const mockGainers: TopGainer[] = [
-  { symbol: 'BTC/USDT', price: 42150.50, changePercent: 5.2 },
-  { symbol: 'ETH/USDT', price: 2285.30, changePercent: 4.8 },
-  { symbol: 'SOL/USDT', price: 98.75, changePercent: 8.3 },
-  { symbol: 'AVAX/USDT', price: 36.20, changePercent: 6.1 },
-  { symbol: 'MATIC/USDT', price: 0.89, changePercent: 3.5 },
+  { symbol: "BTC/USDT", price: 42150.5, changePercent: 5.2 },
+  { symbol: "ETH/USDT", price: 2285.3, changePercent: 4.8 },
+  { symbol: "SOL/USDT", price: 98.75, changePercent: 8.3 },
+  { symbol: "AVAX/USDT", price: 36.2, changePercent: 6.1 },
+  { symbol: "MATIC/USDT", price: 0.89, changePercent: 3.5 },
 ];
 
 export const mockTrendingUsers: TrendingUser[] = [
-  { username: 'crypto_analyst', score: 1250, rank: 1, refCode: generateRefCode(12345), trend: 'up' },
-  { username: 'defi_hunter', score: 980, rank: 2, refCode: generateRefCode(24680), trend: 'stable' },
-  { username: 'nft_collector', score: 750, rank: 3, refCode: generateRefCode(98765), trend: 'up' },
-  { username: 'whale_watcher', score: 680, rank: 4, refCode: generateRefCode(13579), trend: 'down' },
-  { username: 'chain_expert', score: 620, rank: 5, refCode: generateRefCode(19283), trend: 'up' },
-  { username: 'token_researcher', score: 590, rank: 6, refCode: generateRefCode(56473), trend: 'stable' },
-  { username: 'market_maker', score: 540, rank: 7, refCode: generateRefCode(90817), trend: 'up' },
-  { username: 'protocol_dev', score: 500, rank: 8, refCode: generateRefCode(72645), trend: 'stable' },
-  { username: 'yield_farmer', score: 480, rank: 9, refCode: generateRefCode(38495), trend: 'down' },
-  { username: 'smart_trader', score: 460, rank: 10, refCode: generateRefCode(11223), trend: 'stable' },
+  {
+    username: "crypto_analyst",
+    score: 1250,
+    rank: 1,
+    refCode: generateRefCode(12345),
+    trend: "up",
+  },
+  {
+    username: "defi_hunter",
+    score: 980,
+    rank: 2,
+    refCode: generateRefCode(24680),
+    trend: "stable",
+  },
+  {
+    username: "nft_collector",
+    score: 750,
+    rank: 3,
+    refCode: generateRefCode(98765),
+    trend: "up",
+  },
+  {
+    username: "whale_watcher",
+    score: 680,
+    rank: 4,
+    refCode: generateRefCode(13579),
+    trend: "down",
+  },
+  {
+    username: "chain_expert",
+    score: 620,
+    rank: 5,
+    refCode: generateRefCode(19283),
+    trend: "up",
+  },
+  {
+    username: "token_researcher",
+    score: 590,
+    rank: 6,
+    refCode: generateRefCode(56473),
+    trend: "stable",
+  },
+  {
+    username: "market_maker",
+    score: 540,
+    rank: 7,
+    refCode: generateRefCode(90817),
+    trend: "up",
+  },
+  {
+    username: "protocol_dev",
+    score: 500,
+    rank: 8,
+    refCode: generateRefCode(72645),
+    trend: "stable",
+  },
+  {
+    username: "yield_farmer",
+    score: 480,
+    rank: 9,
+    refCode: generateRefCode(38495),
+    trend: "down",
+  },
+  {
+    username: "smart_trader",
+    score: 460,
+    rank: 10,
+    refCode: generateRefCode(11223),
+    trend: "stable",
+  },
 ];
 
 export const mockBurnStats: BurnStats = {
@@ -122,8 +249,8 @@ export const mockBurnStats: BurnStats = {
 export const fetchFeed = async (cursor?: string): Promise<FeedResponse> => {
   await new Promise((resolve) => setTimeout(resolve, 800));
   return {
-    items: mockPosts,
-    nextCursor: cursor ? undefined : 'next-page',
+    items: buildMockPosts(),
+    nextCursor: cursor ? undefined : "next-page",
   };
 };
 
@@ -144,4 +271,3 @@ export const fetchBurnStats = async (): Promise<BurnStats> => {
   await new Promise((resolve) => setTimeout(resolve, 400));
   return mockBurnStats;
 };
-

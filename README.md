@@ -35,16 +35,24 @@ npm ci && npm run build
 
 ## Environment Variables
 
-Media uploads rely on Supabase Storage. Create a `posts` bucket and provide the public client credentials:
+See [`ENV_SETUP.md`](./ENV_SETUP.md) for the complete checklist. Minimum values required for local development:
 
 ```env
-VITE_SUPABASE_URL=<your-supabase-url>
-VITE_SUPABASE_ANON_KEY=<your-anon-key>
+VITE_SUPABASE_URL=<supabase-project-url>
+VITE_SUPABASE_ANON_KEY=<supabase-anon-key>
+VITE_NEWS_RSS="https://cryptopanic.com/feed/rss/,https://www.coindesk.com/arc/outboundfeeds/rss/"
+VITE_API_BASE=/api
 ```
 
-If the values are missing the composer will disable file attachments and show an admin tooltip.
+Serverless functions additionally expect:
 
-> Netlify/Loveable: add `NEXT_PUBLIC_ENABLE_CLOUD_SCORES=true` in the project environment settings to activate cloud score syncing.
+```env
+SUPABASE_SERVICE_ROLE_KEY=<supabase-service-role>
+ADMIN_TOKEN=<shared-admin-token>
+CRYPTOPANIC_API_KEY=<cryptopanic-token>
+```
+
+Missing values trigger inline helper messages (Boosted Tasks, Token Burn, Crypto News) so the UI never crashes during demos.
 
 ---
 

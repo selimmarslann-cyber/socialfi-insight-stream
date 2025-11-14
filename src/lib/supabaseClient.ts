@@ -1,19 +1,33 @@
-import { createClient, type SupabaseClient } from '@supabase/supabase-js'
-import { readEnv } from '@/lib/safeEnv'
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
+import {
+  PUBLIC_ENV,
+  isSupabaseConfigured,
+  supabaseAdminHint,
+} from "@/config/env";
 
-let client: SupabaseClient | null = null
+let client: SupabaseClient<Database> | null = null;
+let warned = false;
 
-export function getSupabase(): SupabaseClient | null {
-  if (client) return client
-  const { url, anon } = readEnv()
-  if (!url || !anon) return null
-  client = createClient(url as string, anon as string, {
-    auth: { persistSession: true, autoRefreshToken: true },
-  })
-  return client
+export function getSupabase(): SupabaseClient<Database> | null {
+  if (client) return client;
+  if (!isSupabaseConfigured()) {
+    if (!warned && typeof console !== "undefined") {
+      console.warn(`[supabase] ${supabaseAdminHint}`);
+      warned = true;
+    }
+    return null;
+  }
+  client = createClient<Database>(
+    PUBLIC_ENV.supabaseUrl,
+    PUBLIC_ENV.supabaseAnonKey,
+    {
+      auth: { persistSession: true, autoRefreshToken: true },
+    },
+  );
+  return client;
 }
 
-// backward compatibility (default export varsa)
-export const supabase = getSupabase()
+export const supabase = getSupabase();
 
-export { isSupabaseConfigured } from '@/lib/safeEnv'
+export { isSupabaseConfigured, supabaseAdminHint } from "@/config/env";
