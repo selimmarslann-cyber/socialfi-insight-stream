@@ -98,14 +98,41 @@ const normalizeBurnStats = (input: Partial<BurnStats>): BurnStats | null => {
   };
 };
 
+const readServerEnv = (...keys: string[]) => {
+  for (const key of keys) {
+    const value = process.env[key];
+    if (typeof value === 'string' && value.length > 0) {
+      return value;
+    }
+  }
+  return undefined;
+};
+
 const fetchSupabaseBurnStats = async (): Promise<BurnStats | null> => {
   const SUPABASE_URL =
-    process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
-  const SUPABASE_KEY =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_KEY ?? process.env.VITE_SUPABASE_ANON_KEY;
+    readServerEnv('SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_URL', 'VITE_SUPABASE_URL') ?? '';
+  const SERVICE_ROLE_KEY = readServerEnv(
+    'SUPABASE_SERVICE_ROLE_KEY',
+    'SUPABASE_SERVICE_KEY',
+    'SERVICE_ROLE_KEY',
+  );
+  const PUBLIC_ANON_KEY = readServerEnv(
+    'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+    'VITE_SUPABASE_ANON_KEY',
+    'SUPABASE_ANON_KEY',
+  );
+  const SUPABASE_KEY = SERVICE_ROLE_KEY ?? PUBLIC_ANON_KEY;
 
   if (!SUPABASE_URL || !SUPABASE_KEY) {
+    console.warn(
+      '[burn-api] Supabase env eksik. SUPABASE_URL ve SUPABASE_SERVICE_ROLE_KEY değerlerini ekleyin.',
+    );
     return null;
+  }
+  if (!SERVICE_ROLE_KEY) {
+    console.warn(
+      '[burn-api] Service role anahtarı bulunamadı. Okuma yetkisi kısıtlı olabilir; SUPABASE_SERVICE_ROLE_KEY ekleyin.',
+    );
   }
 
   try {

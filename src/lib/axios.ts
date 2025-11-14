@@ -1,6 +1,7 @@
 import axios from 'axios';
+import { readApiBaseUrl } from '@/lib/safeEnv';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE || '/api';
+const API_BASE_URL = readApiBaseUrl() || '/api';
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,

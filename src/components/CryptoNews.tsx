@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Card from "@/components/Card";
 import { fetchRssFeed } from "@/lib/rss";
 import { supabase, isSupabaseConfigured } from "@/lib/supabaseClient";
+import { readNewsConfig } from "@/lib/safeEnv";
 
 type NewsRow = {
   title: string;
@@ -10,42 +11,28 @@ type NewsRow = {
   published_at?: string;
 };
 
-const resolveFeeds = () => {
-  if (typeof process !== "undefined" && process?.env?.NEXT_PUBLIC_NEWS_RSS) {
-    return process.env.NEXT_PUBLIC_NEWS_RSS;
-  }
-  if (typeof import.meta !== "undefined") {
-    const metaEnv = import.meta.env as Record<string, string | undefined>;
-    return (
-      metaEnv.NEXT_PUBLIC_NEWS_RSS ||
-      metaEnv.VITE_NEXT_PUBLIC_NEWS_RSS ||
-      metaEnv.VITE_NEWS_RSS ||
-      ""
-    );
-  }
-  return "";
-};
-
-const FEEDS = resolveFeeds();
+const { rssList } = readNewsConfig();
+const FEEDS = rssList ?? "";
 
 export default function CryptoNews() {
   const [rows, setRows] = useState<NewsRow[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const feedsMissing = FEEDS.length === 0;
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      // eslint-disable-next-line no-console
-      console.log("NEWS_FEEDS", FEEDS);
+    if (feedsMissing) {
+      setErr("News feed list missing. Set NEXT_PUBLIC_NEWS_RSS.");
     }
-  }, []);
+  }, [feedsMissing]);
 
   const load = async () => {
-    if (!FEEDS) {
-      setErr("RSS feed list missing.");
+    if (feedsMissing) {
       return;
     }
 
     setErr(null);
+    setIsLoading(true);
 
     try {
       const data = await fetchRssFeed(FEEDS, 8);
@@ -59,19 +46,13 @@ export default function CryptoNews() {
           published_at: item.published_at,
         }));
 
-        const insertResult = await supabase
-          .from("news_cache")
-          .insert(payload)
-          .select("*")
-          .limit(1);
-
-        if (typeof window !== "undefined") {
-          // eslint-disable-next-line no-console
-          console.log("NEWS_CACHE_INSERT_SELECT", insertResult.data);
-        }
+        await supabase.from("news_cache").insert(payload).select("id").limit(1);
       }
     } catch (error) {
-      const message = (error as { message?: string } | null)?.message || "Feed unavailable";
+      console.warn("Crypto news fetch failed", error);
+      const message =
+        (error as { message?: string } | null)?.message ||
+        "Feed temporarily unavailable. Retry.";
       setErr(message);
 
       try {
@@ -84,11 +65,6 @@ export default function CryptoNews() {
           .select("*")
           .order("published_at", { ascending: false })
           .limit(8);
-
-        if (typeof window !== "undefined") {
-          // eslint-disable-next-line no-console
-          console.log("NEWS_CACHE_FALLBACK_SELECT", data);
-        }
 
         if (data && data.length > 0) {
           setRows(
@@ -103,30 +79,62 @@ export default function CryptoNews() {
       } catch (fallbackError) {
         console.warn("News cache fallback failed", fallbackError);
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
     if (!isSupabaseConfigured() && typeof window !== "undefined") {
       // eslint-disable-next-line no-console
-      console.warn("CryptoNews cache disabled: configure Supabase to persist results.");
+      console.warn(
+        "CryptoNews cache disabled: configure Supabase to persist results.",
+      );
     }
     void load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (!rows && !err) {
-    return <Card title="Crypto News" subtitle="Loading..." />;
+  if (!rows && (isLoading || !err)) {
+    return <Card title="Crypto News" subtitle="Loading…" />;
   }
 
   if (err && (!rows || rows.length === 0)) {
     return (
-      <Card title="Crypto News" error="Temporarily unavailable. Retry." onRetry={load} />
+      <Card
+        title="Crypto News"
+        error={err}
+        onRetry={
+          feedsMissing
+            ? undefined
+            : () => {
+                void load();
+              }
+        }
+      />
     );
   }
 
   return (
-    <Card title="Crypto News">
+    <Card
+      title="Crypto News"
+      right={
+        err ? (
+          <button
+            type="button"
+            onClick={() => {
+              if (!feedsMissing) {
+                void load();
+              }
+            }}
+            className="text-xs font-semibold text-indigo-600 underline-offset-4 hover:underline disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={feedsMissing}
+          >
+            Retry
+          </button>
+        ) : undefined
+      }
+    >
       {rows?.map((item, index) => (
         <a
           key={`${item.url}-${index}`}

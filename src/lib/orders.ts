@@ -1,8 +1,8 @@
-import { getSupabase } from '@/lib/supabaseClient'
+import { getSupabase, SUPABASE_ENV_WARNING } from '@/lib/supabaseClient'
 
 export async function logInvestmentBuy(postId: number, amount: number, txHash?: string) {
   const sb = getSupabase()
-  if (!sb) throw new Error('Supabase yok')
+  if (!sb) throw new Error(SUPABASE_ENV_WARNING)
   const {
     data: { user },
   } = await sb.auth.getUser()
@@ -27,7 +27,7 @@ export async function logInvestmentBuy(postId: number, amount: number, txHash?: 
 
 export async function setPostInvestable(postId: number, investable: boolean, open: boolean) {
   const sb = getSupabase()
-  if (!sb) throw new Error('Supabase yok')
+  if (!sb) throw new Error(SUPABASE_ENV_WARNING)
   const { error: e1 } = await sb
     .from('posts')
     .update({ is_investable: investable, invest_open: open })

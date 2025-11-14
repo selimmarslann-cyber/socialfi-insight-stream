@@ -1,9 +1,9 @@
-import { getSupabase } from "@/lib/supabaseClient";
+import { getSupabase, SUPABASE_ENV_WARNING } from "@/lib/supabaseClient";
 
 export async function createPost(text: string) {
   const supabase = getSupabase();
   if (!supabase) {
-    throw new Error("Supabase yapılandırılmadı.");
+    throw new Error(SUPABASE_ENV_WARNING);
   }
   const { data: authData, error: authError } = await supabase.auth.getUser();
 
@@ -32,7 +32,7 @@ export async function createPost(text: string) {
 export async function ratePost(post_id: number, score: number) {
   const supabase = getSupabase();
   if (!supabase) {
-    throw new Error("Supabase yapılandırılmadı.");
+    throw new Error(SUPABASE_ENV_WARNING);
   }
   const { data: authData, error: authError } = await supabase.auth.getUser();
 

@@ -81,7 +81,7 @@ export const PostComposer = () => {
   const handleDrop = (event: DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     if (!supabaseReady) {
-      toast.info('Admin: VITE_SUPABASE_URL/ANON_KEY ekleyin.');
+      toast.info('Admin: NEXT_PUBLIC_SUPABASE_URL/ANON_KEY ekleyin.');
       return;
     }
     const dropped = Array.from(event.dataTransfer.files);
@@ -270,7 +270,7 @@ export const PostComposer = () => {
                 </TooltipTrigger>
                 {!supabaseReady && (
                   <TooltipContent>
-                    Admin: VITE_SUPABASE_URL/ANON_KEY ekleyin.
+                    Admin: NEXT_PUBLIC_SUPABASE_URL/ANON_KEY ekleyin.
                   </TooltipContent>
                 )}
               </Tooltip>

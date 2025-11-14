@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Activity, Flame, ListChecks, ShieldCheck } from "lucide-react";
 import StaticPageLayout from "@/components/layout/StaticPageLayout";
 import { usePageMetadata } from "@/hooks/usePageMetadata";
-import { supabase } from "@/lib/supabaseClient";
+import { getSupabase } from "@/lib/supabaseClient";
+import SupabaseConfigAlert from "@/components/SupabaseConfigAlert";
 import TokenBurn from "@/components/TokenBurn";
 import {
   Card,
@@ -18,6 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 type GuardState = "loading" | "allowed" | "denied";
 
 export default function Admin() {
+  const supabase = getSupabase();
   usePageMetadata({
     title: "Admin Panel — NOP Intelligence Layer",
     description:
@@ -29,9 +31,15 @@ export default function Admin() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!supabase) {
+      setGuard("denied");
+      setErrorMessage("Supabase configuration missing.");
+      return;
+    }
     const verify = async () => {
       try {
-        const { data: authData, error: authError } = await supabase.auth.getUser();
+        const { data: authData, error: authError } =
+          await supabase.auth.getUser();
         if (authError || !authData.user) {
           setGuard("denied");
           setErrorMessage("You don’t have permission.");
@@ -59,7 +67,7 @@ export default function Admin() {
     };
 
     void verify();
-  }, []);
+  }, [supabase]);
 
   useEffect(() => {
     if (guard === "denied") {
@@ -88,6 +96,14 @@ export default function Admin() {
     );
   }
 
+  if (!supabase) {
+    return (
+      <StaticPageLayout>
+        <SupabaseConfigAlert context="Admin panel requires Supabase auth to verify access." />
+      </StaticPageLayout>
+    );
+  }
+
   if (guard === "denied") {
     return (
       <StaticPageLayout>
@@ -97,8 +113,8 @@ export default function Admin() {
             {errorMessage ?? "You don’t have permission."}
           </h1>
           <p className="leading-relaxed text-[#475569]">
-            If you believe this is a mistake, contact an administrator. You’ll be redirected to the
-            homepage shortly.
+            If you believe this is a mistake, contact an administrator. You’ll
+            be redirected to the homepage shortly.
           </p>
         </section>
       </StaticPageLayout>
@@ -112,13 +128,19 @@ export default function Admin() {
           <div className="flex items-center gap-3">
             <ShieldCheck className="h-8 w-8 text-[#0F172A]" />
             <div>
-              <h1 className="text-2xl font-semibold text-[#0F172A]">Admin Panel</h1>
+              <h1 className="text-2xl font-semibold text-[#0F172A]">
+                Admin Panel
+              </h1>
               <p className="text-sm leading-relaxed text-[#475569]">
-                Manage burn reporting, plan upcoming tasks, and review system activity.
+                Manage burn reporting, plan upcoming tasks, and review system
+                activity.
               </p>
             </div>
           </div>
-          <Badge variant="secondary" className="rounded-full bg-[#F5F8FF] text-[#0F172A]">
+          <Badge
+            variant="secondary"
+            className="rounded-full bg-[#F5F8FF] text-[#0F172A]"
+          >
             Internal Access
           </Badge>
         </header>
@@ -132,7 +154,8 @@ export default function Admin() {
                   Burn Manager
                 </CardTitle>
                 <CardDescription>
-                  Update the public burn widget to reflect the latest on-chain totals.
+                  Update the public burn widget to reflect the latest on-chain
+                  totals.
                 </CardDescription>
               </div>
             </CardHeader>
@@ -149,8 +172,9 @@ export default function Admin() {
               </CardTitle>
             </CardHeader>
             <CardContent className="leading-relaxed text-[#475569]">
-              Workflow automation for boosted tasks is in development. You will soon be able to
-              schedule missions, assign reviewers, and monitor completion status from this panel.
+              Workflow automation for boosted tasks is in development. You will
+              soon be able to schedule missions, assign reviewers, and monitor
+              completion status from this panel.
             </CardContent>
           </Card>
 
@@ -162,8 +186,9 @@ export default function Admin() {
               </CardTitle>
             </CardHeader>
             <CardContent className="leading-relaxed text-[#475569]">
-              Comprehensive audit logs, anomaly alerts, and scoring diffs will appear here soon.
-              Until then, please monitor the Supabase dashboard for raw event streams.
+              Comprehensive audit logs, anomaly alerts, and scoring diffs will
+              appear here soon. Until then, please monitor the Supabase
+              dashboard for raw event streams.
             </CardContent>
           </Card>
         </div>
