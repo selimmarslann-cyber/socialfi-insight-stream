@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Search, Sparkles, LineChart, TrendingUp } from 'lucide-react';
 import { Container } from '@/components/layout/Container';
 import { Input } from '@/components/ui/input';
@@ -6,10 +6,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { PostCard } from '@/components/feed/PostCard';
-import { mockPosts, mockGainers } from '@/lib/mock-api';
+import { mockPosts } from '@/lib/mock-api';
 import TopUsersCard from '@/components/TopUsersCard';
 import { useFeedStore } from '@/lib/store';
 import type { Post } from '@/types/feed';
+import { PUBLIC_ENV } from '@/config/env';
 
 type ExploreTab = 'all' | 'funded' | 'trending';
 
@@ -59,10 +60,24 @@ const filterPosts = (dataset: Post[], tab: ExploreTab, query: string) => {
   return filtered;
 };
 
+type MarketRow = {
+  symbol: string;
+  price: number;
+  change24h: number;
+  volume: number;
+  signal: 'Bullish' | 'Neutral' | 'Bearish';
+  score: number;
+};
+
+const API_BASE = PUBLIC_ENV.apiBase || '/api';
+
 const Explore = () => {
   const userPosts = useFeedStore((state) => state.userPosts);
   const [tab, setTab] = useState<ExploreTab>('all');
   const [query, setQuery] = useState('');
+  const [marketItems, setMarketItems] = useState<MarketRow[]>([]);
+  const [marketLoading, setMarketLoading] = useState(false);
+  const [marketError, setMarketError] = useState<string | null>(null);
 
   const combinedPosts = useMemo(
     () => [...userPosts, ...mockPosts],
@@ -78,6 +93,47 @@ const Explore = () => {
     (acc, item) => acc + (item.contributedAmount ?? 0),
     0
   );
+
+  const loadMarkets = useCallback(async () => {
+    setMarketLoading(true);
+    setMarketError(null);
+    try {
+      const response = await fetch(`${API_BASE}/prices`);
+      if (!response.ok) {
+        throw new Error(`prices_${response.status}`);
+      }
+      const payload = (await response.json()) as { items?: MarketRow[] };
+      setMarketItems(payload.items ?? []);
+    } catch (error) {
+      console.warn('Top gainers fetch failed', error);
+      setMarketItems([]);
+      setMarketError('Market data unavailable. Retry soon.');
+    } finally {
+      setMarketLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadMarkets();
+  }, [loadMarkets]);
+
+  const topGainers = useMemo(
+    () =>
+      [...marketItems].sort((a, b) => b.change24h - a.change24h).slice(0, 4),
+    [marketItems],
+  );
+
+  const formatPrice = (value: number) =>
+    new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: value >= 1000 ? 0 : 2,
+    }).format(value);
+
+  const formatChange = (value: number) => {
+    const sign = value > 0 ? '+' : '';
+    return `${sign}${value.toFixed(2)}%`;
+  };
 
   return (
     <Container>
@@ -131,7 +187,7 @@ const Explore = () => {
         </section>
 
           <aside className="space-y-6">
-          <Card className="rounded-3xl border border-indigo-500/10 bg-white p-5 shadow-lg">
+            <Card className="rounded-3xl border border-indigo-500/10 bg-white p-5 shadow-lg">
             <div className="flex items-center gap-3">
               <LineChart className="h-5 w-5 text-indigo-500" />
               <div>
@@ -139,22 +195,52 @@ const Explore = () => {
                 <p className="text-xs text-slate-500">24h price movers</p>
               </div>
             </div>
-            <div className="mt-4 space-y-3">
-              {mockGainers.slice(0, 4).map((asset) => (
-                <div
-                  key={asset.symbol}
-                  className="flex items-center justify-between rounded-2xl border border-indigo-500/10 bg-slate-50 px-3 py-2 text-sm"
-                >
-                  <div>
-                    <p className="font-semibold text-slate-800">{asset.symbol}</p>
-                    <p className="text-xs text-slate-500">${asset.price.toLocaleString()}</p>
-                  </div>
-                  <Badge className="rounded-full bg-emerald-50 text-xs font-semibold text-emerald-600">
-                    +{asset.changePercent}%
-                  </Badge>
-                </div>
-              ))}
-            </div>
+              <div className="mt-4 space-y-3">
+                {marketLoading && (
+                  <>
+                    {Array.from({ length: 4 }).map((_, index) => (
+                      <div
+                        key={`skeleton-${index}`}
+                        className="h-14 rounded-2xl border border-dashed border-slate-200 bg-slate-50 animate-pulse"
+                      />
+                    ))}
+                  </>
+                )}
+
+                {!marketLoading && marketError ? (
+                  <p className="text-xs font-semibold text-amber-600">{marketError}</p>
+                ) : null}
+
+                {!marketLoading && !marketError && topGainers.length === 0 ? (
+                  <p className="text-xs text-slate-500">No live market data right now.</p>
+                ) : null}
+
+                {!marketLoading && !marketError
+                  ? topGainers.map((asset) => {
+                      const isUp = asset.change24h >= 0;
+                      return (
+                        <div
+                          key={asset.symbol}
+                          className="flex items-center justify-between rounded-2xl border border-indigo-500/10 bg-slate-50 px-3 py-2 text-sm"
+                        >
+                          <div>
+                            <p className="font-semibold text-slate-800">{asset.symbol}</p>
+                            <p className="text-xs text-slate-500">{formatPrice(asset.price)}</p>
+                          </div>
+                          <Badge
+                            className={`rounded-full text-xs font-semibold ${
+                              isUp
+                                ? 'bg-emerald-50 text-emerald-600'
+                                : 'bg-rose-50 text-rose-600'
+                            }`}
+                          >
+                            {formatChange(asset.change24h)}
+                          </Badge>
+                        </div>
+                      );
+                    })
+                  : null}
+              </div>
           </Card>
 
             <TopUsersCard title="Top 5 Users" period="weekly" limit={5} />

@@ -43,15 +43,11 @@ export const handler = async (
     const items = await getMarketSnapshot();
     return buildResponse(items);
   } catch (error) {
-    console.error("[api/ai-signals] failed", error);
+    console.error("[api/prices] failed", error);
     return {
       statusCode: 500,
       headers: HEADERS,
-      body: JSON.stringify({
-        items: [],
-        error: "ai_signals_unavailable",
-      }),
+      body: JSON.stringify({ items: [], error: "prices_unavailable" }),
     };
   }
 };
-

@@ -1,69 +1,26 @@
 type EnvRecord = Record<string, string | undefined>;
 
-const processEnv: EnvRecord =
-  typeof process !== "undefined" && process.env
-    ? (process.env as EnvRecord)
-    : {};
-
 const importMetaEnv: EnvRecord =
   typeof import.meta !== "undefined" && (import.meta as { env?: EnvRecord }).env
     ? ((import.meta as { env?: EnvRecord }).env as EnvRecord)
     : {};
 
-const readEnvValue = (...keys: string[]): string | undefined => {
-  for (const key of keys) {
-    const fromMeta = importMetaEnv?.[key];
-    if (typeof fromMeta === "string" && fromMeta.length > 0) {
-      return fromMeta;
-    }
-    const fromProcess = processEnv?.[key];
-    if (typeof fromProcess === "string" && fromProcess.length > 0) {
-      return fromProcess;
-    }
-  }
-  return undefined;
+const readMetaValue = (key: string, fallback = ""): string => {
+  const value = importMetaEnv?.[key];
+  return typeof value === "string" && value.length > 0 ? value : fallback;
 };
 
-const runtimeMode =
-  importMetaEnv?.MODE ??
-  processEnv?.NODE_ENV ??
-  processEnv?.VITE_MODE ??
-  "production";
+const runtimeMode = readMetaValue("MODE", "production");
 const isDevelopment = runtimeMode !== "production";
 
 const SUPABASE_PUBLIC_URL_KEY = "VITE_SUPABASE_URL";
 const SUPABASE_PUBLIC_ANON_KEY = "VITE_SUPABASE_ANON_KEY";
 
 export const PUBLIC_ENV = {
-  supabaseUrl:
-    readEnvValue(
-      SUPABASE_PUBLIC_URL_KEY,
-      "NEXT_PUBLIC_SUPABASE_URL",
-      "REACT_APP_SUPABASE_URL",
-    ) ?? "",
-  supabaseAnonKey:
-    readEnvValue(
-      SUPABASE_PUBLIC_ANON_KEY,
-      "NEXT_PUBLIC_SUPABASE_ANON_KEY",
-      "REACT_APP_SUPABASE_ANON_KEY",
-    ) ?? "",
-  apiBase: readEnvValue("VITE_API_BASE") ?? "/api",
-  adminToken: readEnvValue("VITE_ADMIN_TOKEN") ?? "",
-};
-
-export const SERVER_ENV = {
-  supabaseUrl:
-    readEnvValue(
-      "SUPABASE_URL",
-      SUPABASE_PUBLIC_URL_KEY,
-      "NEXT_PUBLIC_SUPABASE_URL",
-      "REACT_APP_SUPABASE_URL",
-    ) ?? "",
-  supabaseServiceRoleKey:
-    readEnvValue("SUPABASE_SERVICE_ROLE_KEY", "SUPABASE_SECRET_KEY") ?? "",
-  adminToken: readEnvValue("ADMIN_TOKEN") ?? PUBLIC_ENV.adminToken,
-  cryptopanicKey:
-    readEnvValue("CRYPTOPANIC_API_KEY", "VITE_CRYPTOPANIC_KEY") ?? "",
+  supabaseUrl: readMetaValue(SUPABASE_PUBLIC_URL_KEY),
+  supabaseAnonKey: readMetaValue(SUPABASE_PUBLIC_ANON_KEY),
+  apiBase: readMetaValue("VITE_API_BASE", "/api"),
+  adminToken: readMetaValue("VITE_ADMIN_TOKEN"),
 };
 
 export const SUPABASE_REQUIRED_VARS = [
@@ -78,7 +35,7 @@ export const supabaseAdminHint = `Supabase yapılandırması eksik. Yönetici: $
 export const isSupabaseConfigured = (): boolean =>
   Boolean(PUBLIC_ENV.supabaseUrl && PUBLIC_ENV.supabaseAnonKey);
 
-const emitDevWarnings = () => {
+const emitDevWarnings = (): void => {
   if (!isDevelopment) {
     return;
   }

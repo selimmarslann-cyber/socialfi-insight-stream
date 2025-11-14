@@ -7,11 +7,10 @@ import { PUBLIC_ENV } from "@/config/env";
 type RemoteNewsItem = {
   id: string;
   title: string;
-  url: string;
+  link: string;
   source: string;
-  sentiment: string;
-  imageUrl: string;
-  published_at: string;
+  imageUrl?: string;
+  publishedAt: string;
 };
 
 const API_BASE = PUBLIC_ENV.apiBase || "/api";
@@ -41,21 +40,6 @@ const toRelativeTime = (value: string): string => {
   return timeFormatter.format(diffDays, "day");
 };
 
-const SentimentChip = ({ sentiment }: { sentiment: string }) => {
-  const label = sentiment ? sentiment.replace(/^\w/, (c) => c.toUpperCase()) : "Neutral";
-  const tone =
-    sentiment === "bullish"
-      ? "text-emerald-600 bg-emerald-50"
-      : sentiment === "bearish"
-        ? "text-rose-600 bg-rose-50"
-        : "text-slate-500 bg-slate-100";
-  return (
-    <span className={`rounded-full px-3 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${tone}`}>
-      {label}
-    </span>
-  );
-};
-
 export default function CryptoNews() {
   const [items, setItems] = useState<RemoteNewsItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -79,9 +63,7 @@ export default function CryptoNews() {
         throw new Error(`crypto_news_${response.status}`);
       }
 
-      const payload = (await response.json()) as {
-        items?: RemoteNewsItem[];
-      };
+        const payload = (await response.json()) as { items?: RemoteNewsItem[] };
 
       setItems((payload.items ?? []).slice(0, MAX_NEWS_ITEMS));
     } catch (err) {
@@ -108,10 +90,10 @@ export default function CryptoNews() {
     if (!hasItems) {
       return null;
     }
-    return items.map((item) => (
+      return items.map((item) => (
       <a
         key={item.id}
-        href={item.url}
+          href={item.link}
         target="_blank"
         rel="noreferrer"
         className="group flex items-center gap-3 rounded-xl border border-transparent px-2 py-2 transition hover:border-indigo-100 hover:bg-white"
@@ -135,10 +117,9 @@ export default function CryptoNews() {
           <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
             <span className="font-medium text-slate-600">{item.source}</span>
             <span className="text-slate-400">·</span>
-            <span>{toRelativeTime(item.published_at)}</span>
+              <span>{toRelativeTime(item.publishedAt)}</span>
           </div>
         </div>
-        <SentimentChip sentiment={item.sentiment} />
       </a>
     ));
   }, [hasItems, items]);

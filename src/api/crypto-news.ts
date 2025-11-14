@@ -1,4 +1,4 @@
-import { SERVER_ENV } from "@/config/env";
+import Parser from "rss-parser";
 
 interface NetlifyEvent {
   httpMethod: string;
@@ -10,32 +10,36 @@ interface NetlifyResponse {
   body: string;
 }
 
-interface CryptoPanicPost {
-  id: string | number;
+type FeedEnclosure = { url?: string };
+
+type CustomItem = {
   title?: string;
-  url?: string;
-  published_at?: string;
-  metadata?: {
-    image?: string | null;
-    thumbnail?: string | null;
-    sentiment?: string | null;
-  };
-  source?: {
-    title?: string;
-    domain?: string;
-  };
-  kind?: string;
-}
+  link?: string;
+  guid?: string;
+  isoDate?: string;
+  pubDate?: string;
+  enclosure?: FeedEnclosure | FeedEnclosure[];
+  mediaContent?: Array<{ $?: { url?: string } }>;
+  mediaThumbnail?: Array<{ $?: { url?: string } }>;
+};
 
 type CryptoNewsItem = {
   id: string;
   title: string;
-  url: string;
+  link: string;
   source: string;
-  published_at: string;
-  sentiment: string;
+  publishedAt: string;
   imageUrl: string;
 };
+
+const parser = new Parser<CustomItem>({
+  customFields: {
+    item: [
+      ["media:content", "mediaContent", { keepArray: true }],
+      ["media:thumbnail", "mediaThumbnail", { keepArray: true }],
+    ],
+  },
+});
 
 const HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -44,136 +48,122 @@ const HEADERS = {
   "Content-Type": "application/json",
 };
 
-const DEFAULT_PLACEHOLDER = "/placeholder.svg";
-const SOURCE_PLACEHOLDERS: Record<string, string> = {
-  "coindesk.com": "https://logo.clearbit.com/coindesk.com",
-  "cointelegraph.com": "https://logo.clearbit.com/cointelegraph.com",
-  "cryptopanic.com": "https://logo.clearbit.com/cryptopanic.com",
-  "decrypt.co": "https://logo.clearbit.com/decrypt.co",
-};
-
+const DEFAULT_IMAGE = "/placeholder.svg";
 const CACHE_TTL_MS = 60 * 1000;
-let cache:
-  | {
-      payload: { items: CryptoNewsItem[] };
-      expiresAt: number;
-    }
-  | null = null;
+const MAX_ITEMS = 10;
 
-const resolveSentiment = (post: CryptoPanicPost): string => {
-  const metaSentiment = post.metadata?.sentiment;
-  if (metaSentiment && typeof metaSentiment === "string") {
-    return metaSentiment.toLowerCase();
-  }
-  if (post.kind && typeof post.kind === "string") {
-    return post.kind.toLowerCase();
-  }
-  return "neutral";
+type CacheBucket = {
+  items: CryptoNewsItem[];
+  expiresAt: number;
 };
+
+let cache: CacheBucket | null = null;
 
 const hostnameFromUrl = (value?: string): string | null => {
   if (!value) return null;
   try {
-    const hostname = new URL(value).hostname.toLowerCase();
-    return hostname.startsWith("www.") ? hostname.slice(4) : hostname;
+    const url = new URL(value);
+    const host = url.hostname.toLowerCase();
+    return host.startsWith("www.") ? host.slice(4) : host;
   } catch {
     return null;
   }
 };
 
-const resolveImage = (post: CryptoPanicPost): string => {
-  if (post.metadata?.image) {
-    return post.metadata.image;
+const pickImageFromItem = (item: CustomItem): string | undefined => {
+  const enclosure = Array.isArray(item.enclosure) ? item.enclosure[0] : item.enclosure;
+  if (enclosure?.url) {
+    return enclosure.url;
   }
-  if (post.metadata?.thumbnail) {
-    return post.metadata.thumbnail;
-  }
-  const host =
-    post.source?.domain ??
-    hostnameFromUrl(post.url ?? undefined) ??
-    "cryptopanic.com";
-
-  if (host && SOURCE_PLACEHOLDERS[host]) {
-    return SOURCE_PLACEHOLDERS[host];
-  }
-
-  if (host) {
-    return `https://logo.clearbit.com/${host}`;
-  }
-
-  return DEFAULT_PLACEHOLDER;
+  const media =
+    item.mediaContent?.find((entry) => entry?.$?.url)?.$?.url ??
+    item.mediaThumbnail?.find((entry) => entry?.$?.url)?.$?.url;
+  return media ?? undefined;
 };
 
-const dedupeByUrl = (items: CryptoNewsItem[]): CryptoNewsItem[] => {
+const normalizeItem = (
+  item: CustomItem,
+  fallbackSource: string,
+): CryptoNewsItem | null => {
+  const link = item.link?.trim();
+  const publishedAt =
+    item.isoDate ?? item.pubDate ?? new Date().toISOString();
+  const source =
+    hostnameFromUrl(link) ??
+    hostnameFromUrl(fallbackSource) ??
+    fallbackSource.replace(/^https?:\/\//, "") ||
+    "crypto-desk";
+
+  if (!link) {
+    return null;
+  }
+
+  const image = pickImageFromItem(item) ?? DEFAULT_IMAGE;
+  const identifier = item.guid ?? `${source}-${link}`;
+
+  return {
+    id: identifier,
+    title: (item.title ?? "Untitled update").trim(),
+    link,
+    source,
+    publishedAt,
+    imageUrl: image,
+  };
+};
+
+const parseSingleFeed = async (url: string): Promise<CryptoNewsItem[]> => {
+  const feed = await parser.parseURL(url);
+  const items = feed.items ?? [];
+  const mapped = items
+    .map((entry) => normalizeItem(entry, url))
+    .filter((entry): entry is CryptoNewsItem => Boolean(entry));
+  return mapped;
+};
+
+const fetchAllFeeds = async (): Promise<CryptoNewsItem[]> => {
+  const csv = process.env.VITE_NEWS_RSS ?? "";
+  const feeds = csv
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+
+  if (feeds.length === 0) {
+    return [];
+  }
+
+  const results = await Promise.allSettled(
+    feeds.map(async (feedUrl) => {
+      try {
+        return await parseSingleFeed(feedUrl);
+      } catch (error) {
+        console.warn("[crypto-news] feed failed", feedUrl, error);
+        return [];
+      }
+    }),
+  );
+
+  const combined: CryptoNewsItem[] = [];
+  for (const result of results) {
+    if (result.status === "fulfilled") {
+      combined.push(...result.value);
+    }
+  }
+
   const seen = new Set<string>();
-  return items.filter((item) => {
-    if (!item.url || seen.has(item.url)) {
+  const deduped = combined.filter((item) => {
+    if (seen.has(item.link)) {
       return false;
     }
-    seen.add(item.url);
+    seen.add(item.link);
     return true;
   });
-};
 
-const fetchCryptoPanic = async (): Promise<CryptoNewsItem[]> => {
-  const token = SERVER_ENV.cryptopanicKey;
-  if (!token) {
-    throw new Error("CRYPTOPANIC_API_KEY is not configured");
-  }
+  deduped.sort(
+    (a, b) =>
+      new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime(),
+  );
 
-  const endpoint = new URL("https://cryptopanic.com/api/v1/posts/");
-  endpoint.searchParams.set("auth_token", token);
-  endpoint.searchParams.set("currencies", "btc,eth,sol,avax");
-  endpoint.searchParams.set("kind", "news");
-  endpoint.searchParams.set("public", "true");
-  endpoint.searchParams.set("page_size", "20");
-
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 12_000);
-
-  try {
-    const response = await fetch(endpoint.toString(), {
-      signal: controller.signal,
-    });
-
-    if (!response.ok) {
-      throw new Error(`cryptopanic_${response.status}`);
-    }
-
-    const payload = (await response.json()) as { results?: CryptoPanicPost[] };
-    const results = Array.isArray(payload.results) ? payload.results : [];
-
-    const mapped = results
-      .filter((item) => Boolean(item.url))
-      .map((item): CryptoNewsItem => {
-        const sourceLabel =
-          item.source?.title ??
-          hostnameFromUrl(item.url ?? undefined) ??
-          "Crypto Desk";
-
-        return {
-          id: `cryptopanic-${item.id}`,
-          title: item.title ?? "Untitled market update",
-          url: item.url ?? "https://cryptopanic.com",
-          source: sourceLabel,
-          published_at:
-            item.published_at ?? new Date().toISOString(),
-          sentiment: resolveSentiment(item),
-          imageUrl: resolveImage(item),
-        };
-      });
-
-    const unique = dedupeByUrl(mapped);
-    unique.sort(
-      (a, b) =>
-        new Date(b.published_at).getTime() -
-        new Date(a.published_at).getTime(),
-    );
-
-    return unique.slice(0, 8);
-  } finally {
-    clearTimeout(timeout);
-  }
+  return deduped.slice(0, MAX_ITEMS);
 };
 
 const buildResponse = (items: CryptoNewsItem[]): NetlifyResponse => ({
@@ -198,13 +188,13 @@ export const handler = async (
   }
 
   if (cache && Date.now() < cache.expiresAt) {
-    return buildResponse(cache.payload.items);
+    return buildResponse(cache.items);
   }
 
   try {
-    const items = await fetchCryptoPanic();
+    const items = await fetchAllFeeds();
     cache = {
-      payload: { items },
+      items,
       expiresAt: Date.now() + CACHE_TTL_MS,
     };
     return buildResponse(items);

@@ -32,10 +32,6 @@ import type { Database } from "@/integrations/supabase/types";
 
 type BoostedTaskRow = Database["public"]["Tables"]["boosted_tasks"]["Row"];
 type UserTaskRow = Database["public"]["Tables"]["user_tasks"]["Row"];
-type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
-type InvestmentOrderRow =
-  Database["public"]["Tables"]["investment_orders"]["Row"];
-type PostRow = Database["public"]["Tables"]["posts"]["Row"];
 
 type TaskState = "locked" | "ready" | "claimed";
 type TaskView = BoostedTaskRow & { icon: string; state: TaskState };
@@ -87,37 +83,6 @@ export default function BoostedTasks() {
   );
   const totalTasks = state.length || 3;
 
-  const syncCompletions = useCallback(
-    async (
-      userId: string,
-      tasksToSync: Array<{ task: BoostedTaskRow; userTask?: UserTaskRow }>,
-    ): Promise<UserTaskRow[]> => {
-      if (!sb || tasksToSync.length === 0) {
-        return [];
-      }
-      const now = new Date().toISOString();
-      const payload = tasksToSync.map(({ task, userTask }) => ({
-        user_id: userId,
-        task_id: task.id,
-        status: "completed" as UserTaskRow["status"],
-        completed_at: userTask?.completed_at ?? now,
-      }));
-
-      const { data, error } = await sb
-        .from("user_tasks")
-        .upsert(payload, { onConflict: "user_id,task_id" })
-        .select("*");
-
-      if (error) {
-        console.warn("user_tasks sync failed", error);
-        return [];
-      }
-
-      return (data ?? []) as UserTaskRow[];
-    },
-    [sb],
-  );
-
   const refresh = useCallback(async () => {
     setErr(null);
     if (!sb) {
@@ -133,8 +98,10 @@ export default function BoostedTasks() {
         return;
       }
 
-      const [{ data: tasks, error: tasksError }, { data: userTasks }] =
-        await Promise.all([
+        const [
+          { data: tasks, error: tasksError },
+          { data: userTasks, error: userTasksError },
+        ] = await Promise.all([
           sb
             .from<BoostedTaskRow>("boosted_tasks")
             .select("*")
@@ -146,86 +113,35 @@ export default function BoostedTasks() {
             .eq("user_id", user.id),
         ]);
 
-      if (tasksError) {
-        throw tasksError;
-      }
-
-      const { data: profile } = await sb
-        .from<ProfileRow>("profiles")
-        .select("wallet_address")
-        .eq("id", user.id)
-        .single();
-
-      const { data: orders } = await sb
-        .from<InvestmentOrderRow>("investment_orders")
-        .select("amount_nop")
-        .eq("user_id", user.id)
-        .eq("type", "buy");
-
-      const buyVolume = (orders ?? []).reduce(
-        (acc, order) => acc + Number(order?.amount_nop ?? 0),
-        0,
-      );
-      const depositReady = Boolean(profile?.wallet_address) && buyVolume >= 5000;
-
-      const { data: posts } = await sb
-        .from<PostRow>("posts")
-        .select("id")
-        .eq("author_id", user.id)
-        .limit(1);
-      const contributeReady = Boolean(posts?.length);
-
-      const progressMap: Record<string, boolean> = {
-        signup: Boolean(user),
-        deposit: depositReady,
-        contribute: contributeReady,
-      };
-
-      const userTaskMap = new Map<string, UserTaskRow>();
-      (userTasks ?? []).forEach((record) => {
-        userTaskMap.set(record.task_id, record);
-      });
-
-      const needSync: Array<{ task: BoostedTaskRow; userTask?: UserTaskRow }> =
-        [];
-
-      (tasks ?? []).forEach((task) => {
-        const code = task.code ?? "";
-        const progress = progressMap[code] ?? false;
-        const record = userTaskMap.get(task.id);
-        if (progress && (!record || record.status === "pending")) {
-          needSync.push({ task, userTask: record });
+        if (tasksError) {
+          throw tasksError;
         }
-      });
-
-      const synced = await syncCompletions(user.id, needSync);
-      synced.forEach((record) => {
-        userTaskMap.set(record.task_id, record);
-      });
-
-      const nextState: TaskView[] = (tasks ?? []).map((task) => {
-        const record = userTaskMap.get(task.id);
-        const code = task.code ?? "";
-        const icon = iconMap[code] ?? "✨";
-
-        if (record?.status === "claimed") {
-          return { ...task, icon, state: "claimed" };
+        if (userTasksError) {
+          throw userTasksError;
         }
-        if (record?.status === "completed") {
-          return { ...task, icon, state: "ready" };
-        }
-        if (progressMap[code]) {
-          return { ...task, icon, state: "ready" };
-        }
-        return { ...task, icon, state: "locked" };
-      });
 
-      setState(nextState);
+        const userTaskMap = new Map<string, UserTaskRow>();
+        (userTasks ?? []).forEach((record) => {
+          userTaskMap.set(record.task_id, record);
+        });
+
+        const nextState: TaskView[] = (tasks ?? []).map((task) => {
+          const record = userTaskMap.get(task.id);
+          const code = task.code ?? "";
+          const icon = iconMap[code] ?? "✨";
+
+          const derivedState: TaskState =
+            record?.status === "claimed" ? "claimed" : "ready";
+
+          return { ...task, icon, state: derivedState };
+        });
+
+        setState(nextState);
     } catch (error) {
       setErr(getErrorMessage(error, "Görevler yüklenemedi."));
       setState([]);
     }
-  }, [sb, syncCompletions]);
+    }, [sb]);
 
   useEffect(() => {
     void refresh();
