@@ -10,6 +10,7 @@ export interface Post {
   };
   content: string;
   images?: string[];
+  attachments?: string[];
   score: number;
   taskId?: string;
   createdAt: string;

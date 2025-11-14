@@ -4,8 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PostCard } from './PostCard';
 import { fetchFeed } from '@/lib/mock-api';
+import { useFeedStore } from '@/lib/store';
 
 export const FeedList = () => {
+  const userPosts = useFeedStore((state) => state.userPosts);
+
   const {
     data,
     isLoading,
@@ -38,7 +41,8 @@ export const FeedList = () => {
     );
   }
 
-  const posts = data?.pages.flatMap((page) => page.items) ?? [];
+  const remotePosts = data?.pages.flatMap((page) => page.items) ?? [];
+  const posts = [...userPosts, ...remotePosts];
 
   return (
     <div className="space-y-5">

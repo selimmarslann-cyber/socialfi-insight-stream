@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Post } from '@/types/feed';
 import { ImageGrid } from '@/components/post/ImageGrid';
 import { AIInsightStrip } from '@/components/ai/AIInsightStrip';
+import { toast } from 'sonner';
 
 interface PostCardProps {
   post: Post;
@@ -32,10 +33,23 @@ const timeAgo = (value: string) => {
 
 export const PostCard = ({ post }: PostCardProps) => {
   const hashtags = useMemo(() => post.tags ?? [], [post.tags]);
+  const media = useMemo(
+    () => (post.attachments?.length ? post.attachments : post.images ?? []),
+    [post.attachments, post.images],
+  );
+  const handleAction = (action: "upvote" | "comment" | "share" | "tip") => {
+    const labels: Record<typeof action, string> = {
+      upvote: "Upvotes",
+      comment: "Comments",
+      share: "Shares",
+      tip: "Tips",
+    };
+    toast.info(`${labels[action]} will sync to on-chain interactions soon.`);
+  };
   const funded = (post.contributedAmount ?? 0) > 0;
 
-  return (
-    <article className="rounded-2xl bg-white p-6 shadow-lg ring-1 ring-indigo-500/10 transition will-change-transform hover:translate-y-[1px] hover:ring-indigo-500/20">
+    return (
+      <article className="rounded-2xl bg-[color:var(--bg-card)] p-6 text-[color:var(--text-primary)] shadow-lg ring-1 ring-[color:var(--ring)] transition will-change-transform hover:translate-y-[1px] hover:ring-indigo-500/30">
       <header className="flex items-start justify-between gap-4">
         <div className="flex flex-1 items-start gap-3">
           <Avatar className="h-12 w-12 border border-indigo-500/10">
@@ -47,17 +61,17 @@ export const PostCard = ({ post }: PostCardProps) => {
             </AvatarFallback>
           </Avatar>
           <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-1 text-sm">
-              <span className="font-semibold text-slate-900">{post.author.displayName}</span>
+              <div className="flex flex-wrap items-center gap-1 text-sm">
+                <span className="font-semibold text-[color:var(--text-primary)]">{post.author.displayName}</span>
               {post.author.verified && <BadgeCheck className="h-4 w-4 text-cyan-500" />}
-              <span className="text-slate-500">@{post.author.username}</span>
-              <span className="text-slate-400">·</span>
-              <span className="flex items-center gap-1 text-xs text-slate-500">
+                <span className="text-[color:var(--text-secondary)]">@{post.author.username}</span>
+                <span className="text-[color:var(--text-secondary)]">·</span>
+                <span className="flex items-center gap-1 text-xs text-[color:var(--text-secondary)]">
                 <Clock className="h-3 w-3" />
                 {timeAgo(post.createdAt)}
               </span>
             </div>
-            <p className="mt-1 text-[11px] uppercase tracking-wide text-slate-400">
+              <p className="mt-1 text-[11px] uppercase tracking-wide text-[color:var(--text-secondary)]/80">
               {post.author.refCode}
             </p>
           </div>
@@ -69,13 +83,13 @@ export const PostCard = ({ post }: PostCardProps) => {
         )}
       </header>
 
-      <div className="mt-4 space-y-4">
-        <p className="whitespace-pre-wrap text-sm text-slate-800">{post.content}</p>
+        <div className="mt-4 space-y-4">
+          <p className="whitespace-pre-wrap text-sm text-[color:var(--text-primary)]">{post.content}</p>
 
-        {post.images && post.images.length > 0 && <ImageGrid images={post.images} />}
+          {media.length > 0 && <ImageGrid images={media} />}
 
         {hashtags.length > 0 && (
-          <div className="flex flex-wrap gap-2 text-xs text-indigo-600">
+            <div className="flex flex-wrap gap-2 text-xs text-indigo-400">
             {hashtags.map((tag) => (
               <span key={tag} className="rounded-full bg-indigo-50 px-3 py-1 font-semibold">
                 {tag}
@@ -85,43 +99,47 @@ export const PostCard = ({ post }: PostCardProps) => {
         )}
       </div>
 
-      <footer className="mt-5 space-y-4 text-xs text-slate-500">
+        <footer className="mt-5 space-y-4 text-xs text-[color:var(--text-secondary)]">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap gap-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-9 gap-2 rounded-full text-slate-600 hover:bg-indigo-50"
-            >
+            <div className="flex flex-wrap gap-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-9 gap-2 rounded-full text-[color:var(--text-secondary)] hover:bg-indigo-500/10"
+                onClick={() => handleAction("upvote")}
+              >
               <Heart className="h-4 w-4" />
               {post.engagement.upvotes}
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-9 gap-2 rounded-full text-slate-600 hover:bg-indigo-50"
-            >
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-9 gap-2 rounded-full text-[color:var(--text-secondary)] hover:bg-indigo-500/10"
+                onClick={() => handleAction("comment")}
+              >
               <MessageCircle className="h-4 w-4" />
               {post.engagement.comments}
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-9 gap-2 rounded-full text-slate-600 hover:bg-indigo-50"
-            >
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-9 gap-2 rounded-full text-[color:var(--text-secondary)] hover:bg-indigo-500/10"
+                onClick={() => handleAction("share")}
+              >
               <Share2 className="h-4 w-4" />
               {post.engagement.shares}
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-9 gap-2 rounded-full text-slate-600 hover:bg-indigo-50"
-            >
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-9 gap-2 rounded-full text-[color:var(--text-secondary)] hover:bg-indigo-500/10"
+                onClick={() => handleAction("tip")}
+              >
               <Coins className="h-4 w-4 text-[#F5C76A]" />
               {post.engagement.tips}
             </Button>
           </div>
-          <div className="text-xs font-semibold text-indigo-600">+{post.score} pts</div>
+            <div className="text-xs font-semibold text-indigo-400">+{post.score} pts</div>
         </div>
         <AIInsightStrip
           signal={post.aiSignal}

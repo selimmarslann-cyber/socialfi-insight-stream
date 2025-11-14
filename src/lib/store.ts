@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { generateRefCode } from '@/lib/utils';
 import type { WalletTx } from '@/types/wallet';
+import type { Post } from '@/types/feed';
 
 const ADMIN_SESSION_KEY = "nop_admin_session";
 const ADMIN_USERNAME = "admin";
@@ -173,5 +174,28 @@ export const useWalletStore = create<WalletState>((set) => ({
   addTx: (tx) =>
     set((state) => ({
       transactions: [tx, ...state.transactions].slice(0, 25),
+    })),
+}));
+
+interface FeedState {
+  userPosts: Post[];
+  prependPost: (post: Post) => void;
+  clearUserPosts: () => void;
+  removePost: (postId: string) => void;
+}
+
+export const useFeedStore = create<FeedState>((set) => ({
+  userPosts: [],
+  prependPost: (post) =>
+    set((state) => {
+      const filtered = state.userPosts.filter((item) => item.id !== post.id);
+      return {
+        userPosts: [post, ...filtered].slice(0, 30),
+      };
+    }),
+  clearUserPosts: () => set({ userPosts: [] }),
+  removePost: (postId) =>
+    set((state) => ({
+      userPosts: state.userPosts.filter((post) => post.id !== postId),
     })),
 }));

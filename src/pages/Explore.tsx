@@ -8,13 +8,15 @@ import { Badge } from '@/components/ui/badge';
 import { PostCard } from '@/components/feed/PostCard';
 import { mockPosts, mockGainers } from '@/lib/mock-api';
 import TopUsersCard from '@/components/TopUsersCard';
+import { useFeedStore } from '@/lib/store';
+import type { Post } from '@/types/feed';
 
 type ExploreTab = 'all' | 'funded' | 'trending';
 
-const filterPosts = (tab: ExploreTab, query: string) => {
+const filterPosts = (dataset: Post[], tab: ExploreTab, query: string) => {
   const normalizedQuery = query.trim().toLowerCase();
 
-  const sorted = [...mockPosts].sort((a, b) => {
+  const sorted = [...dataset].sort((a, b) => {
     const contributedDiff = (b.contributedAmount ?? 0) - (a.contributedAmount ?? 0);
     if (contributedDiff !== 0) return contributedDiff;
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
@@ -58,12 +60,21 @@ const filterPosts = (tab: ExploreTab, query: string) => {
 };
 
 const Explore = () => {
+  const userPosts = useFeedStore((state) => state.userPosts);
   const [tab, setTab] = useState<ExploreTab>('all');
   const [query, setQuery] = useState('');
 
-  const posts = useMemo(() => filterPosts(tab, query), [tab, query]);
+  const combinedPosts = useMemo(
+    () => [...userPosts, ...mockPosts],
+    [userPosts],
+  );
 
-  const fundedVolume = mockPosts.reduce(
+  const posts = useMemo(
+    () => filterPosts(combinedPosts, tab, query),
+    [combinedPosts, tab, query],
+  );
+
+  const fundedVolume = combinedPosts.reduce(
     (acc, item) => acc + (item.contributedAmount ?? 0),
     0
   );
@@ -157,7 +168,7 @@ const Explore = () => {
               </div>
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
-              {mockPosts
+                {combinedPosts
                 .flatMap((post) => post.tags ?? [])
                 .slice(0, 10)
                 .map((tag) => (
