@@ -7,9 +7,8 @@ type MarketSignal = {
   symbol: string;
   price: number;
   change24h: number;
+  volume: number;
   signal: "Bullish" | "Neutral" | "Bearish";
-  volatility: "Low" | "Medium" | "High";
-  mmActivity: "Positive" | "Neutral" | "Negative";
   score: number;
 };
 
@@ -39,6 +38,12 @@ const formatChange = (value: number) => {
   const sign = value > 0 ? "+" : "";
   return `${sign}${value.toFixed(2)}%`;
 };
+
+const formatVolume = (value: number) =>
+  new Intl.NumberFormat("en-US", {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(value);
 
 export const AIMarketBar = () => {
   const [signals, setSignals] = useState<MarketSignal[]>(FALLBACK_SIGNALS);
@@ -109,7 +114,7 @@ export const AIMarketBar = () => {
                 {formatPrice(signal.price)} · {formatChange(signal.change24h)}
               </p>
             </div>
-            <div className="flex flex-col items-end gap-2 text-xs font-semibold">
+              <div className="flex flex-col items-end gap-2 text-xs font-semibold">
               <span
                 className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 ${toneClasses[signal.signal]}`}
               >
@@ -119,8 +124,8 @@ export const AIMarketBar = () => {
               <span className="rounded-full bg-indigo-50 px-3 py-1 text-indigo-700">
                 Score {signal.score}/100
               </span>
-              <span className="text-[11px] uppercase tracking-wide text-slate-400">
-                Vol {signal.volatility} · MM {signal.mmActivity}
+                <span className="text-[11px] uppercase tracking-wide text-slate-400">
+                  24h Vol {formatVolume(signal.volume)}
               </span>
             </div>
           </div>

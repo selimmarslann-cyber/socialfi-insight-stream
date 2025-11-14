@@ -1,5 +1,6 @@
 import type { Handler } from "@netlify/functions";
-import { SERVER_ENV } from "../../src/config/env";
+
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN ?? "";
 
 interface BurnPayload {
   total: number;
@@ -16,9 +17,9 @@ let inMemory: BurnPayload = {
 };
 
 const handler: Handler = async (event) => {
-  if (event.httpMethod === "POST") {
-    const token = event.headers.authorization;
-    if (token !== `Bearer ${SERVER_ENV.adminToken}`) {
+    if (event.httpMethod === "POST") {
+      const token = event.headers.authorization;
+      if (!ADMIN_TOKEN || token !== `Bearer ${ADMIN_TOKEN}`) {
       return {
         statusCode: 401,
         body: "unauthorized",

@@ -2,7 +2,6 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { createClient } from "@supabase/supabase-js";
 import type { BurnStats, BurnSeriesPoint } from "../types/admin";
-import { SERVER_ENV } from "@/config/env";
 
 interface NetlifyEvent {
   httpMethod: string;
@@ -100,8 +99,8 @@ const normalizeBurnStats = (input: Partial<BurnStats>): BurnStats | null => {
 };
 
 const fetchSupabaseBurnStats = async (): Promise<BurnStats | null> => {
-  const SUPABASE_URL = SERVER_ENV.supabaseUrl;
-  const SUPABASE_KEY = SERVER_ENV.supabaseServiceRoleKey;
+  const SUPABASE_URL = process.env.SUPABASE_URL;
+  const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!SUPABASE_URL || !SUPABASE_KEY) {
     return null;
