@@ -4,6 +4,7 @@ import { fetchRssFeed } from "@/lib/rss";
 import { supabase, isSupabaseConfigured } from "@/lib/supabaseClient";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { PUBLIC_ENV, PUBLIC_ENV_ARRAYS, newsEnvHint } from "@/config/env";
 
 type NewsRow = {
   title: string;
@@ -12,23 +13,8 @@ type NewsRow = {
   published_at?: string;
 };
 
-const resolveFeeds = () => {
-  if (typeof process !== "undefined" && process?.env?.NEXT_PUBLIC_NEWS_RSS) {
-    return process.env.NEXT_PUBLIC_NEWS_RSS;
-  }
-  if (typeof import.meta !== "undefined") {
-    const metaEnv = import.meta.env as Record<string, string | undefined>;
-    return (
-      metaEnv.NEXT_PUBLIC_NEWS_RSS ||
-      metaEnv.VITE_NEXT_PUBLIC_NEWS_RSS ||
-      metaEnv.VITE_NEWS_RSS ||
-      ""
-    );
-  }
-  return "";
-};
-
-const FEEDS = resolveFeeds();
+const FEED_SOURCES = PUBLIC_ENV_ARRAYS.newsRssList;
+const FEEDS_CSV = PUBLIC_ENV.newsRss;
 
 export default function CryptoNews() {
   const [rows, setRows] = useState<NewsRow[] | null>(null);
@@ -36,21 +22,20 @@ export default function CryptoNews() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      // eslint-disable-next-line no-console
-      console.log("NEWS_FEEDS", FEEDS);
+      console.log("NEWS_FEEDS", FEED_SOURCES);
     }
   }, []);
 
   const load = async () => {
-    if (!FEEDS) {
-      setErr("RSS feed list missing.");
+    if (!FEEDS_CSV) {
+      setErr(newsEnvHint);
       return;
     }
 
     setErr(null);
 
     try {
-      const data = await fetchRssFeed(FEEDS, 8);
+      const data = await fetchRssFeed(FEEDS_CSV, 8);
       setRows(data);
 
       if (data.length > 0 && supabase) {
@@ -68,12 +53,12 @@ export default function CryptoNews() {
           .limit(1);
 
         if (typeof window !== "undefined") {
-          // eslint-disable-next-line no-console
           console.log("NEWS_CACHE_INSERT_SELECT", insertResult.data);
         }
       }
     } catch (error) {
-      const message = (error as { message?: string } | null)?.message || "Feed unavailable";
+      const message =
+        (error as { message?: string } | null)?.message || "Feed unavailable";
       setErr(message);
 
       try {
@@ -87,10 +72,9 @@ export default function CryptoNews() {
           .order("published_at", { ascending: false })
           .limit(8);
 
-        if (typeof window !== "undefined") {
-          // eslint-disable-next-line no-console
-          console.log("NEWS_CACHE_FALLBACK_SELECT", data);
-        }
+          if (typeof window !== "undefined") {
+            console.log("NEWS_CACHE_FALLBACK_SELECT", data);
+          }
 
         if (data && data.length > 0) {
           setRows(
@@ -110,11 +94,11 @@ export default function CryptoNews() {
 
   useEffect(() => {
     if (!isSupabaseConfigured() && typeof window !== "undefined") {
-      // eslint-disable-next-line no-console
-      console.warn("CryptoNews cache disabled: configure Supabase to persist results.");
+      console.warn(
+        "CryptoNews cache disabled: configure Supabase to persist results.",
+      );
     }
     void load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const isLoading = !rows && !err;
@@ -125,7 +109,10 @@ export default function CryptoNews() {
       return (
         <div className="space-y-2">
           {Array.from({ length: 4 }).map((_, index) => (
-            <div key={index} className="h-3.5 w-full rounded-full bg-slate-100/80 animate-pulse" />
+            <div
+              key={index}
+              className="h-3.5 w-full rounded-full bg-slate-100/80 animate-pulse"
+            />
           ))}
         </div>
       );
@@ -143,14 +130,20 @@ export default function CryptoNews() {
           <div className="flex items-center justify-between gap-3">
             <span className="font-medium">{item.title}</span>
             {item.source ? (
-              <span className="text-[11px] uppercase tracking-wide text-slate-400">{item.source}</span>
+              <span className="text-[11px] uppercase tracking-wide text-slate-400">
+                {item.source}
+              </span>
             ) : null}
           </div>
         </a>
       ));
     }
 
-    return <p className="text-sm text-slate-500">No AI-curated signals yet. Check back shortly.</p>;
+    return (
+      <p className="text-sm text-slate-500">
+        No AI-curated signals yet. Check back shortly.
+      </p>
+    );
   };
 
   return (
@@ -164,11 +157,11 @@ export default function CryptoNews() {
       }
     >
       <div className="space-y-2">{renderHeadlines()}</div>
-        {err ? (
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50/80 px-3 py-2 text-xs text-amber-700">
-            <span className="font-semibold" title={err ?? undefined}>
-              Temporarily unavailable. Retry.
-            </span>
+      {err ? (
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50/80 px-3 py-2 text-xs text-amber-700">
+          <span className="font-semibold" title={err ?? undefined}>
+            Temporarily unavailable. Retry.
+          </span>
           <Button
             type="button"
             variant="ghost"

@@ -1,4 +1,5 @@
-import type { Handler } from '@netlify/functions';
+import type { Handler } from "@netlify/functions";
+import { SERVER_ENV } from "../../src/config/env";
 
 interface BurnPayload {
   total: number;
@@ -15,17 +16,17 @@ let inMemory: BurnPayload = {
 };
 
 const handler: Handler = async (event) => {
-  if (event.httpMethod === 'POST') {
+  if (event.httpMethod === "POST") {
     const token = event.headers.authorization;
-    if (token !== `Bearer ${process.env.ADMIN_TOKEN}`) {
+    if (token !== `Bearer ${SERVER_ENV.adminToken}`) {
       return {
         statusCode: 401,
-        body: 'unauthorized',
+        body: "unauthorized",
       };
     }
 
     try {
-      const body = JSON.parse(event.body || '{}');
+      const body = JSON.parse(event.body || "{}");
       inMemory = {
         total: Number(body.total ?? 0),
         last24h: Number(body.last24h ?? 0),
@@ -34,20 +35,23 @@ const handler: Handler = async (event) => {
       };
       return {
         statusCode: 200,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(inMemory),
       };
     } catch (error) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: 'invalid_payload', message: String(error) }),
+        body: JSON.stringify({
+          error: "invalid_payload",
+          message: String(error),
+        }),
       };
     }
   }
 
   return {
     statusCode: 200,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(inMemory),
   };
 };

@@ -1,7 +1,8 @@
-import fs from 'node:fs/promises';
-import path from 'node:path';
-import { createClient } from '@supabase/supabase-js';
-import type { BurnStats, BurnSeriesPoint } from '../types/admin';
+import fs from "node:fs/promises";
+import path from "node:path";
+import { createClient } from "@supabase/supabase-js";
+import type { BurnStats, BurnSeriesPoint } from "../types/admin";
+import { SERVER_ENV } from "@/config/env";
 
 interface NetlifyEvent {
   httpMethod: string;
@@ -27,23 +28,23 @@ type SupabaseRow = {
 };
 
 const HEADERS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET,OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-  'Content-Type': 'application/json',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET,OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+  "Content-Type": "application/json",
 };
 
-const FALLBACK_PATH = path.join(process.cwd(), 'src', 'config', 'burn.json');
+const FALLBACK_PATH = path.join(process.cwd(), "src", "config", "burn.json");
 
 const normalizeSeries = (series: unknown): BurnSeriesPoint[] | undefined => {
-  if (typeof series === 'string') {
+  if (typeof series === "string") {
     try {
       const parsed = JSON.parse(series);
       if (Array.isArray(parsed)) {
         return normalizeSeries(parsed);
       }
     } catch (error) {
-      console.warn('Failed to parse burn series JSON', error);
+      console.warn("Failed to parse burn series JSON", error);
       return undefined;
     }
   }
@@ -70,13 +71,13 @@ const normalizeSeries = (series: unknown): BurnSeriesPoint[] | undefined => {
 };
 
 const normalizeBurnStats = (input: Partial<BurnStats>): BurnStats | null => {
-  if (typeof input.total !== 'number' && typeof input.total !== 'string') {
+  if (typeof input.total !== "number" && typeof input.total !== "string") {
     return null;
   }
 
   const total = Number(input.total);
   const last24h = Number(
-    typeof input.last24h === 'number' || typeof input.last24h === 'string'
+    typeof input.last24h === "number" || typeof input.last24h === "string"
       ? input.last24h
       : 0,
   );
@@ -88,7 +89,7 @@ const normalizeBurnStats = (input: Partial<BurnStats>): BurnStats | null => {
   const safeLast24h = Number.isFinite(last24h) ? last24h : 0;
 
   const updatedAt =
-    typeof input.updatedAt === 'string' ? input.updatedAt : undefined;
+    typeof input.updatedAt === "string" ? input.updatedAt : undefined;
 
   return {
     total,
@@ -99,10 +100,8 @@ const normalizeBurnStats = (input: Partial<BurnStats>): BurnStats | null => {
 };
 
 const fetchSupabaseBurnStats = async (): Promise<BurnStats | null> => {
-  const SUPABASE_URL =
-    process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
-  const SUPABASE_KEY =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_KEY ?? process.env.VITE_SUPABASE_ANON_KEY;
+  const SUPABASE_URL = SERVER_ENV.supabaseUrl;
+  const SUPABASE_KEY = SERVER_ENV.supabaseServiceRoleKey;
 
   if (!SUPABASE_URL || !SUPABASE_KEY) {
     return null;
@@ -114,9 +113,9 @@ const fetchSupabaseBurnStats = async (): Promise<BurnStats | null> => {
     });
 
     const { data, error } = await client
-      .from<SupabaseRow>('burn_stats')
-      .select('*')
-      .eq('id', 1)
+      .from<SupabaseRow>("burn_stats")
+      .select("*")
+      .eq("id", 1)
       .maybeSingle();
 
     if (error) {
@@ -134,18 +133,18 @@ const fetchSupabaseBurnStats = async (): Promise<BurnStats | null> => {
       updatedAt: data.updated_at ?? data.updatedAt,
     });
   } catch (error) {
-    console.warn('Supabase burn stats request failed', error);
+    console.warn("Supabase burn stats request failed", error);
     return null;
   }
 };
 
 const readFallbackBurnStats = async (): Promise<BurnStats | null> => {
   try {
-    const raw = await fs.readFile(FALLBACK_PATH, 'utf8');
+    const raw = await fs.readFile(FALLBACK_PATH, "utf8");
     const parsed = JSON.parse(raw) as Partial<BurnStats>;
     return normalizeBurnStats(parsed);
   } catch (error) {
-    console.warn('Failed to read burn fallback file', error);
+    console.warn("Failed to read burn fallback file", error);
     return null;
   }
 };
@@ -167,15 +166,15 @@ const emptyResponse = (): NetlifyResponse =>
 export const handler = async (
   event: NetlifyEvent,
 ): Promise<NetlifyResponse> => {
-  if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 204, headers: HEADERS, body: '' };
+  if (event.httpMethod === "OPTIONS") {
+    return { statusCode: 204, headers: HEADERS, body: "" };
   }
 
-  if (event.httpMethod !== 'GET') {
+  if (event.httpMethod !== "GET") {
     return {
       statusCode: 405,
       headers: HEADERS,
-      body: JSON.stringify({ error: 'Method not allowed' }),
+      body: JSON.stringify({ error: "Method not allowed" }),
     };
   }
 

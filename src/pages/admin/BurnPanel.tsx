@@ -1,22 +1,23 @@
-import { FormEvent, useEffect, useState } from 'react';
-import { Flame, Loader2 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
-import type { BurnStats } from '@/types/admin';
+import { FormEvent, useEffect, useState } from "react";
+import { Flame, Loader2 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import type { BurnStats } from "@/types/admin";
+import { PUBLIC_ENV } from "@/config/env";
 
-const BURN_ENDPOINT = '/api/burn';
+const BURN_ENDPOINT = "/api/burn";
 
 const formatNumber = (value: number | string) => {
-  if (typeof value === 'number') return value.toString();
+  if (typeof value === "number") return value.toString();
   return value;
 };
 
 export const BurnPanel = () => {
-  const [form, setForm] = useState({ total: '0', last24h: '0' });
-  const [series, setSeries] = useState<BurnStats['series']>([]);
+  const [form, setForm] = useState({ total: "0", last24h: "0" });
+  const [series, setSeries] = useState<BurnStats["series"]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -24,7 +25,7 @@ export const BurnPanel = () => {
     const loadStats = async () => {
       try {
         const response = await fetch(BURN_ENDPOINT, {
-          headers: { Accept: 'application/json' },
+          headers: { Accept: "application/json" },
         });
         if (!response.ok) throw new Error(`burn_fetch_${response.status}`);
         const data = (await response.json()) as BurnStats;
@@ -34,7 +35,7 @@ export const BurnPanel = () => {
         });
         setSeries(Array.isArray(data.series) ? data.series : []);
       } catch (error) {
-        toast.error('Burn verileri alınamadı');
+        toast.error("Burn verileri alınamadı");
         console.error(error);
       } finally {
         setLoading(false);
@@ -55,11 +56,19 @@ export const BurnPanel = () => {
         series,
       };
 
+      const adminToken = PUBLIC_ENV.adminToken;
+      if (!adminToken) {
+        toast.error(
+          "VITE_ADMIN_TOKEN eksik. Yetkili erişim için env değerini ekleyin.",
+        );
+        return;
+      }
+
       const response = await fetch(BURN_ENDPOINT, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${import.meta.env.VITE_ADMIN_TOKEN}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${adminToken}`,
         },
         body: JSON.stringify(payload),
       });
@@ -68,9 +77,9 @@ export const BurnPanel = () => {
         throw new Error(`burn_update_${response.status}`);
       }
 
-      toast.success('Burn verileri güncellendi');
+      toast.success("Burn verileri güncellendi");
     } catch (error) {
-      toast.error('Burn verileri güncellenemedi');
+      toast.error("Burn verileri güncellenemedi");
       console.error(error);
     } finally {
       setSaving(false);

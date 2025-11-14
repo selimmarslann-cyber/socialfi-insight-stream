@@ -1,50 +1,50 @@
-import { useState } from 'react'
+import { useState } from "react";
 
-import { supabase } from '@/lib/supabaseClient'
+import { supabase, supabaseAdminHint } from "@/lib/supabaseClient";
 
 type AuthBoxProps = {
-  onAuthed: (id: string) => void
-}
+  onAuthed: (id: string) => void;
+};
 
 export default function AuthBox({ onAuthed }: AuthBoxProps) {
-  const [email, setEmail] = useState('')
-  const [pass, setPass] = useState('')
+  const [email, setEmail] = useState("");
+  const [pass, setPass] = useState("");
 
   const signup = async () => {
     if (!supabase) {
-      alert('Supabase yapılandırması eksik. Yönetici: VITE_SUPABASE_URL ve VITE_SUPABASE_ANON_KEY ekleyin.')
-      return
+      alert(supabaseAdminHint);
+      return;
     }
 
     const { data, error } = await supabase.auth.signUp({
       email,
       password: pass,
-    })
+    });
 
     if (error) {
-      alert(error.message)
+      alert(error.message);
     } else if (data.user) {
-      onAuthed(data.user.id)
+      onAuthed(data.user.id);
     }
-  }
+  };
 
   const signin = async () => {
     if (!supabase) {
-      alert('Supabase yapılandırması eksik. Yönetici: VITE_SUPABASE_URL ve VITE_SUPABASE_ANON_KEY ekleyin.')
-      return
+      alert(supabaseAdminHint);
+      return;
     }
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password: pass,
-    })
+    });
 
     if (error) {
-      alert(error.message)
+      alert(error.message);
     } else if (data.user) {
-      onAuthed(data.user.id)
+      onAuthed(data.user.id);
     }
-  }
+  };
 
   return (
     <div className="border p-3 rounded space-y-2">
@@ -70,5 +70,5 @@ export default function AuthBox({ onAuthed }: AuthBoxProps) {
         </button>
       </div>
     </div>
-  )
+  );
 }

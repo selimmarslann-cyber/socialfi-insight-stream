@@ -19,6 +19,7 @@ export interface Post {
   aiVolatility?: string;
   aiMmActivity?: string;
   aiScore?: number;
+  aiLastUpdatedAt?: string;
   engagement: {
     upvotes: number;
     comments: number;

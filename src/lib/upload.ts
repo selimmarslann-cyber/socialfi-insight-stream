@@ -1,31 +1,23 @@
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-const supabase =
-  supabaseUrl && supabaseAnonKey
-    ? createClient(supabaseUrl, supabaseAnonKey)
-    : null;
-
-export function isSupabaseConfigured() {
-  return Boolean(supabaseUrl && supabaseAnonKey);
-}
+import { getSupabase, supabaseAdminHint } from "@/lib/supabaseClient";
+import { isSupabaseConfigured } from "@/config/env";
 
 export async function uploadPostImage(file: File, userId: string) {
+  const supabase = getSupabase();
   if (!supabase) {
-    throw new Error('Supabase client is not configured');
+    throw new Error(supabaseAdminHint);
   }
 
   const path = `${userId}/${Date.now()}-${file.name}`;
   const { error } = await supabase.storage
-    .from('posts')
+    .from("posts")
     .upload(path, file, { upsert: false, contentType: file.type });
 
   if (error) {
     throw error;
   }
 
-  const { data } = supabase.storage.from('posts').getPublicUrl(path);
+  const { data } = supabase.storage.from("posts").getPublicUrl(path);
   return data.publicUrl;
 }
+
+export { isSupabaseConfigured };
