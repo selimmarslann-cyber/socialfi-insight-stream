@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
 import { Toaster as Sonner, toast } from "sonner";
-import { getTheme, subscribeTheme, type ThemeMode } from "@/lib/theme";
+import {
+  getTheme,
+  getSystem,
+  subscribeTheme,
+  type ThemeMode,
+  type ThemePreference,
+} from "@/lib/theme";
 
 type ToasterProps = React.ComponentProps<typeof Sonner>;
 
@@ -9,7 +15,9 @@ const Toaster = ({ ...props }: ToasterProps) => {
 
   useEffect(() => {
     setMode(getTheme());
-    const unsubscribe = subscribeTheme(setMode);
+    const unsubscribe = subscribeTheme((preference: ThemePreference) => {
+      setMode(preference === "system" ? getSystem() : preference);
+    });
     return () => {
       unsubscribe();
     };

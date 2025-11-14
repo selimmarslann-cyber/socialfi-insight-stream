@@ -139,8 +139,12 @@ const buildPostWithAI = (seed: MockPostSeed): Post => {
 
   const ai = computeAIFromRules(aiInput);
 
+  const attachments = seed.attachments ?? seed.images ?? [];
+
   return {
     ...seed,
+    images: seed.images ?? attachments,
+    attachments,
     aiSignal: seed.aiSignal ?? ai.aiSignal,
     aiVolatility: seed.aiVolatility ?? ai.aiVolatility,
     aiMmActivity: seed.aiMmActivity ?? ai.aiMmActivity,

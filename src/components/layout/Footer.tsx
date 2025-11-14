@@ -1,100 +1,104 @@
 import { Link } from "react-router-dom";
 import { Container } from "@/components/layout/Container";
 
-const footerLinks = [
-  { label: "About", to: "/about" },
-  { label: "Whitepaper", to: "/whitepaper" },
-  { label: "Tokenomics", to: "/tokenomics" },
-  { label: "Burn", to: "/burn" },
-  { label: "Privacy", to: "/privacy" },
-  { label: "Terms", to: "/terms" },
-  { label: "Cookies", to: "/cookies" },
-  { label: "Security", to: "/security" },
-  { label: "Guidelines", to: "/guidelines" },
-  { label: "Contact", to: "/contact" },
-  { label: "Support", to: "/support" },
-  { label: "Admin", to: "/admin" },
-];
-
-const socialLinks = [
+const footerColumns = [
   {
-    label: "Twitter / X",
-    href: "https://twitter.com/nopintelligencelayer",
+    title: "Product",
+    links: [
+      { label: "About", to: "/about" },
+      { label: "Features", to: "/features" },
+      { label: "Roadmap", to: "/roadmap" },
+    ],
   },
   {
-    label: "Telegram",
-    href: "https://t.me/nopintelligencelayer",
+    title: "Docs",
+    links: [
+      { label: "Whitepaper", to: "/whitepaper" },
+      { label: "FAQ", to: "/faq" },
+      { label: "API Docs", to: "/docs/api" },
+    ],
   },
   {
-    label: "Discord",
-    href: "https://discord.gg/nopintelligencelayer",
+    title: "Support",
+    links: [
+      { label: "Help & Support", to: "/support" },
+      { label: "Contact", to: "/contact" },
+      { label: "Community", to: "/community" },
+    ],
   },
   {
-    label: "GitHub",
-    href: "https://github.com/nopintelligencelayer",
+    title: "Legal",
+    links: [
+      { label: "Privacy Policy", to: "/legal/privacy" },
+      { label: "Terms", to: "/legal/terms" },
+      { label: "Cookies", to: "/legal/cookies" },
+    ],
+  },
+  {
+    title: "System",
+    links: [
+      { label: "Admin Panel", to: "/admin" },
+      { label: "Status", to: "/status" },
+    ],
   },
 ];
 
 export const Footer = () => {
+  const year = new Date().getFullYear();
+
   return (
-    <footer className="border-t border-slate-200 bg-[#F5F8FF] py-10 text-sm text-slate-600">
+    <footer className="mt-16 border-t border-[color:var(--ring)] bg-[color:var(--bg-base)]/95 text-[color:var(--text-secondary)]">
       <Container>
-        <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
-          <div className="space-y-3">
-            <div className="text-base font-semibold text-[#0F172A]">
-              NOP Intelligence Layer
+        <div className="grid gap-10 py-12 lg:grid-cols-[1.4fr_3fr]">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <img
+                src="/logo.svg"
+                alt="NOP Intelligence Layer"
+                className="h-10 w-10"
+                loading="lazy"
+              />
+              <div>
+                <p className="text-base font-semibold text-[color:var(--text-primary)]">
+                  NOP Intelligence Layer
+                </p>
+                <p className="text-xs text-[color:var(--text-secondary)]">
+                  SocialFi · AI · Proof-of-Burn
+                </p>
+              </div>
             </div>
-            <p className="max-w-sm leading-relaxed text-[#475569]">
-              AI-led SocialFi intelligence network. Earn for meaningful signal,
-              burn to prove commitment, build a safer crypto ecosystem.
-            </p>
-            <p className="text-xs text-slate-400">
-              © {new Date().getFullYear()} NOP Intelligence Layer. All rights
-              reserved.
+            <p className="max-w-sm text-sm">
+              A professional signal network where researchers publish, communities
+              co-fund, and AI moderates the flow. Every contribution is scored,
+              every burn is accounted for.
             </p>
           </div>
-
-          <div className="grid gap-6 md:grid-cols-2">
-            <div>
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-[#0F172A]">
-                Site
-              </h2>
-              <ul className="mt-3 space-y-2">
-                {footerLinks.map((item) => (
-                  <li key={item.to}>
-                    <Link
-                      to={item.to}
-                      className="transition hover:text-[#0F172A]"
-                    >
-                      {item.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div>
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-[#0F172A]">
-                Connect
-              </h2>
-              <ul className="mt-3 space-y-2">
-                {socialLinks.map((item) => (
-                  <li key={item.href}>
-                    <a
-                      href={item.href}
-                      target="_blank"
-                      rel="noreferrer noopener"
-                      className="transition hover:text-[#0F172A]"
-                    >
-                      {item.label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-5">
+            {footerColumns.map((column) => (
+              <div key={column.title} className="space-y-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]/80">
+                  {column.title}
+                </p>
+                <ul className="space-y-2 text-sm">
+                  {column.links.map((link) => (
+                    <li key={link.to}>
+                      <Link
+                        to={link.to}
+                        className="transition hover:text-[color:var(--text-primary)]"
+                      >
+                        {link.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
         </div>
       </Container>
+      <div className="border-t border-[color:var(--ring)] px-6 py-4 text-center text-xs text-[color:var(--text-secondary)]">
+        © {year} NOP Intelligence Layer. All rights reserved.
+      </div>
     </footer>
   );
 };

@@ -33,6 +33,15 @@ import Security from "./pages/Security";
 import Guidelines from "./pages/Guidelines";
 import Contact from "./pages/Contact";
 import Support from "./pages/Support";
+import Features from "./pages/Features";
+import Roadmap from "./pages/Roadmap";
+import FAQ from "./pages/FAQ";
+import DocsApi from "./pages/DocsApi";
+import Community from "./pages/Community";
+import Status from "./pages/Status";
+import LegalPrivacy from "./pages/legal/LegalPrivacy";
+import LegalTerms from "./pages/legal/LegalTerms";
+import LegalCookies from "./pages/legal/LegalCookies";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -66,10 +75,19 @@ const App = () => (
               <Route path="/about" element={<About />} />
               <Route path="/whitepaper" element={<Whitepaper />} />
               <Route path="/tokenomics" element={<Tokenomics />} />
+                <Route path="/features" element={<Features />} />
+                <Route path="/roadmap" element={<Roadmap />} />
+                <Route path="/faq" element={<FAQ />} />
+                <Route path="/docs/api" element={<DocsApi />} />
+                <Route path="/community" element={<Community />} />
+                <Route path="/status" element={<Status />} />
               <Route path="/burn" element={<Burn />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/cookies" element={<Cookies />} />
+                <Route path="/legal/privacy" element={<LegalPrivacy />} />
+                <Route path="/legal/terms" element={<LegalTerms />} />
+                <Route path="/legal/cookies" element={<LegalCookies />} />
               <Route path="/security" element={<Security />} />
               <Route path="/guidelines" element={<Guidelines />} />
               <Route path="/contact" element={<Contact />} />

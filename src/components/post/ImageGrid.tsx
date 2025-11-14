@@ -16,11 +16,11 @@ export const ImageGrid = ({ images, onRemove, editable }: ImageGridProps) => {
     }[Math.min(images.length, 4)] ?? 'grid-cols-2 gap-3';
 
   return (
-    <div className={`grid ${layoutClass}`}>
+      <div className={`grid ${layoutClass}`}>
       {images.slice(0, 4).map((url, index) => (
         <div
           key={url + index}
-          className="relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-100"
+            className="relative overflow-hidden rounded-2xl border border-[color:var(--ring)] bg-[color:var(--bg-base)]"
         >
           <img
             src={url}

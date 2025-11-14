@@ -6,6 +6,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Paperclip, Smile, Loader2, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,7 +21,8 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { uploadPostImage, isSupabaseConfigured } from "@/lib/upload";
 import { supabaseAdminHint } from "@/lib/supabaseClient";
-import { useWalletStore } from "@/lib/store";
+import { useFeedStore, useWalletStore } from "@/lib/store";
+import type { Post } from "@/types/feed";
 import { ImageGrid } from "./ImageGrid";
 
 const hashtagSuggestions = [
@@ -37,12 +39,22 @@ const MAX_FILES = 4;
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 const sanitizeContent = (value: string) => value.replace(/[<>]/g, "");
+const extractHashtags = (value: string) =>
+  Array.from(new Set(value.match(/#[\p{L}\d_]{2,24}/gu) ?? []));
+const readFileAsDataUrl = (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error ?? new Error("Unable to read file"));
+    reader.readAsDataURL(file);
+  });
 
 export const PostComposer = () => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const { address } = useWalletStore();
+  const queryClient = useQueryClient();
+  const { prependPost } = useFeedStore();
+  const { address, refCode } = useWalletStore();
 
   const [content, setContent] = useState("");
   const [files, setFiles] = useState<File[]>([]);
@@ -51,6 +63,7 @@ export const PostComposer = () => {
   const [hashtagQuery, setHashtagQuery] = useState<string | null>(null);
   const [showEmojiPanel, setShowEmojiPanel] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [storageHintShown, setStorageHintShown] = useState(false);
 
   const supabaseReady = isSupabaseConfigured();
 
@@ -74,6 +87,12 @@ export const PostComposer = () => {
 
   const processFiles = (selectedFiles: File[]) => {
     if (!selectedFiles.length) return;
+    if (!supabaseReady && !storageHintShown) {
+      toast.info(
+        `${supabaseAdminHint} Görseller local preview olarak saklanacak.`,
+      );
+      setStorageHintShown(true);
+    }
 
     const nextFiles: File[] = [];
     const nextPreviews: string[] = [];
@@ -101,10 +120,6 @@ export const PostComposer = () => {
 
   const handleDrop = (event: DragEvent<HTMLDivElement>) => {
     event.preventDefault();
-    if (!supabaseReady) {
-      toast.info(supabaseAdminHint);
-      return;
-    }
     const dropped = Array.from(event.dataTransfer.files);
     processFiles(dropped);
   };
@@ -198,31 +213,49 @@ export const PostComposer = () => {
       setIsSubmitting(true);
       setError(null);
 
-      const sanitized = sanitizeContent(content.trim());
-      const userId = address ?? "guest";
+        const sanitized = sanitizeContent(content.trim());
+        const userId = address ?? "guest";
+        const uploadedUrls =
+          files.length > 0
+            ? await Promise.all(
+                files.map((file) =>
+                  supabaseReady ? uploadPostImage(file, userId) : readFileAsDataUrl(file),
+                ),
+              )
+            : [];
 
-      let uploadedUrls: string[] = [];
-      if (files.length > 0) {
-        if (!supabaseReady) {
-          toast.error("Image upload requires Supabase configuration");
-          setIsSubmitting(false);
-          return;
-        }
-        uploadedUrls = await Promise.all(
-          files.map((file) => uploadPostImage(file, userId)),
-        );
-      }
+        const authorLabel = address
+          ? `${address.slice(0, 6)}…${address.slice(-4)}`
+          : "Guest Analyst";
+        const authorUsername = address
+          ? address.slice(-8).toLowerCase()
+          : "guest";
+        const tags = extractHashtags(sanitized);
 
-      await new Promise((resolve) => setTimeout(resolve, 800));
+        const newPost: Post = {
+          id: `local-${Date.now()}`,
+          author: {
+            username: authorUsername,
+            displayName: authorLabel,
+            score: 0,
+            refCode: refCode || "nop00000",
+            verified: false,
+          },
+          content: sanitized,
+          images: uploadedUrls,
+          attachments: uploadedUrls,
+          score: estimatedReward,
+          createdAt: new Date().toISOString(),
+          contributedAmount: 0,
+          tags,
+          engagement: { upvotes: 0, comments: 0, tips: 0, shares: 0 },
+        };
 
-      console.info("Post published", {
-        content: sanitized,
-        images: uploadedUrls,
-        reward: estimatedReward,
-      });
+        prependPost(newPost);
+        await queryClient.invalidateQueries({ queryKey: ["feed"] });
 
-      toast.success("Contribution shared with the network");
-      resetComposer();
+        toast.success("Contribution shared with the network");
+        resetComposer();
     } catch (err) {
       console.error(err);
       toast.error("Failed to publish contribution");
@@ -231,12 +264,12 @@ export const PostComposer = () => {
     }
   };
 
-  return (
-    <Card className="flex flex-col gap-6 rounded-3xl border-none bg-white p-6 shadow-xl ring-1 ring-indigo-500/10">
+    return (
+      <Card className="flex flex-col gap-6 rounded-3xl border-none bg-[color:var(--bg-card)] p-6 shadow-xl ring-1 ring-[color:var(--ring)]">
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div className="flex flex-1 flex-col gap-4">
-          <div
-            className="rounded-2xl border border-dashed border-indigo-500/20 bg-indigo-50/40 p-4 transition hover:border-indigo-500/30"
+            <div
+              className="rounded-2xl border border-dashed border-indigo-500/25 bg-[color:var(--surface-subtle)]/70 p-4 transition hover:border-indigo-500/40"
             onDrop={handleDrop}
             onDragOver={handleDragOver}
           >
@@ -259,7 +292,7 @@ export const PostComposer = () => {
               placeholder="Break down the trade, tag protocols, drop the charts…"
               value={content}
               onChange={handleContentChange}
-              className="mt-4 min-h-[140px] w-full resize-none border-none bg-transparent p-0 text-base text-slate-800 focus-visible:ring-0"
+                className="mt-4 min-h-[140px] w-full resize-none border-none bg-transparent p-0 text-base text-[color:var(--text-primary)] focus-visible:ring-0"
             />
           </div>
 
@@ -290,16 +323,17 @@ export const PostComposer = () => {
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    disabled={!supabaseReady}
-                    className="flex items-center gap-2 rounded-full border border-indigo-500/10 bg-indigo-500/10 px-4 py-2 text-sm font-medium text-indigo-600 transition hover:bg-indigo-500/15 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="flex items-center gap-2 rounded-full border border-indigo-500/20 bg-indigo-500/10 px-4 py-2 text-sm font-medium text-indigo-600 transition hover:bg-indigo-500/20"
                   >
                     <Paperclip className="h-4 w-4" />
                     Attach media
                   </button>
                 </TooltipTrigger>
-                {!supabaseReady && (
-                  <TooltipContent>{supabaseAdminHint}</TooltipContent>
-                )}
+                  <TooltipContent className="max-w-xs text-xs">
+                    {supabaseReady
+                      ? "Upload on-chain ready charts or decks."
+                      : `${supabaseAdminHint} Dosyalar cihazında geçici olarak tutulacak.`}
+                  </TooltipContent>
               </Tooltip>
             </TooltipProvider>
 
@@ -310,12 +344,11 @@ export const PostComposer = () => {
               multiple
               className="hidden"
               onChange={handleFileSelect}
-              disabled={!supabaseReady}
             />
 
             <button
               type="button"
-              className="flex items-center gap-2 rounded-full border border-indigo-500/10 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-indigo-500/30 hover:text-slate-800"
+                className="flex items-center gap-2 rounded-full border border-indigo-500/10 bg-[color:var(--bg-card)] px-4 py-2 text-sm font-medium text-[color:var(--text-secondary)] transition hover:border-indigo-500/30 hover:text-[color:var(--text-primary)]"
               onClick={() => setShowEmojiPanel((prev) => !prev)}
             >
               <Smile className="h-4 w-4" />
@@ -323,7 +356,7 @@ export const PostComposer = () => {
             </button>
 
             {showEmojiPanel && (
-              <div className="flex items-center gap-1 rounded-full border border-indigo-500/10 bg-white px-3 py-2 text-lg shadow">
+                <div className="flex items-center gap-1 rounded-full border border-indigo-500/10 bg-[color:var(--bg-card)] px-3 py-2 text-lg shadow">
                 {emojiOptions.map((emoji) => (
                   <button
                     key={emoji}
@@ -349,11 +382,11 @@ export const PostComposer = () => {
                 onRemove={handleRemoveImage}
                 editable
               />
-              <div className="flex flex-wrap gap-2 text-xs text-slate-500">
+                <div className="flex flex-wrap gap-2 text-xs text-[color:var(--text-secondary)]">
                 {files.map((file) => (
                   <span
                     key={file.name + file.size}
-                    className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1"
+                      className="inline-flex items-center gap-1 rounded-full bg-[color:var(--bg-base)]/70 px-3 py-1"
                   >
                     <Upload className="h-3.5 w-3.5 text-indigo-500" />
                     {file.name}
@@ -368,30 +401,30 @@ export const PostComposer = () => {
           )}
         </div>
 
-        <aside className="flex w-full max-w-sm flex-col gap-4 rounded-2xl border border-indigo-500/10 bg-slate-50/70 p-4 shadow-inner">
+          <aside className="flex w-full max-w-sm flex-col gap-4 rounded-2xl border border-indigo-500/15 bg-[color:var(--surface-subtle)]/80 p-4 shadow-inner">
           <div>
-            <h3 className="text-sm font-semibold text-slate-800">
+              <h3 className="text-sm font-semibold text-[color:var(--text-primary)]">
               Est. NOP reward
             </h3>
-            <p className="mt-2 text-3xl font-bold text-indigo-600">
+              <p className="mt-2 text-3xl font-bold text-indigo-400">
               {estimatedReward}
-              <span className="ml-1 text-base font-medium text-slate-500">
+                <span className="ml-1 text-base font-medium text-[color:var(--text-secondary)]">
                 NOP
               </span>
             </p>
-            <p className="mt-2 text-xs text-slate-500">
+              <p className="mt-2 text-xs text-[color:var(--text-secondary)]">
               Based on content depth, visual signals and community traction.
             </p>
           </div>
 
-          <div className="rounded-xl bg-white/80 p-3 text-xs text-slate-500 shadow">
-            <p className="font-semibold text-slate-700">Tips</p>
+            <div className="rounded-xl bg-[color:var(--bg-base)]/80 p-3 text-xs text-[color:var(--text-secondary)] shadow">
+              <p className="font-semibold text-[color:var(--text-primary)]">Tips</p>
             <ul className="mt-2 list-disc space-y-1 pl-4">
               <li>Tag relevant assets using #hashtags.</li>
               <li>Attach up to 4 charts, on-chain screenshots or decks.</li>
               <li>Keep sensitive data masked.</li>
             </ul>
-            <p className="mt-3 text-[11px] text-slate-400">
+              <p className="mt-3 text-[11px] text-[color:var(--text-secondary)]/80">
               AI will later analyze high-quality insights for risk and signal
               scoring.
             </p>
