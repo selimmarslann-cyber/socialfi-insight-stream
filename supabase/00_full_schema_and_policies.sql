@@ -11,22 +11,6 @@ create extension if not exists "pgcrypto";
 -- Helper utilities
 -- ---------------------------------------------------------------------
 
-create or replace function public.is_admin()
-returns boolean
-language sql
-stable
-set search_path = public
-as $$
-  select coalesce(
-    (
-      select is_admin
-      from public.profiles
-      where id = auth.uid()
-    ),
-    false
-  );
-$$;
-
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
@@ -117,6 +101,26 @@ on public.profiles
 for update
 using (auth.uid() = id)
 with check (auth.uid() = id);
+
+-- ---------------------------------------------------------------------
+-- Admin helper function
+-- ---------------------------------------------------------------------
+
+create or replace function public.is_admin()
+returns boolean
+language sql
+stable
+set search_path = public
+as $$
+  select coalesce(
+    (
+      select is_admin
+      from public.profiles
+      where id = auth.uid()
+    ),
+    false
+  );
+$$;
 
 -- ---------------------------------------------------------------------
 -- Posts & social primitives
