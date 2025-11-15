@@ -9,14 +9,18 @@ import type { BurnStats } from "@/types/admin";
 import { PUBLIC_ENV } from "@/config/env";
 
 const BURN_ENDPOINT = "/api/burn";
+const DIGIT_COUNT = 8;
 
-const formatNumber = (value: number | string) => {
-  if (typeof value === "number") return value.toString();
-  return value;
-};
+const sanitizeDigits = (value: number | string | null | undefined): string =>
+  (typeof value === "number"
+    ? Math.max(0, Math.floor(value)).toString()
+    : (value ?? "").toString()
+  )
+    .replace(/[^\d]/g, "")
+    .slice(0, DIGIT_COUNT);
 
 export const BurnPanel = () => {
-  const [form, setForm] = useState({ total: "0", last24h: "0" });
+  const [form, setForm] = useState({ total: "", last24h: "0" });
   const [series, setSeries] = useState<BurnStats["series"]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -29,10 +33,10 @@ export const BurnPanel = () => {
         });
         if (!response.ok) throw new Error(`burn_fetch_${response.status}`);
         const data = (await response.json()) as BurnStats;
-        setForm({
-          total: formatNumber(data.total ?? 0),
-          last24h: formatNumber(data.last24h ?? 0),
-        });
+          setForm({
+            total: sanitizeDigits(data.total),
+            last24h: (data.last24h ?? 0).toString(),
+          });
         setSeries(Array.isArray(data.series) ? data.series : []);
       } catch (error) {
         toast.error("Burn verileri alınamadı");
@@ -50,9 +54,14 @@ export const BurnPanel = () => {
     setSaving(true);
 
     try {
+      if (form.total.length !== DIGIT_COUNT) {
+        toast.error(`Toplam yakım ${DIGIT_COUNT} haneli olmalı.`);
+        return;
+      }
+
       const payload = {
         total: Number(form.total),
-        last24h: Number(form.last24h),
+        last24h: Number(form.last24h || "0"),
         series,
       };
 
@@ -98,17 +107,26 @@ export const BurnPanel = () => {
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div className="space-y-2">
             <Label htmlFor="burn-total">Toplam Yakım</Label>
-            <Input
-              id="burn-total"
-              type="number"
-              inputMode="numeric"
-              value={form.total}
-              onChange={(event) =>
-                setForm((prev) => ({ ...prev, total: event.target.value }))
-              }
-              disabled={loading || saving}
-              className="font-mono"
-            />
+              <Input
+                id="burn-total"
+                type="text"
+                inputMode="numeric"
+                pattern="\d*"
+                maxLength={DIGIT_COUNT}
+                placeholder="00000000"
+                value={form.total}
+                onChange={(event) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    total: sanitizeDigits(event.target.value),
+                  }))
+                }
+                disabled={loading || saving}
+                className="font-mono tracking-[0.3em]"
+              />
+              <p className="text-xs text-muted-foreground">
+                Tam olarak {DIGIT_COUNT} haneyi doldurun (sadece rakam).
+              </p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="burn-last24h">Son 24 Saat</Label>

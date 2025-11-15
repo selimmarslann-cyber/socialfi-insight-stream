@@ -50,7 +50,13 @@ const HEADERS = {
 
 const DEFAULT_IMAGE = "/placeholder.svg";
 const CACHE_TTL_MS = 60 * 1000;
-const MAX_ITEMS = 10;
+const REQUIRED_ITEMS = 3;
+const MAX_ITEMS = REQUIRED_ITEMS;
+const FALLBACK_FEEDS = [
+  "https://decrypt.co/feed",
+  "https://cointelegraph.com/rss",
+  "https://www.coindesk.com/arc/outboundfeeds/rss/",
+] as const;
 
 type CacheBucket = {
   items: CryptoNewsItem[];
@@ -70,15 +76,31 @@ const hostnameFromUrl = (value?: string): string | null => {
   }
 };
 
+const sanitizeImageUrl = (value?: string): string | undefined => {
+  if (!value) return undefined;
+  if (value.startsWith("//")) {
+    return `https:${value}`;
+  }
+  if (/^https?:\/\//i.test(value)) {
+    return value;
+  }
+  try {
+    const url = new URL(value, "https://decrypt.co");
+    return url.toString();
+  } catch {
+    return undefined;
+  }
+};
+
 const pickImageFromItem = (item: CustomItem): string | undefined => {
   const enclosure = Array.isArray(item.enclosure) ? item.enclosure[0] : item.enclosure;
   if (enclosure?.url) {
-    return enclosure.url;
+    return sanitizeImageUrl(enclosure.url);
   }
   const media =
     item.mediaContent?.find((entry) => entry?.$?.url)?.$?.url ??
     item.mediaThumbnail?.find((entry) => entry?.$?.url)?.$?.url;
-  return media ?? undefined;
+  return sanitizeImageUrl(media);
 };
 
 const normalizeItem = (
@@ -98,7 +120,10 @@ const normalizeItem = (
     return null;
   }
 
-  const image = pickImageFromItem(item) ?? DEFAULT_IMAGE;
+  const image = pickImageFromItem(item);
+  if (!image) {
+    return null;
+  }
   const identifier = item.guid ?? `${source}-${link}`;
 
   return {
@@ -126,13 +151,10 @@ const fetchAllFeeds = async (): Promise<CryptoNewsItem[]> => {
     .split(",")
     .map((entry) => entry.trim())
     .filter(Boolean);
-
-  if (feeds.length === 0) {
-    return [];
-  }
+  const resolvedFeeds = feeds.length > 0 ? feeds : [...FALLBACK_FEEDS];
 
   const results = await Promise.allSettled(
-    feeds.map(async (feedUrl) => {
+    resolvedFeeds.map(async (feedUrl) => {
       try {
         return await parseSingleFeed(feedUrl);
       } catch (error) {
@@ -163,7 +185,13 @@ const fetchAllFeeds = async (): Promise<CryptoNewsItem[]> => {
       new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime(),
   );
 
-  return deduped.slice(0, MAX_ITEMS);
+  const withImages = deduped.filter(
+    (item) => item.imageUrl && item.imageUrl !== DEFAULT_IMAGE,
+  );
+  const prioritized =
+    withImages.length >= REQUIRED_ITEMS ? withImages : deduped;
+
+  return prioritized.slice(0, MAX_ITEMS);
 };
 
 const buildResponse = (items: CryptoNewsItem[]): NetlifyResponse => ({

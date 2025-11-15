@@ -9,7 +9,7 @@ interface TrendingUsersProps {
   limit?: number;
 }
 
-export const TrendingUsers = ({ limit = 10 }: TrendingUsersProps) => {
+export const TrendingUsers = ({ limit = 5 }: TrendingUsersProps) => {
   const { data, isLoading } = useQuery({
     queryKey: ['trendingUsers'],
     queryFn: fetchTrendingUsers,
@@ -19,16 +19,16 @@ export const TrendingUsers = ({ limit = 10 }: TrendingUsersProps) => {
 
   if (isLoading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm font-medium">Trending Users</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <Skeleton key={i} className="h-14 w-full" />
-          ))}
-        </CardContent>
-      </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">Trending Users</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {Array.from({ length: limit }).map((_, i) => (
+              <Skeleton key={i} className="h-14 w-full" />
+            ))}
+          </CardContent>
+        </Card>
     );
   }
 
@@ -39,13 +39,13 @@ export const TrendingUsers = ({ limit = 10 }: TrendingUsersProps) => {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-sm font-medium flex items-center gap-2">
-          <Trophy className="h-4 w-4 text-accent" />
-          {limit === 5 ? 'Top 5 Users' : 'Top 10 Users'}
-        </CardTitle>
-      </CardHeader>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <Trophy className="h-4 w-4 text-accent" />
+            Trending Users
+          </CardTitle>
+        </CardHeader>
         <CardContent className="space-y-2">
           {displayUsers?.map((user) => (
             <div

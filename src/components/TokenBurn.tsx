@@ -1,113 +1,124 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Card from "@/components/Card";
-import { getSupabase, supabaseAdminHint } from "@/lib/supabaseClient";
+import type { BurnStats } from "@/types/admin";
 
-type BurnRow = {
-  total_burn: number;
-  last_update?: string;
+const BURN_ENDPOINT = "/api/burn";
+const DIGIT_COUNT = 8;
+
+const numberFormatter = new Intl.NumberFormat("tr-TR");
+
+const formatDigits = (value?: number | null): string[] => {
+  if (typeof value !== "number" || Number.isNaN(value)) {
+    return Array.from({ length: DIGIT_COUNT }).map(() => "0");
+  }
+  const normalized = Math.max(0, Math.floor(value));
+  return normalized
+    .toString()
+    .padStart(DIGIT_COUNT, "0")
+    .slice(-DIGIT_COUNT)
+    .split("");
 };
 
-export default function TokenBurn({ admin = false }: { admin?: boolean }) {
-  const sb = getSupabase();
-  const [val, setVal] = useState<number | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+export default function TokenBurn() {
+  const [data, setData] = useState<BurnStats | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (!sb) {
-      setVal(null);
-      return;
-    }
+    setLoading(true);
+    setError(null);
     try {
-      const { data, error } = await sb
-        .from("burn_widget")
-        .select("*")
-        .eq("id", 1)
-        .maybeSingle<BurnRow>();
-
-      if (!error && data) {
-        setVal(Number(data.total_burn));
-        setLastUpdated(data.last_update ?? null);
-      } else if (error) {
-        throw error;
-      } else {
-        setVal(0);
+      const response = await fetch(BURN_ENDPOINT, {
+        headers: { Accept: "application/json" },
+      });
+      if (!response.ok) {
+        throw new Error(`burn_${response.status}`);
       }
-    } catch (selectError) {
-      console.error("Burn widget load failed", selectError);
-      setVal(null);
-    }
-  }, [sb]);
-
-  const save = async () => {
-    if (!admin || val === null || !sb) return;
-    setSaving(true);
-    try {
-      const isoTimestamp = new Date().toISOString();
-      const { error } = await sb
-        .from("burn_widget")
-        .update({ total_burn: val, last_update: isoTimestamp })
-        .eq("id", 1);
-      if (error) {
-        throw error;
-      }
-      alert("Updated");
-      setLastUpdated(isoTimestamp);
-    } catch (updateError) {
-      alert(
-        (updateError as { message?: string } | null)?.message ||
-          "Failed to update burn widget",
-      );
+      const payload = (await response.json()) as BurnStats;
+      setData(payload);
+    } catch (err) {
+      console.error("Token burn fetch failed", err);
+      setData(null);
+      setError("Yakım verisi alınamadı.");
     } finally {
-      setSaving(false);
+      setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     void load();
   }, [load]);
 
-  if (!sb) {
-    return (
-      <div className="p-3 rounded-xl border bg-white/70 text-[13px]">
-        <div className="text-rose-600 font-medium">
-          Supabase yapılandırılmadı.
-        </div>
-        <div className="text-[#475569]">{supabaseAdminHint}</div>
-      </div>
-    );
-  }
+  const digits = useMemo(() => formatDigits(data?.total), [data?.total]);
 
-  if (val === null) {
-    return <Card title="Token Burn" subtitle="Loading…" onRetry={load} />;
-  }
+  const subtitle = data?.updatedAt
+    ? `Last update: ${new Date(data.updatedAt).toLocaleString()}`
+    : "Manual admin feed";
+
+  const last24h =
+    typeof data?.last24h === "number" && !Number.isNaN(data.last24h)
+      ? data.last24h
+      : null;
 
   return (
     <Card
       title="Token Burn"
-      subtitle={
-        lastUpdated
-          ? `Last update: ${new Date(lastUpdated).toLocaleString()}`
-          : undefined
+      subtitle={subtitle}
+      error={error || undefined}
+      onRetry={error ? load : undefined}
+      right={
+        loading ? (
+          <span className="text-xs font-semibold uppercase text-slate-400">
+            Updating…
+          </span>
+        ) : null
       }
     >
-      <div className="text-2xl font-bold text-slate-800">{val} NOP</div>
-      {admin ? (
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <input
-            type="number"
-            value={Number.isNaN(val) ? "" : val}
-            onChange={(event) => setVal(Number(event.target.value))}
-            className="w-40 rounded border border-slate-200 p-2 text-sm"
-          />
-          <button
-            type="button"
-            onClick={save}
-            disabled={saving}
-            className="rounded border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {saving ? "Saving…" : "Save"}
-          </button>
+      {loading && !data ? (
+        <div className="space-y-3">
+          <div className="h-12 rounded-2xl bg-slate-100 animate-pulse" />
+          <div className="h-6 w-1/2 rounded-full bg-slate-100 animate-pulse" />
+        </div>
+      ) : null}
+
+      {!loading && !data && !error ? (
+        <p className="text-sm text-slate-500">
+          Henüz bir yakım değeri girilmedi. Admin panelinden 8 haneli yeni bir
+          toplam girdiğinde burada görünecek.
+        </p>
+      ) : null}
+
+      {!error && data ? (
+        <div className="space-y-4">
+          <div className="flex flex-wrap gap-2">
+            {digits.map((digit, index) => (
+              <span
+                key={`${digit}-${index}`}
+                className="grid h-12 w-10 place-items-center rounded-lg border border-slate-200 bg-slate-50 font-mono text-xl font-semibold text-slate-800 shadow-sm"
+              >
+                {digit}
+              </span>
+            ))}
+          </div>
+
+          <div className="space-y-1">
+            <p className="text-2xl font-bold text-slate-900">
+              {typeof data.total === "number"
+                ? `${numberFormatter.format(data.total)} NOP`
+                : "0 NOP"}
+            </p>
+            {last24h !== null ? (
+              <p
+                className={`text-xs font-semibold ${
+                  last24h >= 0 ? "text-emerald-600" : "text-rose-600"
+                }`}
+              >
+                {`${last24h >= 0 ? "+" : "-"}${numberFormatter.format(
+                  Math.abs(last24h),
+                )} NOP · last 24h`}
+              </p>
+            ) : null}
+          </div>
         </div>
       ) : null}
     </Card>

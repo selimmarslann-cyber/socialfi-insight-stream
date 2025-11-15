@@ -14,7 +14,7 @@ type RemoteNewsItem = {
 };
 
 const API_BASE = PUBLIC_ENV.apiBase || "/api";
-const MAX_NEWS_ITEMS = 4;
+const MAX_NEWS_ITEMS = 3;
 const FALLBACK_IMAGE = "/placeholder.svg";
 
 const timeFormatter = new Intl.RelativeTimeFormat("en", {
@@ -63,7 +63,7 @@ export default function CryptoNews() {
         throw new Error(`crypto_news_${response.status}`);
       }
 
-        const payload = (await response.json()) as { items?: RemoteNewsItem[] };
+      const payload = (await response.json()) as { items?: RemoteNewsItem[] };
 
       setItems((payload.items ?? []).slice(0, MAX_NEWS_ITEMS));
     } catch (err) {
@@ -90,10 +90,10 @@ export default function CryptoNews() {
     if (!hasItems) {
       return null;
     }
-      return items.map((item) => (
+    return items.map((item) => (
       <a
         key={item.id}
-          href={item.link}
+        href={item.link}
         target="_blank"
         rel="noreferrer"
         className="group flex items-center gap-3 rounded-xl border border-transparent px-2 py-2 transition hover:border-indigo-100 hover:bg-white"
@@ -117,7 +117,7 @@ export default function CryptoNews() {
           <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
             <span className="font-medium text-slate-600">{item.source}</span>
             <span className="text-slate-400">·</span>
-              <span>{toRelativeTime(item.publishedAt)}</span>
+            <span>{toRelativeTime(item.publishedAt)}</span>
           </div>
         </div>
       </a>
@@ -156,7 +156,9 @@ export default function CryptoNews() {
       ) : null}
 
       {!loading && !hasItems && !error ? (
-        <p className="text-sm text-slate-500">No AI-curated signals yet. Check back shortly.</p>
+        <p className="text-sm text-slate-500">
+          No AI-curated signals yet. Check back shortly.
+        </p>
       ) : null}
 
       {error ? (
