@@ -10,13 +10,12 @@ This project runs on **Vite + React**, so every frontend environment variable mu
 | --- | --- | --- |
 | Frontend (public) | `VITE_SUPABASE_URL` | Supabase project URL (Project Settings → API → Project URL) |
 | Frontend (public) | `VITE_SUPABASE_ANON_KEY` | Supabase anon/public key (Project Settings → API → `anon` key) |
-| Frontend (public) | `VITE_NEWS_RSS` | _(Optional)_ Legacy RSS list (serverless feed now uses CryptoPanic directly) |
+| Frontend (public) | `VITE_NEWS_RSS` | _(Optional)_ Comma-separated RSS feeds (falls back to Decrypt, Cointelegraph, CoinDesk) |
 | Frontend (public) | `VITE_API_BASE` | Optional override for HTTP client base URL (defaults to `/api`) |
 | Frontend (public) | `VITE_ADMIN_TOKEN` | Token used by the internal burn admin panel to call `/api/burn` |
 | Server-only | `SUPABASE_URL` | Same as `VITE_SUPABASE_URL` but scoped to backend functions (optional if identical) |
 | Server-only | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service-role key for Netlify functions that need write access |
 | Server-only | `ADMIN_TOKEN` | Must match `VITE_ADMIN_TOKEN`; used by Netlify burn function authorization |
-| Server-only | `CRYPTOPANIC_API_KEY` | API token for CryptoPanic RSS enrichment |
 
 > Tip: copy `.env.example` to `.env` (local dev) or `.env.local` (if you prefer) and fill these values. Never commit real secrets.
 
@@ -38,9 +37,9 @@ The UI checks these variables via `src/config/env.ts`. When a value is missing, 
 
 ### Crypto News API (serverless)
 
-1. Create an account at [cryptopanic.com/developers/api/](https://cryptopanic.com/developers/api/).
-2. Generate an API token and store it as `CRYPTOPANIC_API_KEY` (server).
-3. Serverless endpoint `/api/crypto-news` (see `src/api/crypto-news.ts`) fetches hot posts, maps thumbnails, and caches the result for 60s. Missing/invalid tokens return an empty list with a warning banner in the UI.
+1. Optionally set `VITE_NEWS_RSS` to a comma-separated list of RSS feeds that expose featured images (e.g. Decrypt, Cointelegraph verticals, CoinDesk categories).
+2. If the env var is omitted, `/api/crypto-news` automatically falls back to `https://decrypt.co/feed`, `https://cointelegraph.com/rss`, and CoinDesk's global markets feed.
+3. The handler (`src/api/crypto-news.ts`) normalizes thumbnails, filters out entries without media, deduplicates, and caches the top three stories for 60 seconds so the UI renders instantly.
 
 ### AI Signals API
 
@@ -89,7 +88,7 @@ The frontend (see `src/lib/ai/ruleBasedEngine.ts`) computes fallback values at r
 ## 6. Verification checklist
 
 - [ ] `npm run dev` renders Boosted Tasks without “Supabase missing” warnings.
-- [ ] Crypto News pulls data (or shows the intentional RSS warning if `VITE_NEWS_RSS` is blank).
+- [ ] Crypto News pulls three image-backed items (or shows the intentional warning if every RSS feed fails).
 - [ ] `/api/burn` POST calls succeed when `VITE_ADMIN_TOKEN`/`ADMIN_TOKEN` match.
 - [ ] The AI Market Bar and AI Insight Strip display computed signals (Bullish/Bearish/Neutral) without hitting any external LLM provider.
 

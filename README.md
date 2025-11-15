@@ -40,16 +40,16 @@ See [`ENV_SETUP.md`](./ENV_SETUP.md) for the complete checklist. Minimum values 
 ```env
 VITE_SUPABASE_URL=<supabase-project-url>
 VITE_SUPABASE_ANON_KEY=<supabase-anon-key>
-VITE_NEWS_RSS="https://cryptopanic.com/feed/rss/,https://www.coindesk.com/arc/outboundfeeds/rss/"
+VITE_NEWS_RSS="https://decrypt.co/feed,https://cointelegraph.com/rss,https://www.coindesk.com/arc/outboundfeeds/rss/"
 VITE_API_BASE=/api
+VITE_ADMIN_TOKEN=<shared-admin-token>
 ```
 
-Serverless functions additionally expect:
+Serverless functions additionally expect (match `ADMIN_TOKEN` with `VITE_ADMIN_TOKEN` so the burn admin UI can authenticate):
 
 ```env
 SUPABASE_SERVICE_ROLE_KEY=<supabase-service-role>
 ADMIN_TOKEN=<shared-admin-token>
-CRYPTOPANIC_API_KEY=<cryptopanic-token>
 ```
 
 Missing values trigger inline helper messages (Boosted Tasks, Token Burn, Crypto News) so the UI never crashes during demos.

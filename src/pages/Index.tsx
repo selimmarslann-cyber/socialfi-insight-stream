@@ -6,6 +6,7 @@ import { AIMarketBar } from '@/components/ai/AIMarketBar';
 import CryptoNews from '@/components/CryptoNews';
 import TokenBurn from '@/components/TokenBurn';
 import TopUsersCard from '@/components/TopUsersCard';
+import { TrendingUsers } from '@/components/widgets/TrendingUsers';
 
 const Index = () => {
   return (
@@ -21,12 +22,14 @@ const Index = () => {
 
         <aside className="sticky top-20 hidden h-[calc(100vh-5rem)] space-y-6 overflow-y-auto pb-10 lg:block">
           <TopUsersCard title="Top 5 Users" period="weekly" limit={5} />
+          <TrendingUsers limit={5} />
           <CryptoNews />
           <TokenBurn />
         </aside>
 
         <div className="space-y-6 lg:hidden">
           <TopUsersCard title="Top 5 Users" period="weekly" limit={5} />
+          <TrendingUsers limit={5} />
           <CryptoNews />
           <TokenBurn />
         </div>
