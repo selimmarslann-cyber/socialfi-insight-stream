@@ -8,8 +8,9 @@ This repository now uses a single canonical SQL file for everything Supabase-rel
 2. Copy the **Project URL**, **anon key**, and **service role key**.
 3. Add these to your deployment environments (Vercel/Netlify/local `.env`):
    - `VITE_SUPABASE_URL`
+   - `SUPABASE_URL`
    - `VITE_SUPABASE_ANON_KEY`
-   - `SUPABASE_SERVICE_ROLE_KEY`
+   - `SUPABASE_SERVICE_ROLE`
    - Optional helpers already used by the app: `VITE_API_BASE` (defaults to `/api`), `VITE_ADMIN_TOKEN`, `VITE_NEWS_RSS` (comma-separated RSS feeds).
 
 ## 2. Apply the canonical schema + policies
