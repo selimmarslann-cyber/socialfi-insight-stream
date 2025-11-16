@@ -1,14 +1,14 @@
+import type { VercelRequest, VercelResponse } from "@vercel/node";
 import Parser from "rss-parser";
 
-interface NetlifyEvent {
-  httpMethod: string;
-}
-
-interface NetlifyResponse {
-  statusCode: number;
-  headers: Record<string, string>;
-  body: string;
-}
+type RemoteNewsItem = {
+  id: string;
+  title: string;
+  link: string;
+  source: string;
+  imageUrl: string;
+  publishedAt: string;
+};
 
 type FeedEnclosure = { url?: string };
 
@@ -21,15 +21,6 @@ type CustomItem = {
   enclosure?: FeedEnclosure | FeedEnclosure[];
   mediaContent?: Array<{ $?: { url?: string } }>;
   mediaThumbnail?: Array<{ $?: { url?: string } }>;
-};
-
-type CryptoNewsItem = {
-  id: string;
-  title: string;
-  link: string;
-  source: string;
-  publishedAt: string;
-  imageUrl: string;
 };
 
 const parser = new Parser<CustomItem>({
@@ -59,11 +50,26 @@ const FALLBACK_FEEDS = [
 ] as const;
 
 type CacheBucket = {
-  items: CryptoNewsItem[];
+  items: RemoteNewsItem[];
   expiresAt: number;
 };
 
 let cache: CacheBucket | null = null;
+
+const withHeaders = (res: VercelResponse): VercelResponse => {
+  Object.entries(HEADERS).forEach(([key, value]) => {
+    res.setHeader(key, value);
+  });
+  return res;
+};
+
+const respond = (
+  res: VercelResponse,
+  statusCode: number,
+  payload: Record<string, unknown>,
+) => {
+  withHeaders(res).status(statusCode).json(payload);
+};
 
 const hostnameFromUrl = (value?: string): string | null => {
   if (!value) return null;
@@ -106,10 +112,9 @@ const pickImageFromItem = (item: CustomItem): string | undefined => {
 const normalizeItem = (
   item: CustomItem,
   fallbackSource: string,
-): CryptoNewsItem | null => {
+): RemoteNewsItem | null => {
   const link = item.link?.trim();
-  const publishedAt =
-    item.isoDate ?? item.pubDate ?? new Date().toISOString();
+  const publishedAt = item.isoDate ?? item.pubDate ?? new Date().toISOString();
   const source =
     hostnameFromUrl(link) ??
     hostnameFromUrl(fallbackSource) ??
@@ -136,16 +141,16 @@ const normalizeItem = (
   };
 };
 
-const parseSingleFeed = async (url: string): Promise<CryptoNewsItem[]> => {
+const parseSingleFeed = async (url: string): Promise<RemoteNewsItem[]> => {
   const feed = await parser.parseURL(url);
   const items = feed.items ?? [];
   const mapped = items
     .map((entry) => normalizeItem(entry, url))
-    .filter((entry): entry is CryptoNewsItem => Boolean(entry));
+    .filter((entry): entry is RemoteNewsItem => Boolean(entry));
   return mapped;
 };
 
-const fetchAllFeeds = async (): Promise<CryptoNewsItem[]> => {
+const fetchAllFeeds = async (): Promise<RemoteNewsItem[]> => {
   const csv = process.env.VITE_NEWS_RSS ?? "";
   const feeds = csv
     .split(",")
@@ -164,7 +169,7 @@ const fetchAllFeeds = async (): Promise<CryptoNewsItem[]> => {
     }),
   );
 
-  const combined: CryptoNewsItem[] = [];
+  const combined: RemoteNewsItem[] = [];
   for (const result of results) {
     if (result.status === "fulfilled") {
       combined.push(...result.value);
@@ -181,8 +186,7 @@ const fetchAllFeeds = async (): Promise<CryptoNewsItem[]> => {
   });
 
   deduped.sort(
-    (a, b) =>
-      new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime(),
+    (a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime(),
   );
 
   const withImages = deduped.filter(
@@ -194,29 +198,20 @@ const fetchAllFeeds = async (): Promise<CryptoNewsItem[]> => {
   return prioritized.slice(0, MAX_ITEMS);
 };
 
-const buildResponse = (items: CryptoNewsItem[]): NetlifyResponse => ({
-  statusCode: 200,
-  headers: HEADERS,
-  body: JSON.stringify({ items }),
-});
-
-export const handler = async (
-  event: NetlifyEvent,
-): Promise<NetlifyResponse> => {
-  if (event.httpMethod === "OPTIONS") {
-    return { statusCode: 204, headers: HEADERS, body: "" };
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (req.method === "OPTIONS") {
+    withHeaders(res).status(204).end();
+    return;
   }
 
-  if (event.httpMethod !== "GET") {
-    return {
-      statusCode: 405,
-      headers: HEADERS,
-      body: JSON.stringify({ items: [], error: "method_not_allowed" }),
-    };
+  if (req.method !== "GET") {
+    respond(res, 405, { items: [], error: "method_not_allowed" });
+    return;
   }
 
   if (cache && Date.now() < cache.expiresAt) {
-    return buildResponse(cache.items);
+    respond(res, 200, { items: cache.items });
+    return;
   }
 
   try {
@@ -225,17 +220,12 @@ export const handler = async (
       items,
       expiresAt: Date.now() + CACHE_TTL_MS,
     };
-    return buildResponse(items);
+    respond(res, 200, { items });
   } catch (error) {
     console.error("[api/crypto-news] failed", error);
-    return {
-      statusCode: 500,
-      headers: HEADERS,
-      body: JSON.stringify({
-        items: [],
-        error: "crypto_news_unavailable",
-      }),
-    };
+    respond(res, 500, {
+      items: [],
+      error: "crypto_news_unavailable",
+    });
   }
-};
-
+}

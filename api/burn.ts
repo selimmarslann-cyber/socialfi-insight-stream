@@ -1,17 +1,8 @@
+import type { VercelRequest, VercelResponse } from "@vercel/node";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { createClient } from "@supabase/supabase-js";
-import type { BurnStats, BurnSeriesPoint } from "../types/admin";
-
-interface NetlifyEvent {
-  httpMethod: string;
-}
-
-interface NetlifyResponse {
-  statusCode: number;
-  headers: Record<string, string>;
-  body: string;
-}
+import type { BurnSeriesPoint, BurnStats } from "../src/types/admin";
 
 type SupabaseRow = {
   id: number;
@@ -34,6 +25,21 @@ const HEADERS = {
 };
 
 const FALLBACK_PATH = path.join(process.cwd(), "src", "config", "burn.json");
+
+const withHeaders = (res: VercelResponse): VercelResponse => {
+  Object.entries(HEADERS).forEach(([key, value]) => {
+    res.setHeader(key, value);
+  });
+  return res;
+};
+
+const respond = (
+  res: VercelResponse,
+  statusCode: number,
+  payload: Record<string, unknown>,
+) => {
+  withHeaders(res).status(statusCode).json(payload);
+};
 
 const normalizeSeries = (series: unknown): BurnSeriesPoint[] | undefined => {
   if (typeof series === "string") {
@@ -99,7 +105,7 @@ const normalizeBurnStats = (input: Partial<BurnStats>): BurnStats | null => {
 };
 
 const fetchSupabaseBurnStats = async (): Promise<BurnStats | null> => {
-  const SUPABASE_URL = process.env.SUPABASE_URL;
+  const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
   const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!SUPABASE_URL || !SUPABASE_KEY) {
@@ -148,44 +154,35 @@ const readFallbackBurnStats = async (): Promise<BurnStats | null> => {
   }
 };
 
-const buildResponse = (data: BurnStats): NetlifyResponse => ({
-  statusCode: 200,
-  headers: HEADERS,
-  body: JSON.stringify({ data }),
+const emptyStats = (): BurnStats => ({
+  total: 0,
+  last24h: 0,
+  series: undefined,
+  updatedAt: new Date().toISOString(),
 });
 
-const emptyResponse = (): NetlifyResponse =>
-  buildResponse({
-    total: 0,
-    last24h: 0,
-    series: undefined,
-    updatedAt: new Date().toISOString(),
-  });
-
-export const handler = async (
-  event: NetlifyEvent,
-): Promise<NetlifyResponse> => {
-  if (event.httpMethod === "OPTIONS") {
-    return { statusCode: 204, headers: HEADERS, body: "" };
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (req.method === "OPTIONS") {
+    withHeaders(res).status(204).end();
+    return;
   }
 
-  if (event.httpMethod !== "GET") {
-    return {
-      statusCode: 405,
-      headers: HEADERS,
-      body: JSON.stringify({ error: "Method not allowed" }),
-    };
+  if (req.method !== "GET") {
+    respond(res, 405, { error: "method_not_allowed" });
+    return;
   }
 
   const supabaseData = await fetchSupabaseBurnStats();
   if (supabaseData) {
-    return buildResponse(supabaseData);
+    respond(res, 200, { data: supabaseData });
+    return;
   }
 
   const fallbackData = await readFallbackBurnStats();
   if (fallbackData) {
-    return buildResponse(fallbackData);
+    respond(res, 200, { data: fallbackData });
+    return;
   }
 
-  return emptyResponse();
-};
+  respond(res, 200, { data: emptyStats() });
+}
