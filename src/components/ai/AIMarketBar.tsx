@@ -40,7 +40,7 @@ const FALLBACK_COINS: MarketSignal[] = [
   },
 ];
 
-const GLOBAL_MARKET_CARDS: MarketSignal[] = [
+const BASE_GLOBAL_MARKET_CARDS: MarketSignal[] = [
   {
     symbol: "BTC Dominance",
     price: 52.4,
@@ -52,12 +52,12 @@ const GLOBAL_MARKET_CARDS: MarketSignal[] = [
   },
   {
     symbol: "Fear & Greed Index",
-    price: 68,
-    change24h: -4.1,
+    price: 50,
+    change24h: 0,
     signal: "Neutral",
-    score: 68,
-    displayValue: "68 / 100",
-    subtitle: "Market sentiment snapshot",
+    score: 50,
+    displayValue: "-- / 100",
+    subtitle: "Sentiment verisi yükleniyor",
   },
   {
     symbol: "Total Market Cap",
@@ -78,7 +78,40 @@ const sentimentBadgeClasses: Record<MarketSignal["signal"], string> = {
   Bearish: "bg-rose-50 text-rose-600",
 };
 
-const normalizeSignals = (source: MarketSignal[]): MarketSignal[] => {
+const classificationToSignal = (
+  classification: string,
+): MarketSignal["signal"] => {
+  const normalized = classification?.toLowerCase() ?? "";
+  if (normalized.includes("greed") || normalized.includes("hırs")) {
+    return "Bullish";
+  }
+  if (normalized.includes("fear") || normalized.includes("korku")) {
+    return "Bearish";
+  }
+  return "Neutral";
+};
+
+const formatSentimentSubtitle = (classification: string, isoTime?: string) => {
+  if (!isoTime) {
+    return classification || "Market sentiment snapshot";
+  }
+
+  try {
+    const formatted = new Intl.DateTimeFormat("tr-TR", {
+      day: "2-digit",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(new Date(isoTime));
+    return classification
+      ? `${classification} • Güncellendi ${formatted}`
+      : `Güncellendi ${formatted}`;
+  } catch {
+    return classification || "Market sentiment snapshot";
+  }
+};
+
+const normalizeCoinSignals = (source: MarketSignal[]): MarketSignal[] => {
   const filtered = source.filter((entry) => {
     const uppercase = entry.symbol.toUpperCase();
     return !uppercase.startsWith("SOL") && !uppercase.startsWith("AVAX");
@@ -100,7 +133,7 @@ const normalizeSignals = (source: MarketSignal[]): MarketSignal[] => {
     return fallbackRegistry.get(symbol);
   }).filter(Boolean) as MarketSignal[];
 
-  return [...selectedCoins, ...GLOBAL_MARKET_CARDS];
+  return selectedCoins;
 };
 
 const formatPrice = (value: number) =>
@@ -122,12 +155,16 @@ const formatVolume = (value: number) =>
   }).format(value);
 
 export const AIMarketBar = () => {
-  const [signals, setSignals] = useState<MarketSignal[]>(() =>
-    normalizeSignals(FALLBACK_COINS),
+  const [coinSignals, setCoinSignals] = useState<MarketSignal[]>(() =>
+    normalizeCoinSignals(FALLBACK_COINS),
+  );
+  const [globalMetrics, setGlobalMetrics] = useState<MarketSignal[]>(() =>
+    BASE_GLOBAL_MARKET_CARDS.map((card) => ({ ...card })),
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const controllerRef = useRef<AbortController | null>(null);
+  const sentimentControllerRef = useRef<AbortController | null>(null);
   const [activeFilter, setActiveFilter] = useState("Top Volume");
 
   const load = useCallback(async () => {
@@ -148,16 +185,85 @@ export const AIMarketBar = () => {
       }
 
       const payload = (await response.json()) as { items?: MarketSignal[] };
-      setSignals(normalizeSignals(payload.items ?? FALLBACK_COINS));
+      setCoinSignals(normalizeCoinSignals(payload.items ?? FALLBACK_COINS));
     } catch (err) {
       if ((err as { name?: string })?.name === "AbortError") {
         return;
       }
       console.warn("AI signals fetch failed", err);
-      setSignals(normalizeSignals(FALLBACK_COINS));
+      setCoinSignals(normalizeCoinSignals(FALLBACK_COINS));
       setError("No signals right now. Retry in a minute.");
     } finally {
       setLoading(false);
+    }
+  }, []);
+
+  const fetchSentiment = useCallback(async () => {
+    sentimentControllerRef.current?.abort();
+    const controller = new AbortController();
+    sentimentControllerRef.current = controller;
+
+    try {
+      const response = await fetch(`${API_BASE}/fear-greed`, {
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error(`fear_greed_${response.status}`);
+      }
+
+      const payload = (await response.json()) as {
+        item?: {
+          value?: number;
+          classification?: string;
+          change24h?: number;
+          isoTime?: string;
+        };
+      };
+
+      if (!payload.item) {
+        throw new Error("fear_greed_empty");
+      }
+
+      const rawValue = Number(payload.item.value ?? 0);
+      const rawChange = Number(payload.item.change24h ?? 0);
+      const classification = payload.item.classification ?? "Neutral";
+      const signal = classificationToSignal(classification);
+      const value = Number.isFinite(rawValue)
+        ? Math.min(100, Math.max(0, Math.round(rawValue)))
+        : 0;
+      const change24h = Number.isFinite(rawChange)
+        ? Number(rawChange.toFixed(2))
+        : 0;
+      const isoTime = payload.item.isoTime;
+
+      setGlobalMetrics((current) =>
+        current.map((metric) =>
+          metric.symbol === "Fear & Greed Index"
+            ? {
+                ...metric,
+                price: value,
+                change24h,
+                signal,
+                score: value,
+                displayValue: `${value} / 100`,
+                subtitle: formatSentimentSubtitle(classification, isoTime),
+              }
+            : metric,
+        ),
+      );
+    } catch (err) {
+      console.warn("Fear & Greed fetch failed", err);
+      setGlobalMetrics((current) =>
+        current.map((metric) =>
+          metric.symbol === "Fear & Greed Index"
+            ? {
+                ...metric,
+                subtitle: "Sentiment verisi getirilemedi",
+              }
+            : metric,
+        ),
+      );
     }
   }, []);
 
@@ -168,9 +274,20 @@ export const AIMarketBar = () => {
     };
   }, [load]);
 
-  const hasSignals = signals.length > 0;
+  useEffect(() => {
+    void fetchSentiment();
+    return () => {
+      sentimentControllerRef.current?.abort();
+    };
+  }, [fetchSentiment]);
+
+  const combinedSignals = useMemo(
+    () => [...coinSignals, ...globalMetrics],
+    [coinSignals, globalMetrics],
+  );
+  const hasCoinSignals = coinSignals.length > 0;
   const gridContent = useMemo(() => {
-    if (!hasSignals) {
+    if (combinedSignals.length === 0) {
       return (
         <p className="text-sm text-slate-500">
           NOP scanners are warming up. Signals will appear shortly.
@@ -179,59 +296,66 @@ export const AIMarketBar = () => {
     }
 
     return (
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {signals.map((signal) => {
-          const changeTone =
-            signal.change24h > 0
-              ? "text-emerald-500"
-              : signal.change24h < 0
-                ? "text-rose-500"
-                : "text-slate-500";
-          const subtitle =
-            signal.subtitle ??
-            (signal.volume
-              ? `24H VOL ${formatVolume(signal.volume).toUpperCase()}`
-              : "Global metric update");
-          const primaryValue = signal.displayValue ?? formatPrice(signal.price);
+      <>
+        {!hasCoinSignals ? (
+          <p className="text-sm text-slate-500">
+            NOP scanners are warming up. Signals will appear shortly.
+          </p>
+        ) : null}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {combinedSignals.map((signal) => {
+            const changeTone =
+              signal.change24h > 0
+                ? "text-emerald-500"
+                : signal.change24h < 0
+                  ? "text-rose-500"
+                  : "text-slate-500";
+            const subtitle =
+              signal.subtitle ??
+              (signal.volume
+                ? `24H VOL ${formatVolume(signal.volume).toUpperCase()}`
+                : "Global metric update");
+            const primaryValue = signal.displayValue ?? formatPrice(signal.price);
 
-          return (
-            <div
-              key={signal.symbol}
-              className="flex flex-col gap-2 rounded-xl border border-slate-100 bg-slate-50/40 px-3 py-3 transition hover:border-indigo-200 hover:bg-white"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-sm font-semibold text-slate-900">
-                    {signal.symbol}
+            return (
+              <div
+                key={signal.symbol}
+                className="flex flex-col gap-2 rounded-xl border border-slate-100 bg-slate-50/40 px-3 py-3 transition hover:border-indigo-200 hover:bg-white"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-semibold text-slate-900">
+                      {signal.symbol}
+                    </div>
+                    <div className="text-[11px] text-slate-500">{subtitle}</div>
                   </div>
-                  <div className="text-[11px] text-slate-500">{subtitle}</div>
+                  <span
+                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${sentimentBadgeClasses[signal.signal]}`}
+                  >
+                    {signal.signal}
+                  </span>
                 </div>
-                <span
-                  className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${sentimentBadgeClasses[signal.signal]}`}
-                >
-                  {signal.signal}
-                </span>
-              </div>
-              <div className="flex items-baseline justify-between">
-                <div className="text-sm font-semibold text-slate-900">
-                  {primaryValue}
+                <div className="flex items-baseline justify-between">
+                  <div className="text-sm font-semibold text-slate-900">
+                    {primaryValue}
+                  </div>
+                  <div className={`text-xs font-medium ${changeTone}`}>
+                    {formatChange(signal.change24h)}
+                  </div>
                 </div>
-                <div className={`text-xs font-medium ${changeTone}`}>
-                  {formatChange(signal.change24h)}
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] text-slate-500">Score</span>
+                  <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-indigo-600">
+                    {signal.score} / 100
+                  </span>
                 </div>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] text-slate-500">Score</span>
-                <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-indigo-600">
-                  {signal.score} / 100
-                </span>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      </>
     );
-  }, [hasSignals, signals]);
+  }, [combinedSignals, hasCoinSignals]);
 
   return (
     <section className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
@@ -261,7 +385,7 @@ export const AIMarketBar = () => {
       </div>
 
       <div className="mt-4 space-y-3">
-        {loading && !hasSignals ? (
+          {loading && !hasCoinSignals ? (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, index) => (
               <div
