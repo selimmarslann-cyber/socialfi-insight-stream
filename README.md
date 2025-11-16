@@ -48,7 +48,8 @@ VITE_ADMIN_TOKEN=<shared-admin-token>
 Serverless functions additionally expect (match `ADMIN_TOKEN` with `VITE_ADMIN_TOKEN` so the burn admin UI can authenticate):
 
 ```env
-SUPABASE_SERVICE_ROLE_KEY=<supabase-service-role>
+SUPABASE_URL=<supabase-project-url>
+SUPABASE_SERVICE_ROLE=<supabase-service-role>
 ADMIN_TOKEN=<shared-admin-token>
 ```
 

@@ -13,7 +13,8 @@ This project runs on **Vite + React**, so every frontend environment variable mu
 | Frontend (public) | `VITE_NEWS_RSS` | _(Optional)_ Comma-separated RSS feeds (falls back to Decrypt, Cointelegraph, CoinDesk) |
 | Frontend (public) | `VITE_API_BASE` | Optional override for HTTP client base URL (defaults to `/api`) |
 | Frontend (public) | `VITE_ADMIN_TOKEN` | Token used by the internal burn admin panel to call `/api/burn` |
-| Server-only | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service-role key for serverless functions that need write access |
+| Server-only | `SUPABASE_URL` | Supabase project URL for API routes/Edge functions |
+| Server-only | `SUPABASE_SERVICE_ROLE` | Supabase service-role key for serverless functions that need write access |
 | Server-only | `ADMIN_TOKEN` | Must match `VITE_ADMIN_TOKEN`; used by the burn admin authorization |
 
 > Tip: copy `.env.example` to `.env` (local dev) or `.env.local` (if you prefer) and fill these values. Never commit real secrets.
@@ -23,9 +24,9 @@ This project runs on **Vite + React**, so every frontend environment variable mu
 ## 2. Supabase configuration
 
 1. Open **Supabase Dashboard → Your project → Project Settings → API**.
-2. Copy the **Project URL** into `VITE_SUPABASE_URL` (serverless API'ler de aynı anahtarı okuyor).
+2. Copy the **Project URL** into both `VITE_SUPABASE_URL` (frontend) and `SUPABASE_URL` (serverless).
 3. Copy the **anon public key** into `VITE_SUPABASE_ANON_KEY`.
-4. Copy the **service role key** into `SUPABASE_SERVICE_ROLE_KEY` (server-only, never expose to the browser).
+4. Copy the **service role key** into `SUPABASE_SERVICE_ROLE` (server-only, never expose to the browser).
 5. Optional: keep `VITE_ADMIN_TOKEN`/`ADMIN_TOKEN` in a password manager; use any strong random string.
 
 The UI checks these variables via `src/config/env.ts`. When a value is missing, cards such as **Boosted Tasks** and **Crypto News** will show the helper message instead of throwing runtime errors.
