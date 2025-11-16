@@ -10,7 +10,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Paperclip, Smile, Loader2, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import {
   Tooltip,
   TooltipContent,
@@ -265,50 +264,52 @@ export const PostComposer = () => {
   };
 
     return (
-      <Card className="flex flex-col gap-6 rounded-3xl border-none bg-[color:var(--bg-card)] p-6 shadow-xl ring-1 ring-[color:var(--ring)]">
-      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-        <div className="flex flex-1 flex-col gap-4">
-            <div
-              className="rounded-2xl border border-dashed border-indigo-500/25 bg-[color:var(--surface-subtle)]/70 p-4 transition hover:border-indigo-500/40"
+      <Card className="rounded-2xl border border-slate-100 bg-white shadow-sm">
+        <div className="flex flex-col gap-5 p-5">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-semibold text-slate-900">Share your alpha</p>
+              <p className="text-[11px] text-slate-500">Market outlooks, trading ideas, on-chain insights.</p>
+            </div>
+            <div className="inline-flex flex-col items-end">
+              <span className="text-[11px] text-slate-500">Est. NOP reward</span>
+              <span className="text-lg font-semibold text-amber-500">
+                {estimatedReward} <span className="text-sm font-medium text-slate-500">NOP</span>
+              </span>
+            </div>
+          </div>
+
+          <ul className="space-y-1 text-[11px] text-slate-500">
+            <li>• Tag relevant assets using #hashtags</li>
+            <li>• Attach up to 4 charts or on-chain screenshots</li>
+            <li>• Keep it concise and signal-rich</li>
+          </ul>
+
+          <div
+            className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 p-4 transition hover:border-indigo-200"
             onDrop={handleDrop}
             onDragOver={handleDragOver}
           >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-800">
-                  Share your alpha
-                </p>
-                <p className="text-xs text-slate-500">
-                  Market outlooks, trading ideas, on-chain insights
-                </p>
-              </div>
-              <Badge className="rounded-full bg-white text-xs font-semibold text-indigo-600 ring-1 ring-indigo-500/20">
-                Visual ready
-              </Badge>
-            </div>
-
             <Textarea
               ref={textareaRef}
               placeholder="Break down the trade, tag protocols, drop the charts…"
               value={content}
               onChange={handleContentChange}
-                className="mt-4 min-h-[140px] w-full resize-none border-none bg-transparent p-0 text-base text-[color:var(--text-primary)] focus-visible:ring-0"
+              className="min-h-[150px] w-full resize-none border-none bg-transparent p-0 text-sm text-slate-900 placeholder:text-slate-400 focus-visible:ring-0"
             />
           </div>
 
           {hashtagQuery && (
             <div className="flex flex-wrap gap-2">
               {hashtagSuggestions
-                .filter((tag) =>
-                  tag.toLowerCase().startsWith(hashtagQuery.toLowerCase()),
-                )
+                .filter((tag) => tag.toLowerCase().startsWith(hashtagQuery.toLowerCase()))
                 .slice(0, 5)
                 .map((tag) => (
                   <button
                     key={tag}
                     type="button"
                     onClick={() => insertHashtag(tag)}
-                    className="rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-700 transition hover:bg-indigo-200"
+                    className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-600 transition hover:bg-indigo-100"
                   >
                     {tag}
                   </button>
@@ -323,17 +324,17 @@ export const PostComposer = () => {
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                      className="flex items-center gap-2 rounded-full border border-indigo-500/20 bg-indigo-500/10 px-4 py-2 text-sm font-medium text-indigo-600 transition hover:bg-indigo-500/20"
+                    className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-indigo-200"
                   >
                     <Paperclip className="h-4 w-4" />
                     Attach media
                   </button>
                 </TooltipTrigger>
-                  <TooltipContent className="max-w-xs text-xs">
-                    {supabaseReady
-                      ? "Upload on-chain ready charts or decks."
-                      : `${supabaseAdminHint} Dosyalar cihazında geçici olarak tutulacak.`}
-                  </TooltipContent>
+                <TooltipContent className="max-w-xs text-xs">
+                  {supabaseReady
+                    ? "Upload on-chain ready charts or decks."
+                    : `${supabaseAdminHint} Dosyalar cihazında geçici olarak tutulacak.`}
+                </TooltipContent>
               </Tooltip>
             </TooltipProvider>
 
@@ -348,7 +349,7 @@ export const PostComposer = () => {
 
             <button
               type="button"
-                className="flex items-center gap-2 rounded-full border border-indigo-500/10 bg-[color:var(--bg-card)] px-4 py-2 text-sm font-medium text-[color:var(--text-secondary)] transition hover:border-indigo-500/30 hover:text-[color:var(--text-primary)]"
+              className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm transition hover:border-indigo-200"
               onClick={() => setShowEmojiPanel((prev) => !prev)}
             >
               <Smile className="h-4 w-4" />
@@ -356,7 +357,7 @@ export const PostComposer = () => {
             </button>
 
             {showEmojiPanel && (
-                <div className="flex items-center gap-1 rounded-full border border-indigo-500/10 bg-[color:var(--bg-card)] px-3 py-2 text-lg shadow">
+              <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-2 text-lg shadow-sm">
                 {emojiOptions.map((emoji) => (
                   <button
                     key={emoji}
@@ -370,23 +371,17 @@ export const PostComposer = () => {
               </div>
             )}
 
-            <span className="ml-auto text-xs text-slate-400">
-              {content.length}/500
-            </span>
+            <span className="ml-auto text-xs text-slate-400">{content.length}/500</span>
           </div>
 
           {previews.length > 0 && (
             <div className="space-y-3">
-              <ImageGrid
-                images={previews}
-                onRemove={handleRemoveImage}
-                editable
-              />
-                <div className="flex flex-wrap gap-2 text-xs text-[color:var(--text-secondary)]">
+              <ImageGrid images={previews} onRemove={handleRemoveImage} editable />
+              <div className="flex flex-wrap gap-2 text-xs text-slate-500">
                 {files.map((file) => (
                   <span
                     key={file.name + file.size}
-                      className="inline-flex items-center gap-1 rounded-full bg-[color:var(--bg-base)]/70 px-3 py-1"
+                    className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-1"
                   >
                     <Upload className="h-3.5 w-3.5 text-indigo-500" />
                     {file.name}
@@ -396,45 +391,21 @@ export const PostComposer = () => {
             </div>
           )}
 
-          {error && (
-            <p className="text-sm font-medium text-rose-500">{error}</p>
-          )}
-        </div>
+          {error ? <p className="text-sm font-medium text-rose-500">{error}</p> : null}
 
-          <aside className="flex w-full max-w-sm flex-col gap-4 rounded-2xl border border-indigo-500/15 bg-[color:var(--surface-subtle)]/80 p-4 shadow-inner">
-          <div>
-              <h3 className="text-sm font-semibold text-[color:var(--text-primary)]">
-              Est. NOP reward
-            </h3>
-              <p className="mt-2 text-3xl font-bold text-indigo-400">
-              {estimatedReward}
-                <span className="ml-1 text-base font-medium text-[color:var(--text-secondary)]">
-                NOP
-              </span>
-            </p>
-              <p className="mt-2 text-xs text-[color:var(--text-secondary)]">
-              Based on content depth, visual signals and community traction.
-            </p>
-          </div>
-
-            <div className="rounded-xl bg-[color:var(--bg-base)]/80 p-3 text-xs text-[color:var(--text-secondary)] shadow">
-              <p className="font-semibold text-[color:var(--text-primary)]">Tips</p>
-            <ul className="mt-2 list-disc space-y-1 pl-4">
-              <li>Tag relevant assets using #hashtags.</li>
-              <li>Attach up to 4 charts, on-chain screenshots or decks.</li>
-              <li>Keep sensitive data masked.</li>
-            </ul>
-              <p className="mt-3 text-[11px] text-[color:var(--text-secondary)]/80">
-              AI will later analyze high-quality insights for risk and signal
-              scoring.
-            </p>
-          </div>
-
-          <div className="mt-auto flex flex-col gap-2">
+          <div className="flex flex-col gap-2 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
+            <Button
+              variant="ghost"
+              className="h-10 w-full text-sm text-slate-500 hover:text-slate-700 sm:w-auto"
+              onClick={resetComposer}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Clear draft
+            </Button>
             <Button
               onClick={handleSubmit}
               disabled={!canSubmit || isSubmitting}
-              className="h-11 rounded-full bg-gradient-to-r from-indigo-600 to-cyan-500 text-sm font-semibold shadow-lg transition hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60"
+              className="h-11 w-full rounded-full bg-gradient-to-r from-indigo-500 to-cyan-500 text-sm font-semibold text-white shadow-md transition hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
             >
               {isSubmitting ? (
                 <>
@@ -442,20 +413,11 @@ export const PostComposer = () => {
                   Publishing…
                 </>
               ) : (
-                "Publish insight"
+                "New contribution"
               )}
             </Button>
-            <Button
-              variant="ghost"
-              className="h-10 text-sm text-slate-500 hover:text-slate-700"
-              onClick={resetComposer}
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Clear draft
-            </Button>
           </div>
-        </aside>
-      </div>
-    </Card>
-  );
+        </div>
+      </Card>
+    );
 };
