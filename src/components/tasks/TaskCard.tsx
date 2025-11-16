@@ -1,4 +1,10 @@
-import { type LucideIcon, PenSquare, Sparkles, User, Wallet } from "lucide-react";
+import {
+  type LucideIcon,
+  PenSquare,
+  Sparkles,
+  User,
+  Wallet,
+} from "lucide-react";
 
 export type TaskState = "locked" | "ready" | "claimed";
 
@@ -60,6 +66,7 @@ export function TaskCard({
   onClaim,
 }: TaskCardProps) {
   const visual = iconVisuals[iconVariant] ?? iconVisuals.default;
+
   const ActionContent = () => {
     if (state === "ready") {
       return (
@@ -71,7 +78,7 @@ export function TaskCard({
             }
           }}
           disabled={busy}
-          className="inline-flex min-w-[160px] items-center justify-center rounded-full bg-gradient-to-r from-[#4F46E5] to-[#06B6D4] px-4 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex w-full items-center justify-center rounded-full bg-gradient-to-r from-[#4F46E5] to-[#06B6D4] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60 sm:min-w-[180px]"
         >
           {busy ? "Claiming…" : "Claim reward"}
         </button>
@@ -80,11 +87,11 @@ export function TaskCard({
 
     if (state === "locked") {
       return (
-        <div className="inline-flex min-w-[160px] justify-center rounded-full bg-gradient-to-r from-[#4F46E5] to-[#06B6D4] p-[1.5px]">
+        <div className="inline-flex w-full justify-center rounded-full bg-gradient-to-r from-[#4F46E5] to-[#06B6D4] p-[1.5px] sm:min-w-[180px]">
           <button
             type="button"
             disabled
-            className="inline-flex w-full items-center justify-center rounded-full bg-white px-4 py-1.5 text-xs font-semibold text-[#0F172A] opacity-80"
+            className="inline-flex w-full items-center justify-center rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#0F172A] opacity-80"
           >
             Complete to unlock
           </button>
@@ -93,35 +100,39 @@ export function TaskCard({
     }
 
     return (
-      <span className="inline-flex min-w-[160px] items-center justify-center rounded-full bg-emerald-50 px-4 py-1.5 text-xs font-semibold text-emerald-600">
+      <span className="inline-flex w-full items-center justify-center rounded-full bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-600 sm:min-w-[180px]">
         Reward claimed
       </span>
     );
   };
 
   return (
-    <div className="flex flex-col gap-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
-      <div className="flex flex-1 items-start gap-4">
+    <div className="flex flex-col gap-3 py-4">
+      <div className="flex items-start gap-4">
         <div
-          className="flex h-12 w-12 items-center justify-center rounded-full border border-white/70 shadow-inner"
+          className="flex h-14 w-14 items-center justify-center rounded-[18px] border border-white/70 shadow-inner"
           style={{
             background: visual.bg,
             color: visual.color,
           }}
         >
-          <visual.Icon className="h-5 w-5" strokeWidth={1.8} />
+          <visual.Icon className="h-6 w-6" strokeWidth={1.8} />
         </div>
-        <div className="space-y-1">
-          <p className="text-sm font-semibold text-[#0F172A]">{title}</p>
-          <p className="text-xs text-[#475569]">
-            {description || "Detaylar yakında eklenecek."}
-          </p>
+        <div className="flex flex-1 flex-col gap-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-1">
+              <p className="text-sm font-semibold text-[#0F172A]">{title}</p>
+              <p className="text-xs text-[#475569]">
+                {description || "Detaylar yakında eklenecek."}
+              </p>
+            </div>
+            <span className="inline-flex items-center rounded-full bg-[#F5C76A]/90 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-[#0F172A] shadow-sm">
+              +{formatReward(reward)} NOP
+            </span>
+          </div>
         </div>
       </div>
-      <div className="flex flex-col items-start gap-3 sm:items-end">
-        <span className="inline-flex items-center rounded-full bg-[#F5C76A] px-3 py-1 text-[11px] font-bold text-[#0F172A] shadow-sm">
-          +{formatReward(reward)} NOP
-        </span>
+      <div className="w-full sm:pl-[4.5rem]">
         <ActionContent />
       </div>
     </div>
