@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { getSupabase, supabaseAdminHint } from "@/lib/supabaseClient";
 import { getUserSafe } from "@/lib/safeAuth";
+import { useWalletStore } from "@/lib/store";
 import type { Database } from "@/integrations/supabase/types";
 
 // SQL:
@@ -42,6 +43,55 @@ const iconMap: Record<string, string> = {
   contribute: "✍️",
 };
 
+const WALLET_CLAIM_STORAGE = "nop.walletTaskClaims";
+
+type WalletClaimStore = Record<string, Record<string, number>>;
+
+const isBrowser = () => typeof window !== "undefined";
+
+const readWalletClaimStore = (): WalletClaimStore => {
+  if (!isBrowser()) return {};
+  try {
+    const raw = window.localStorage.getItem(WALLET_CLAIM_STORAGE);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === "object") {
+      return parsed as WalletClaimStore;
+    }
+  } catch {
+    // ignore
+  }
+  return {};
+};
+
+const writeWalletClaimStore = (store: WalletClaimStore) => {
+  if (!isBrowser()) return;
+  try {
+    window.localStorage.setItem(
+      WALLET_CLAIM_STORAGE,
+      JSON.stringify(store),
+    );
+  } catch {
+    // ignore
+  }
+};
+
+const getWalletClaimsFor = (walletId: string) => {
+  const store = readWalletClaimStore();
+  return store[walletId.toLowerCase()] ?? {};
+};
+
+const markWalletClaim = (walletId: string, taskId: string) => {
+  const store = readWalletClaimStore();
+  const key = walletId.toLowerCase();
+  const next = {
+    ...(store[key] ?? {}),
+    [taskId]: Date.now(),
+  };
+  store[key] = next;
+  writeWalletClaimStore(store);
+};
+
 function GoldChip({ children }: { children: ReactNode }) {
   return (
     <span className="px-2 py-0.5 rounded-full text-[12px] bg-[#F5C76A] text-[#0F172A] font-medium shadow-sm">
@@ -75,7 +125,12 @@ export default function BoostedTasks() {
   const sb = getSupabase();
   const [state, setState] = useState<TaskView[]>([]);
   const [err, setErr] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  const connected = useWalletStore((wallet) => wallet.connected);
+  const address = useWalletStore((wallet) => wallet.address);
+  const grantNop = useWalletStore((wallet) => wallet.grantNop);
+  const walletKey = connected && address ? address.toLowerCase() : null;
 
   const claimedCount = useMemo(
     () => state.filter((r) => r.state === "claimed").length,
@@ -83,21 +138,17 @@ export default function BoostedTasks() {
   );
   const totalTasks = state.length || 3;
 
-  const refresh = useCallback(async () => {
-    setErr(null);
-    if (!sb) {
-      setErr(supabaseAdminHint);
-      setState([]);
-      return;
-    }
-    try {
-      const { user } = await getUserSafe();
-      if (!user) {
-        setErr("Oturum açmadın. Lütfen giriş yap.");
+    const refresh = useCallback(async () => {
+      setErr(null);
+      setNotice(null);
+      if (!sb) {
+        setErr(supabaseAdminHint);
         setState([]);
         return;
       }
-
+      try {
+        const { user } = await getUserSafe();
+        const supabaseUserId = user?.id ?? null;
         const [
           { data: tasks, error: tasksError },
           { data: userTasks, error: userTasksError },
@@ -107,10 +158,12 @@ export default function BoostedTasks() {
             .select("*")
             .eq("is_active", true)
             .order("order_index", { ascending: true }),
-          sb
-            .from<UserTaskRow>("user_tasks")
-            .select("*")
-            .eq("user_id", user.id),
+          supabaseUserId
+            ? sb
+                .from<UserTaskRow>("user_tasks")
+                .select("*")
+                .eq("user_id", supabaseUserId)
+            : Promise.resolve({ data: [], error: null }),
         ]);
 
         if (tasksError) {
@@ -125,60 +178,100 @@ export default function BoostedTasks() {
           userTaskMap.set(record.task_id, record);
         });
 
+        const walletClaims = walletKey ? getWalletClaimsFor(walletKey) : {};
+        if (!supabaseUserId) {
+          if (walletKey) {
+            setNotice(
+              "Demo mod: Claimler cüzdanına yerel olarak kaydediliyor.",
+            );
+          } else {
+            setNotice("Ödülleri almak için cüzdanını bağla.");
+          }
+        }
+
+        const canClaim = Boolean(supabaseUserId || walletKey);
         const nextState: TaskView[] = (tasks ?? []).map((task) => {
           const record = userTaskMap.get(task.id);
           const code = task.code ?? "";
           const icon = iconMap[code] ?? "✨";
 
-          const derivedState: TaskState =
-            record?.status === "claimed" ? "claimed" : "ready";
+          const claimedViaWallet =
+            walletKey && walletClaims ? Boolean(walletClaims[task.id]) : false;
+          const claimed =
+            record?.status === "claimed" || claimedViaWallet;
+
+          const derivedState: TaskState = claimed
+            ? "claimed"
+            : canClaim
+            ? "ready"
+            : "locked";
 
           return { ...task, icon, state: derivedState };
         });
 
         setState(nextState);
-    } catch (error) {
-      setErr(getErrorMessage(error, "Görevler yüklenemedi."));
-      setState([]);
-    }
-    }, [sb]);
+      } catch (error) {
+        setErr(getErrorMessage(error, "Görevler yüklenemedi."));
+        setState([]);
+      }
+    }, [sb, walletKey]);
 
   useEffect(() => {
     void refresh();
   }, [refresh]);
 
-  async function claim(taskId: string) {
-    if (!sb) return;
-    setBusy(taskId);
-    try {
-      const { user } = await getUserSafe();
-      if (!user) throw new Error("Giriş yapmalısın.");
+    async function claim(taskId: string) {
       const task = state.find((entry) => entry.id === taskId);
       if (!task || task.state !== "ready") {
-        throw new Error("Şartlar henüz sağlanmadı.");
+        return;
       }
+      setBusy(taskId);
+      try {
+        const { user } = await getUserSafe();
+        if (user) {
+          if (!sb) {
+            throw new Error(supabaseAdminHint);
+          }
+          const now = new Date().toISOString();
+          const { error } = await sb.from("user_tasks").upsert(
+            {
+              user_id: user.id,
+              task_id: taskId,
+              status: "claimed",
+              completed_at: now,
+              claimed_at: now,
+            },
+            { onConflict: "user_id,task_id" },
+          );
+          if (error) {
+            throw error;
+          }
+          await refresh();
+          return;
+        }
 
-      const now = new Date().toISOString();
-      const { error } = await sb.from("user_tasks").upsert(
-        {
-          user_id: user.id,
-          task_id: taskId,
-          status: "claimed",
-          completed_at: now,
-          claimed_at: now,
-        },
-        { onConflict: "user_id,task_id" },
-      );
-      if (error) {
-        throw error;
+        if (walletKey) {
+          markWalletClaim(walletKey, taskId);
+          const reward = Number(task.reward_nop ?? 0);
+          if (reward > 0) {
+            grantNop?.(reward);
+          }
+          setState((prev) =>
+            prev.map((entry) =>
+              entry.id === taskId ? { ...entry, state: "claimed" } : entry,
+            ),
+          );
+          setNotice("Claim kaydedildi (demo).");
+          return;
+        }
+
+        throw new Error("Önce cüzdan bağla veya giriş yap.");
+      } catch (error) {
+        setErr(getErrorMessage(error, "Claim başarısız."));
+      } finally {
+        setBusy(null);
       }
-      await refresh();
-    } catch (error) {
-      setErr(getErrorMessage(error, "Claim başarısız."));
-    } finally {
-      setBusy(null);
     }
-  }
 
   return (
     <div
@@ -194,7 +287,10 @@ export default function BoostedTasks() {
           {claimedCount}/{totalTasks} claimed
         </div>
       </div>
-      {err && <div className="mt-2 text-[13px] text-rose-600">{err}</div>}
+        {err && <div className="mt-2 text-[13px] text-rose-600">{err}</div>}
+        {!err && notice && (
+          <div className="mt-2 text-[13px] text-[#475569]">{notice}</div>
+        )}
       <div className="mt-3 space-y-2">
         {state.length === 0 && !err && (
           <div className="text-xs text-[#475569]">Görevler yükleniyor…</div>
