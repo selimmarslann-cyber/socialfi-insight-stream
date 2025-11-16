@@ -13,7 +13,40 @@ type MarketSignal = {
 };
 
 const API_BASE = PUBLIC_ENV.apiBase || "/api";
-const FALLBACK_SIGNALS: MarketSignal[] = [];
+const FALLBACK_SIGNALS: MarketSignal[] = [
+  {
+    symbol: "BTC/USDT",
+    price: 62850,
+    change24h: 1.42,
+    volume: 12800000000,
+    signal: "Bullish",
+    score: 78,
+  },
+  {
+    symbol: "ETH/USDT",
+    price: 3180,
+    change24h: 0.85,
+    volume: 7200000000,
+    signal: "Bullish",
+    score: 71,
+  },
+  {
+    symbol: "SOL/USDT",
+    price: 142.5,
+    change24h: -0.65,
+    volume: 1850000000,
+    signal: "Neutral",
+    score: 62,
+  },
+  {
+    symbol: "AVAX/USDT",
+    price: 38.8,
+    change24h: -2.1,
+    volume: 890000000,
+    signal: "Bearish",
+    score: 69,
+  },
+];
 
 const toneClasses: Record<MarketSignal["signal"], string> = {
   Bullish: "bg-emerald-50 text-emerald-600 border-emerald-100",
