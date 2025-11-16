@@ -85,10 +85,6 @@ export default function BoostedTasks() {
     [state],
   );
   const totalTasks = state.length || 3;
-  const progressPercent = Math.min(
-    100,
-    Math.round((claimedCount / (totalTasks || 1)) * 100),
-  );
 
   const refresh = useCallback(async () => {
     setErr(null);
@@ -224,57 +220,51 @@ export default function BoostedTasks() {
   const showSkeleton = !err && state.length === 0;
 
   return (
-    <section
-      className="rounded-3xl border bg-[#F5F8FF] p-5 text-[#0F172A] shadow-[0_2px_6px_rgba(0,0,0,0.04)]"
-      style={{ borderColor: "rgba(79,70,229,0.15)" }}
-    >
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="space-y-1">
-          <p className="text-sm font-bold">Boosted Tasks</p>
-          <p className="text-xs text-[#475569]">Complete tasks & earn NOP</p>
+    <section className="rounded-3xl border border-slate-100 bg-white px-4 pt-4 pb-3 shadow-sm flex flex-col gap-3">
+      <div className="flex items-baseline justify-between">
+        <div className="flex flex-col gap-1">
+          <div className="text-[15px] font-semibold text-slate-900">Boosted Tasks</div>
+          <div className="text-[12px] text-slate-500">Complete tasks &amp; earn NOP</div>
         </div>
-        <div className="text-xs font-semibold text-[#475569]">
-          {claimedCount}/{totalTasks} completed
+        <div className="text-[12px] font-medium text-slate-400">
+          ({claimedCount}/{totalTasks})
         </div>
       </div>
-      <div className="mt-3 h-2 w-full rounded-full bg-white/50">
-        <div
-          className="h-full rounded-full bg-gradient-to-r from-[#4F46E5] to-[#06B6D4] transition-all duration-500 ease-out"
-          style={{ width: `${progressPercent || 4}%` }}
-        />
-      </div>
+      <div className="h-px w-full rounded-full bg-slate-200/80" />
 
       {err ? (
-        <div className="mt-4 rounded-2xl border border-rose-100 bg-rose-50/70 px-3 py-2 text-xs font-semibold text-rose-700">
+        <div className="rounded-2xl border border-rose-100 bg-rose-50/80 px-3 py-2 text-[12px] font-medium text-rose-700">
           {err}
         </div>
       ) : null}
 
-      {!err && notice ? (
-        <div className="mt-4 rounded-2xl border border-[rgba(79,70,229,0.12)] bg-white/70 px-3 py-2 text-xs text-[#475569]">
+      {notice ? (
+        <div className="rounded-2xl border border-slate-100 bg-slate-50/80 px-3 py-2 text-[12px] text-slate-600">
           {notice}
         </div>
       ) : null}
 
-      <div className="mt-5 rounded-2xl border border-[rgba(79,70,229,0.15)] bg-white px-4">
-        {showSkeleton ? (
-          <div className="divide-y divide-[rgba(0,0,0,0.06)]">
-            {Array.from({ length: totalTasks }).map((_, index) => (
-              <div key={index} className="flex items-center justify-between gap-4 py-4">
-                <div className="flex flex-1 items-start gap-4">
-                  <div className="h-12 w-12 rounded-full bg-[#F5F8FF] shadow-inner" />
-                  <div className="w-full space-y-2">
-                    <div className="h-3 w-3/4 rounded-full bg-slate-100" />
-                    <div className="h-3 w-1/2 rounded-full bg-slate-100" />
+      <div className="space-y-3">
+        {showSkeleton
+          ? Array.from({ length: totalTasks }).map((_, index) => (
+              <div
+                key={`boosted-task-skeleton-${index}`}
+                className="rounded-2xl border border-slate-100 bg-slate-50/40 px-3 py-2.5 flex items-center justify-between gap-3"
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="h-7 w-7 rounded-full bg-white/80" />
+                  <div className="space-y-1">
+                    <div className="h-3 w-28 rounded-full bg-slate-100" />
+                    <div className="h-3 w-20 rounded-full bg-slate-100" />
                   </div>
                 </div>
-                <div className="h-8 w-24 rounded-full bg-slate-100" />
+                <div className="flex flex-col items-end gap-1">
+                  <div className="h-5 w-20 rounded-full bg-amber-100/60" />
+                  <div className="h-5 w-24 rounded-full bg-sky-100/70" />
+                </div>
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className="divide-y divide-[rgba(0,0,0,0.06)]">
-            {state.map((task) => (
+            ))
+          : state.map((task) => (
               <TaskCard
                 key={task.id}
                 title={task.title}
@@ -286,8 +276,6 @@ export default function BoostedTasks() {
                 onClaim={() => claim(task.id)}
               />
             ))}
-          </div>
-        )}
       </div>
     </section>
   );

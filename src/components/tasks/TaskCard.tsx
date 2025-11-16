@@ -22,30 +22,25 @@ type TaskCardProps = {
 
 type IconVisual = {
   Icon: LucideIcon;
-  bg: string;
-  color: string;
+  wrapperClass: string;
 };
 
 const iconVisuals: Record<TaskIconVariant, IconVisual> = {
   signup: {
     Icon: User,
-    bg: "rgba(79,70,229,0.1)",
-    color: "#4F46E5",
+    wrapperClass: "bg-indigo-100 text-indigo-600",
   },
   deposit: {
     Icon: Wallet,
-    bg: "rgba(37, 99, 235, 0.12)",
-    color: "#2563EB",
+    wrapperClass: "bg-sky-100 text-sky-600",
   },
   contribute: {
     Icon: PenSquare,
-    bg: "rgba(14, 165, 233, 0.12)",
-    color: "#0EA5E9",
+    wrapperClass: "bg-amber-100 text-amber-600",
   },
   default: {
     Icon: Sparkles,
-    bg: "rgba(79,70,229,0.12)",
-    color: "#4F46E5",
+    wrapperClass: "bg-slate-100 text-slate-600",
   },
 };
 
@@ -53,7 +48,7 @@ const formatReward = (value: number) => {
   if (Number.isNaN(value)) {
     return "0";
   }
-  return value.toLocaleString();
+  return value.toLocaleString("en-US");
 };
 
 export function TaskCard({
@@ -67,7 +62,7 @@ export function TaskCard({
 }: TaskCardProps) {
   const visual = iconVisuals[iconVariant] ?? iconVisuals.default;
 
-  const ActionContent = () => {
+  const renderAction = () => {
     if (state === "ready") {
       return (
         <button
@@ -78,7 +73,7 @@ export function TaskCard({
             }
           }}
           disabled={busy}
-          className="inline-flex w-full items-center justify-center rounded-full bg-gradient-to-r from-[#4F46E5] to-[#06B6D4] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60 sm:min-w-[180px]"
+          className="text-[11px] font-medium text-white bg-gradient-to-r from-indigo-500 to-cyan-500 hover:from-indigo-600 hover:to-cyan-600 rounded-full px-2.5 py-0.5 leading-none shadow-sm transition disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {busy ? "Claiming…" : "Claim reward"}
         </button>
@@ -87,53 +82,45 @@ export function TaskCard({
 
     if (state === "locked") {
       return (
-        <div className="inline-flex w-full justify-center rounded-full bg-gradient-to-r from-[#4F46E5] to-[#06B6D4] p-[1.5px] sm:min-w-[180px]">
-          <button
-            type="button"
-            disabled
-            className="inline-flex w-full items-center justify-center rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#0F172A] opacity-80"
-          >
-            Complete to unlock
-          </button>
-        </div>
+        <button
+          type="button"
+          disabled
+          className="text-[11px] font-medium text-indigo-600 bg-sky-50 hover:bg-sky-100 rounded-full px-2.5 py-0.5 leading-none transition disabled:opacity-70"
+        >
+          Complete to unlock
+        </button>
       );
     }
 
     return (
-      <span className="inline-flex w-full items-center justify-center rounded-full bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-600 sm:min-w-[180px]">
-        Reward claimed
-      </span>
+      <div className="text-[11px] font-medium text-emerald-600 bg-emerald-50 rounded-full px-2.5 py-0.5">
+        Claimed
+      </div>
     );
   };
 
   return (
-    <div className="flex flex-col gap-3 py-4">
-      <div className="flex items-start gap-4">
+    <div className="rounded-2xl border border-slate-100 bg-slate-50/40 px-3 py-2.5 flex items-center justify-between gap-3">
+      <div className="flex items-center gap-2.5 min-w-0">
         <div
-          className="flex h-14 w-14 items-center justify-center rounded-[18px] border border-white/70 shadow-inner"
-          style={{
-            background: visual.bg,
-            color: visual.color,
-          }}
+          className={`h-7 w-7 rounded-full flex items-center justify-center text-[13px] font-medium ${visual.wrapperClass}`}
         >
-          <visual.Icon className="h-6 w-6" strokeWidth={1.8} />
+          <visual.Icon className="h-3.5 w-3.5" strokeWidth={1.8} />
         </div>
-        <div className="flex flex-1 flex-col gap-3">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div className="space-y-1">
-              <p className="text-sm font-semibold text-[#0F172A]">{title}</p>
-              <p className="text-xs text-[#475569]">
-                {description || "Detaylar yakında eklenecek."}
-              </p>
-            </div>
-            <span className="inline-flex items-center rounded-full bg-[#F5C76A]/90 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-[#0F172A] shadow-sm">
-              +{formatReward(reward)} NOP
-            </span>
+        <div className="flex flex-col min-w-0">
+          <div className="text-[13px] font-semibold text-slate-900 truncate">{title}</div>
+          <div className="text-[11px] leading-snug text-slate-500 line-clamp-2">
+            {description || "Detaylar yakında eklenecek."}
           </div>
         </div>
       </div>
-      <div className="w-full sm:pl-[4.5rem]">
-        <ActionContent />
+      <div className="flex flex-col items-end gap-1 shrink-0">
+        <div className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5">
+          <span className="text-[11px] font-semibold text-amber-700">
+            +{formatReward(reward)} NOP
+          </span>
+        </div>
+        {renderAction()}
       </div>
     </div>
   );
