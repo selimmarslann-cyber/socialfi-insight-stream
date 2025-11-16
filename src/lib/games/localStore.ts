@@ -1,4 +1,4 @@
-export type GameKey = 'flappy' | 'runner' | 'memory' | 'reaction';
+export type GameKey = 'nopchart' | 'flappy' | 'runner' | 'memory' | 'reaction';
 
 export type ScoreRow = { score: number; ts: number; address?: string };
 
@@ -65,13 +65,14 @@ export const setSettings = (value: UserSettings) => {
 
 export const getEarnedNop = (address: string, game?: GameKey) => {
   const map: Record<GameKey, (score: number) => number> = {
+    nopchart: () => 0,
     flappy: (score) => Math.floor(score / 10),
     runner: (score) => Math.floor(score / 1000),
     memory: (score) => (score <= 10 ? 3 : score <= 20 ? 1 : 0),
     reaction: (score) => (score < 200 ? 3 : score < 250 ? 2 : score < 300 ? 1 : 0),
   };
 
-  const keys: GameKey[] = game ? [game] : ['flappy', 'runner', 'memory', 'reaction'];
+  const keys: GameKey[] = game ? [game] : ['nopchart', 'flappy', 'runner', 'memory', 'reaction'];
 
   return keys.reduce((sum, key) => {
     const scores = getScores(key);

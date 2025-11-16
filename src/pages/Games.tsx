@@ -10,6 +10,12 @@ type CardConfig = {
 };
 
 const CARDS: CardConfig[] = [
+  {
+    key: 'nopchart',
+    name: 'NopChart',
+    desc: 'Predict the path of a moving line chart. Place NOP on grid boxes and win if the line touches your box.',
+    href: '/games/nopchart',
+  },
   { key: 'flappy', name: 'Flappy NOP', desc: 'Engellerden geç, en uzağa uç.', href: '/games/flappy' },
   { key: 'runner', name: 'NOP Runner', desc: 'Koş, zıpla, engellerden kaç.', href: '/games/runner' },
   {
