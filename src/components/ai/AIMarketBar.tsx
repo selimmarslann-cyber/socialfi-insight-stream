@@ -5,13 +5,15 @@ type MarketSignal = {
   symbol: string;
   price: number;
   change24h: number;
-  volume: number;
+  volume?: number;
   signal: "Bullish" | "Neutral" | "Bearish";
   score: number;
+  displayValue?: string;
+  subtitle?: string;
 };
 
 const API_BASE = PUBLIC_ENV.apiBase || "/api";
-const FALLBACK_SIGNALS: MarketSignal[] = [
+const FALLBACK_COINS: MarketSignal[] = [
   {
     symbol: "BTC/USDT",
     price: 62850,
@@ -29,22 +31,6 @@ const FALLBACK_SIGNALS: MarketSignal[] = [
     score: 71,
   },
   {
-    symbol: "SOL/USDT",
-    price: 142.5,
-    change24h: -0.65,
-    volume: 1850000000,
-    signal: "Neutral",
-    score: 62,
-  },
-  {
-    symbol: "AVAX/USDT",
-    price: 38.8,
-    change24h: -2.1,
-    volume: 890000000,
-    signal: "Bearish",
-    score: 69,
-  },
-  {
     symbol: "ZK/USDT",
     price: 0.42,
     change24h: 3.2,
@@ -52,20 +38,69 @@ const FALLBACK_SIGNALS: MarketSignal[] = [
     signal: "Bullish",
     score: 66,
   },
+];
+
+const GLOBAL_MARKET_CARDS: MarketSignal[] = [
   {
-    symbol: "BNB/USDT",
-    price: 568.4,
-    change24h: 0.78,
-    volume: 2100000000,
+    symbol: "BTC Dominance",
+    price: 52.4,
+    change24h: 0.62,
+    signal: "Bullish",
+    score: 64,
+    displayValue: "52.4%",
+    subtitle: "Share of global crypto market cap",
+  },
+  {
+    symbol: "Fear & Greed Index",
+    price: 68,
+    change24h: -4.1,
     signal: "Neutral",
-    score: 73,
+    score: 68,
+    displayValue: "68 / 100",
+    subtitle: "Market sentiment snapshot",
+  },
+  {
+    symbol: "Total Market Cap",
+    price: 2480000000000,
+    change24h: 1.83,
+    signal: "Bullish",
+    score: 72,
+    displayValue: "$2.48T",
+    subtitle: "Combined crypto market value",
   },
 ];
+
+const DESIRED_COIN_SYMBOLS = ["BTC/USDT", "ETH/USDT", "ZK/USDT"];
 
 const sentimentBadgeClasses: Record<MarketSignal["signal"], string> = {
   Bullish: "bg-emerald-50 text-emerald-600",
   Neutral: "bg-slate-100 text-slate-600",
   Bearish: "bg-rose-50 text-rose-600",
+};
+
+const normalizeSignals = (source: MarketSignal[]): MarketSignal[] => {
+  const filtered = source.filter((entry) => {
+    const uppercase = entry.symbol.toUpperCase();
+    return !uppercase.startsWith("SOL") && !uppercase.startsWith("AVAX");
+  });
+
+  const registry = new Map<string, MarketSignal>();
+  filtered.forEach((entry) => {
+    registry.set(entry.symbol, entry);
+  });
+
+  const fallbackRegistry = new Map(
+    FALLBACK_COINS.map((entry) => [entry.symbol, entry] as const),
+  );
+
+  const selectedCoins = DESIRED_COIN_SYMBOLS.map((symbol) => {
+    if (registry.has(symbol)) {
+      return registry.get(symbol);
+    }
+    return fallbackRegistry.get(symbol);
+  }).filter(Boolean) as MarketSignal[];
+
+  return [...selectedCoins, ...GLOBAL_MARKET_CARDS];
 };
 
 const formatPrice = (value: number) =>
@@ -87,7 +122,9 @@ const formatVolume = (value: number) =>
   }).format(value);
 
 export const AIMarketBar = () => {
-  const [signals, setSignals] = useState<MarketSignal[]>(FALLBACK_SIGNALS);
+  const [signals, setSignals] = useState<MarketSignal[]>(() =>
+    normalizeSignals(FALLBACK_COINS),
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const controllerRef = useRef<AbortController | null>(null);
@@ -111,13 +148,13 @@ export const AIMarketBar = () => {
       }
 
       const payload = (await response.json()) as { items?: MarketSignal[] };
-      setSignals(payload.items ?? FALLBACK_SIGNALS);
+      setSignals(normalizeSignals(payload.items ?? FALLBACK_COINS));
     } catch (err) {
       if ((err as { name?: string })?.name === "AbortError") {
         return;
       }
       console.warn("AI signals fetch failed", err);
-      setSignals(FALLBACK_SIGNALS);
+      setSignals(normalizeSignals(FALLBACK_COINS));
       setError("No signals right now. Retry in a minute.");
     } finally {
       setLoading(false);
@@ -148,8 +185,14 @@ export const AIMarketBar = () => {
             signal.change24h > 0
               ? "text-emerald-500"
               : signal.change24h < 0
-              ? "text-rose-500"
-              : "text-slate-500";
+                ? "text-rose-500"
+                : "text-slate-500";
+          const subtitle =
+            signal.subtitle ??
+            (signal.volume
+              ? `24H VOL ${formatVolume(signal.volume).toUpperCase()}`
+              : "Global metric update");
+          const primaryValue = signal.displayValue ?? formatPrice(signal.price);
 
           return (
             <div
@@ -158,10 +201,10 @@ export const AIMarketBar = () => {
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-sm font-semibold text-slate-900">{signal.symbol}</div>
-                  <div className="text-[11px] text-slate-500">
-                    24H VOL {formatVolume(signal.volume).toUpperCase()}
+                  <div className="text-sm font-semibold text-slate-900">
+                    {signal.symbol}
                   </div>
+                  <div className="text-[11px] text-slate-500">{subtitle}</div>
                 </div>
                 <span
                   className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${sentimentBadgeClasses[signal.signal]}`}
@@ -171,9 +214,11 @@ export const AIMarketBar = () => {
               </div>
               <div className="flex items-baseline justify-between">
                 <div className="text-sm font-semibold text-slate-900">
-                  {formatPrice(signal.price)}
+                  {primaryValue}
                 </div>
-                <div className={`text-xs font-medium ${changeTone}`}>{formatChange(signal.change24h)}</div>
+                <div className={`text-xs font-medium ${changeTone}`}>
+                  {formatChange(signal.change24h)}
+                </div>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-[11px] text-slate-500">Score</span>
@@ -219,7 +264,10 @@ export const AIMarketBar = () => {
         {loading && !hasSignals ? (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, index) => (
-              <div key={index} className="h-24 rounded-xl border border-dashed border-slate-100 bg-slate-50 animate-pulse" />
+              <div
+                key={index}
+                className="h-24 rounded-xl border border-dashed border-slate-100 bg-slate-50 animate-pulse"
+              />
             ))}
           </div>
         ) : null}
