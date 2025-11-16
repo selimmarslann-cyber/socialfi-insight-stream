@@ -131,14 +131,41 @@ const fetchSupabaseBurnStats = async (): Promise<BurnStats | null> => {
       return null;
     }
 
-    const row = data as SupabaseRow;
+   const row = data as SupabaseRow;
 
-    return normalizeBurnStats({
-      total: row.total ?? row.total_burned,
-      last24h: row.last24h ?? row.last_24h,
-      series: row.series ?? row.series_data ?? row.history,
-      updatedAt: row.updated_at ?? row.updatedAt,
-    });
+// total her zaman number olsun
+const total: number =
+  typeof row.total === "string"
+    ? Number(row.total)
+    : typeof row.total_burned === "string"
+    ? Number(row.total_burned)
+    : (row.total ?? row.total_burned ?? 0);
+
+// last24h her zaman number olsun
+const last24h: number =
+  typeof row.last24h === "string"
+    ? Number(row.last24h)
+    : typeof row.last_24h === "string"
+    ? Number(row.last_24h)
+    : (row.last24h ?? row.last_24h ?? 0);
+
+// series her zaman BurnSeriesPoint[] olsun
+let rawSeries = row.series ?? row.series_data ?? row.history;
+
+const series: BurnSeriesPoint[] =
+  typeof rawSeries === "string"
+    ? (JSON.parse(rawSeries) as BurnSeriesPoint[])
+    : rawSeries ?? [];
+
+const updatedAt = row.updated_at ?? row.updatedAt;
+
+return normalizeBurnStats({
+  total,
+  last24h,
+  series,
+  updatedAt,
+});
+
   } catch (error) {
     console.warn("Supabase burn stats request failed", error);
     return null;
