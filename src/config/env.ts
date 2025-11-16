@@ -5,8 +5,13 @@ const importMetaEnv: EnvRecord =
     ? ((import.meta as { env?: EnvRecord }).env as EnvRecord)
     : {};
 
+const nodeEnv: EnvRecord =
+  typeof process !== "undefined" && typeof process.env === "object"
+    ? (process.env as EnvRecord)
+    : {};
+
 const readMetaValue = (key: string, fallback = ""): string => {
-  const value = importMetaEnv?.[key];
+  const value = importMetaEnv?.[key] ?? nodeEnv?.[key];
   return typeof value === "string" && value.length > 0 ? value : fallback;
 };
 

@@ -13,9 +13,8 @@ This project runs on **Vite + React**, so every frontend environment variable mu
 | Frontend (public) | `VITE_NEWS_RSS` | _(Optional)_ Comma-separated RSS feeds (falls back to Decrypt, Cointelegraph, CoinDesk) |
 | Frontend (public) | `VITE_API_BASE` | Optional override for HTTP client base URL (defaults to `/api`) |
 | Frontend (public) | `VITE_ADMIN_TOKEN` | Token used by the internal burn admin panel to call `/api/burn` |
-| Server-only | `SUPABASE_URL` | Same as `VITE_SUPABASE_URL` but scoped to backend functions (optional if identical) |
-| Server-only | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service-role key for Netlify functions that need write access |
-| Server-only | `ADMIN_TOKEN` | Must match `VITE_ADMIN_TOKEN`; used by Netlify burn function authorization |
+| Server-only | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service-role key for serverless functions that need write access |
+| Server-only | `ADMIN_TOKEN` | Must match `VITE_ADMIN_TOKEN`; used by the burn admin authorization |
 
 > Tip: copy `.env.example` to `.env` (local dev) or `.env.local` (if you prefer) and fill these values. Never commit real secrets.
 
@@ -24,7 +23,7 @@ This project runs on **Vite + React**, so every frontend environment variable mu
 ## 2. Supabase configuration
 
 1. Open **Supabase Dashboard → Your project → Project Settings → API**.
-2. Copy the **Project URL** into both `VITE_SUPABASE_URL` and (server) `SUPABASE_URL`.
+2. Copy the **Project URL** into `VITE_SUPABASE_URL` (serverless API'ler de aynı anahtarı okuyor).
 3. Copy the **anon public key** into `VITE_SUPABASE_ANON_KEY`.
 4. Copy the **service role key** into `SUPABASE_SERVICE_ROLE_KEY` (server-only, never expose to the browser).
 5. Optional: keep `VITE_ADMIN_TOKEN`/`ADMIN_TOKEN` in a password manager; use any strong random string.
@@ -39,11 +38,11 @@ The UI checks these variables via `src/config/env.ts`. When a value is missing, 
 
 1. Optionally set `VITE_NEWS_RSS` to a comma-separated list of RSS feeds that expose featured images (e.g. Decrypt, Cointelegraph verticals, CoinDesk categories).
 2. If the env var is omitted, `/api/crypto-news` automatically falls back to `https://decrypt.co/feed`, `https://cointelegraph.com/rss`, and CoinDesk's global markets feed.
-3. The handler (`src/api/crypto-news.ts`) normalizes thumbnails, filters out entries without media, deduplicates, and caches the top three stories for 60 seconds so the UI renders instantly.
+3. The handler (`api/crypto-news.ts`) normalizes thumbnails, filters out entries without media, deduplicates, and caches the top three stories for 60 seconds so the UI renders instantly.
 
 ### AI Signals API
 
-- Endpoint: `/api/ai-signals` (`src/api/ai-signals.ts`)
+- Endpoint: `/api/ai-signals` (`api/ai-signals.ts`)
 - Data source: CoinGecko `coins/markets` (no API key required)
 - Logic: applies the rule-based engine from `src/lib/ai/ruleBasedEngine.ts` to determine signal/volatility/market-maker activity and returns 40–90 scores for BTC/ETH/SOL/AVAX every request (cached for 60s).
 

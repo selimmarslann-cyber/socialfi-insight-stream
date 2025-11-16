@@ -98,10 +98,10 @@ const mapTickersToSignals = (rows: BinanceTicker[]): PriceSignal[] => {
 
     return {
       symbol: config.label,
-      price: Number.isFinite(price) ? Number(price.toFixed(price >= 1000 ? 0 : 2)) : 0,
-      change24h: Number.isFinite(change)
-        ? Number(change.toFixed(2))
+      price: Number.isFinite(price)
+        ? Number(price.toFixed(price >= 1000 ? 0 : 2))
         : 0,
+      change24h: Number.isFinite(change) ? Number(change.toFixed(2)) : 0,
       volume: Number.isFinite(volume) ? Math.round(volume) : 0,
       signal: ai.signal,
       score: ai.score,
