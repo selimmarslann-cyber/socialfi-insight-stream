@@ -18,21 +18,21 @@ export const NopCounter = () => {
     refetchInterval: 120000, // 2 minutes
   });
 
-  return (
-    <Button
-      type="button"
-      variant="ghost"
-      onClick={() => navigate("/wallet")}
-      className="group h-10 gap-2 rounded-full border border-[color:var(--ring)] bg-[color:var(--bg-card)]/90 px-4 text-xs font-semibold text-[color:var(--text-secondary)] shadow-sm backdrop-blur transition hover:opacity-90 focus-visible:ring-2 focus-visible:ring-[color:var(--ring)]"
-      aria-label="NOP balance"
-    >
-      <Coins className="h-4 w-4 text-[#F5C76A]" />
-      <span className="font-mono text-sm text-[color:var(--text-primary)] transition group-hover:text-[color:var(--text-primary)]">
-        {(data?.nop || nop).toLocaleString()}
-      </span>
-      <span className="hidden text-[11px] uppercase tracking-wide text-[color:var(--text-secondary)] md:inline">
-        NOP
-      </span>
-    </Button>
-  );
+    return (
+      <Button
+        type="button"
+        variant="ghost"
+        onClick={() => navigate("/wallet")}
+        className="group h-10 gap-2 rounded-full border border-slate-200 bg-white/90 px-4 text-xs font-semibold text-slate-600 shadow-sm transition hover:bg-white focus-visible:ring-2 focus-visible:ring-indigo-100"
+        aria-label="NOP balance"
+      >
+        <Coins className="h-4 w-4 text-amber-500" />
+        <span className="font-mono text-sm text-slate-900 transition group-hover:text-slate-900">
+          {(data?.nop || nop).toLocaleString()}
+        </span>
+        <span className="hidden text-[11px] uppercase tracking-wide text-slate-500 md:inline">
+          NOP
+        </span>
+      </Button>
+    );
 };

@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Card from "@/components/Card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PUBLIC_ENV } from "@/config/env";
+import { cn } from "@/lib/utils";
 
 type RemoteNewsItem = {
   id: string;
@@ -40,7 +39,11 @@ const toRelativeTime = (value: string): string => {
   return timeFormatter.format(diffDays, "day");
 };
 
-export default function CryptoNews() {
+type CryptoNewsProps = {
+  className?: string;
+};
+
+export default function CryptoNews({ className }: CryptoNewsProps) {
   const [items, setItems] = useState<RemoteNewsItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -90,58 +93,52 @@ export default function CryptoNews() {
     if (!hasItems) {
       return null;
     }
-    return items.map((item) => (
-      <a
-        key={item.id}
-        href={item.link}
-        target="_blank"
-        rel="noreferrer"
-        className="group flex items-center gap-3 rounded-xl border border-transparent px-2 py-2 transition hover:border-indigo-100 hover:bg-white"
-      >
-        <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl border border-slate-100 bg-slate-50">
-          <img
-            src={item.imageUrl || FALLBACK_IMAGE}
-            alt={item.source}
-            className="h-full w-full object-cover"
-            loading="lazy"
-            onError={(event) => {
-              event.currentTarget.onerror = null;
-              event.currentTarget.src = FALLBACK_IMAGE;
-            }}
-          />
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-slate-800 line-clamp-2 group-hover:text-indigo-600">
-            {item.title}
-          </p>
-          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-            <span className="font-medium text-slate-600">{item.source}</span>
-            <span className="text-slate-400">·</span>
-            <span>{toRelativeTime(item.publishedAt)}</span>
+      return items.map((item) => (
+        <a
+          key={item.id}
+          href={item.link}
+          target="_blank"
+          rel="noreferrer"
+          className="group flex items-center gap-3 py-2"
+        >
+          <div className="h-9 w-9 flex-shrink-0 overflow-hidden rounded-md border border-slate-100 bg-slate-100">
+            <img
+              src={item.imageUrl || FALLBACK_IMAGE}
+              alt={item.source}
+              className="h-full w-full object-cover"
+              loading="lazy"
+              onError={(event) => {
+                event.currentTarget.onerror = null;
+                event.currentTarget.src = FALLBACK_IMAGE;
+              }}
+            />
           </div>
-        </div>
-      </a>
-    ));
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-medium text-slate-900 line-clamp-2 group-hover:text-indigo-600">
+              {item.title}
+            </p>
+            <div className="text-[11px] text-slate-500">
+              {item.source} • {toRelativeTime(item.publishedAt)}
+            </div>
+          </div>
+        </a>
+      ));
   }, [hasItems, items]);
 
   return (
-    <Card
-      title="Crypto News · AI Signals"
-      subtitle="Realtime feeds scored by the NOP AI engine"
-      right={
-        <Badge className="rounded-full border border-indigo-200 bg-indigo-50 text-[11px] font-semibold uppercase tracking-wide text-indigo-600">
-          AI
-        </Badge>
-      }
-    >
+    <div className={cn("rounded-2xl border border-slate-100 bg-white p-5 shadow-sm", className)}>
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-semibold text-slate-900">Crypto News — AI Signals</p>
+          <p className="text-[11px] text-slate-500">Realtime feeds scored by the NOP AI Engine</p>
+        </div>
+      </div>
+
       {loading && !hasItems ? (
-        <div className="space-y-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-            Loading crypto news…
-          </p>
+        <div className="mt-4 space-y-3">
           {Array.from({ length: MAX_NEWS_ITEMS }).map((_, index) => (
             <div key={index} className="flex items-center gap-3">
-              <div className="h-14 w-14 rounded-xl bg-slate-100 animate-pulse" />
+              <div className="h-9 w-9 rounded-md bg-slate-100 animate-pulse" />
               <div className="flex-1 space-y-2">
                 <div className="h-3 w-3/4 rounded-full bg-slate-100 animate-pulse" />
                 <div className="h-3 w-1/2 rounded-full bg-slate-100 animate-pulse" />
@@ -152,13 +149,11 @@ export default function CryptoNews() {
       ) : null}
 
       {!loading && hasItems ? (
-        <div className="space-y-3">{headlineList}</div>
+        <div className="mt-4 divide-y divide-slate-100">{headlineList}</div>
       ) : null}
 
       {!loading && !hasItems && !error ? (
-        <p className="text-sm text-slate-500">
-          No AI-curated signals yet. Check back shortly.
-        </p>
+        <p className="mt-4 text-sm text-slate-500">No AI-curated signals yet. Check back shortly.</p>
       ) : null}
 
       {error ? (
@@ -175,6 +170,6 @@ export default function CryptoNews() {
           </Button>
         </div>
       ) : null}
-    </Card>
+    </div>
   );
 }
