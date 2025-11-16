@@ -113,13 +113,12 @@ const normalizeItem = (
   item: CustomItem,
   fallbackSource: string,
 ): RemoteNewsItem | null => {
-  const link = item.link?.trim();
-  const publishedAt = item.isoDate ?? item.pubDate ?? new Date().toISOString();
-  const source =
-    hostnameFromUrl(link) ??
-    hostnameFromUrl(fallbackSource) ??
-    fallbackSource.replace(/^https?:\/\//, "") ||
-    "crypto-desk";
+    const link = item.link?.trim();
+    const publishedAt = item.isoDate ?? item.pubDate ?? new Date().toISOString();
+    const source =
+      hostnameFromUrl(link) ??
+      hostnameFromUrl(fallbackSource) ??
+      (fallbackSource.replace(/^https?:\/\//, "") || "crypto-desk");
 
   if (!link) {
     return null;

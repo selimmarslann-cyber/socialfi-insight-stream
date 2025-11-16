@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { createClient } from "@supabase/supabase-js";
-import type { BurnSeriesPoint, BurnStats } from "../src/types/admin";
+import type { BurnSeriesPoint, BurnStats } from "../src/types/admin.js";
 
 type SupabaseRow = {
   id: number;
@@ -118,7 +118,7 @@ const fetchSupabaseBurnStats = async (): Promise<BurnStats | null> => {
     });
 
     const { data, error } = await client
-      .from<SupabaseRow>("burn_stats")
+      .from("burn_stats")
       .select("*")
       .eq("id", 1)
       .maybeSingle();
@@ -131,11 +131,13 @@ const fetchSupabaseBurnStats = async (): Promise<BurnStats | null> => {
       return null;
     }
 
+    const row = data as SupabaseRow;
+
     return normalizeBurnStats({
-      total: data.total ?? data.total_burned,
-      last24h: data.last24h ?? data.last_24h,
-      series: data.series ?? data.series_data ?? data.history,
-      updatedAt: data.updated_at ?? data.updatedAt,
+      total: row.total ?? row.total_burned,
+      last24h: row.last24h ?? row.last_24h,
+      series: row.series ?? row.series_data ?? row.history,
+      updatedAt: row.updated_at ?? row.updatedAt,
     });
   } catch (error) {
     console.warn("Supabase burn stats request failed", error);
