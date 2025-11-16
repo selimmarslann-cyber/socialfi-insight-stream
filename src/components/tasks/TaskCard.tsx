@@ -1,10 +1,5 @@
-import {
-  type LucideIcon,
-  PenSquare,
-  Sparkles,
-  User,
-  Wallet,
-} from "lucide-react";
+import clsx from "clsx";
+import { PenSquare, Sparkles, User, Wallet } from "lucide-react";
 
 export type TaskState = "locked" | "ready" | "claimed";
 
@@ -20,28 +15,11 @@ type TaskCardProps = {
   onClaim?: () => void;
 };
 
-type IconVisual = {
-  Icon: LucideIcon;
-  wrapperClass: string;
-};
-
-const iconVisuals: Record<TaskIconVariant, IconVisual> = {
-  signup: {
-    Icon: User,
-    wrapperClass: "bg-indigo-100 text-indigo-600",
-  },
-  deposit: {
-    Icon: Wallet,
-    wrapperClass: "bg-sky-100 text-sky-600",
-  },
-  contribute: {
-    Icon: PenSquare,
-    wrapperClass: "bg-amber-100 text-amber-600",
-  },
-  default: {
-    Icon: Sparkles,
-    wrapperClass: "bg-slate-100 text-slate-600",
-  },
+const iconVisuals: Record<TaskIconVariant, typeof User> = {
+  signup: User,
+  deposit: Wallet,
+  contribute: PenSquare,
+  default: Sparkles,
 };
 
 const formatReward = (value: number) => {
@@ -60,7 +38,15 @@ export function TaskCard({
   iconVariant,
   onClaim,
 }: TaskCardProps) {
-  const visual = iconVisuals[iconVariant] ?? iconVisuals.default;
+  const Icon = iconVisuals[iconVariant] ?? iconVisuals.default;
+
+  const iconWrapperClassName = clsx(
+    "h-7 w-7 rounded-full flex items-center justify-center text-[13px] font-medium",
+    iconVariant === "signup" && "bg-indigo-100 text-indigo-600",
+    iconVariant === "deposit" && "bg-sky-100 text-sky-600",
+    iconVariant === "contribute" && "bg-amber-100 text-amber-600",
+    iconVariant === "default" && "bg-slate-100 text-slate-600"
+  );
 
   const renderAction = () => {
     if (state === "ready") {
@@ -84,14 +70,15 @@ export function TaskCard({
       return (
         <button
           type="button"
-          disabled
-          className="text-[11px] font-medium text-indigo-600 bg-sky-50 hover:bg-sky-100 rounded-full px-2.5 py-0.5 leading-none transition disabled:opacity-70"
+          aria-disabled="true"
+          className="text-[11px] font-medium text-indigo-600 bg-sky-50 hover:bg-sky-100 rounded-full px-2.5 py-0.5 leading-none transition cursor-not-allowed"
         >
-          Complete
+          Complete to unlock
         </button>
       );
     }
 
+    // claimed
     return (
       <div className="text-[11px] font-medium text-emerald-600 bg-emerald-50 rounded-full px-2.5 py-0.5">
         Claimed
@@ -101,14 +88,12 @@ export function TaskCard({
 
   return (
     <div className="rounded-2xl border border-slate-100 bg-slate-50/40 px-3 py-2.5 flex items-center justify-between gap-3">
-      <div className="flex flex-1 items-center gap-2.5 min-w-0">
-        <div
-          className={`h-7 w-7 rounded-full flex items-center justify-center text-[13px] font-medium ${visual.wrapperClass}`}
-        >
-          <visual.Icon className="h-3.5 w-3.5" strokeWidth={1.8} />
+      <div className="flex items-center gap-2.5 min-w-0">
+        <div className={iconWrapperClassName}>
+          <Icon className="h-3.5 w-3.5" strokeWidth={1.8} />
         </div>
-        <div className="flex flex-col min-w-0 gap-0.5">
-          <div className="text-[13px] font-semibold text-slate-900 leading-tight break-words">
+        <div className="flex flex-col min-w-0">
+          <div className="text-[13px] font-semibold text-slate-900 truncate">
             {title}
           </div>
           <div className="text-[11px] leading-snug text-slate-500 line-clamp-2">
@@ -116,7 +101,8 @@ export function TaskCard({
           </div>
         </div>
       </div>
-      <div className="flex flex-col items-end gap-1 shrink-0 ml-auto text-right">
+
+      <div className="flex flex-col items-end gap-1 shrink-0">
         <div className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5">
           <span className="text-[11px] font-semibold text-amber-700">
             +{formatReward(reward)} NOP
