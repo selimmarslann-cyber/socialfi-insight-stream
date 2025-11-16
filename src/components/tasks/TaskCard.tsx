@@ -87,7 +87,7 @@ export function TaskCard({
           disabled
           className="text-[11px] font-medium text-indigo-600 bg-sky-50 hover:bg-sky-100 rounded-full px-2.5 py-0.5 leading-none transition disabled:opacity-70"
         >
-          Complete to unlock
+          Complete
         </button>
       );
     }
@@ -101,20 +101,22 @@ export function TaskCard({
 
   return (
     <div className="rounded-2xl border border-slate-100 bg-slate-50/40 px-3 py-2.5 flex items-center justify-between gap-3">
-      <div className="flex items-center gap-2.5 min-w-0">
+      <div className="flex flex-1 items-center gap-2.5 min-w-0">
         <div
           className={`h-7 w-7 rounded-full flex items-center justify-center text-[13px] font-medium ${visual.wrapperClass}`}
         >
           <visual.Icon className="h-3.5 w-3.5" strokeWidth={1.8} />
         </div>
-        <div className="flex flex-col min-w-0">
-          <div className="text-[13px] font-semibold text-slate-900 truncate">{title}</div>
+        <div className="flex flex-col min-w-0 gap-0.5">
+          <div className="text-[13px] font-semibold text-slate-900 leading-tight break-words">
+            {title}
+          </div>
           <div className="text-[11px] leading-snug text-slate-500 line-clamp-2">
             {description || "Detaylar yakında eklenecek."}
           </div>
         </div>
       </div>
-      <div className="flex flex-col items-end gap-1 shrink-0">
+      <div className="flex flex-col items-end gap-1 shrink-0 ml-auto text-right">
         <div className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5">
           <span className="text-[11px] font-semibold text-amber-700">
             +{formatReward(reward)} NOP
