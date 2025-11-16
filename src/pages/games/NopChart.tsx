@@ -1,20 +1,18 @@
 import { useCallback, useEffect, useMemo, useState, type ChangeEvent } from 'react';
+import { cn } from '../../lib/utils';
 
-const VIEW_WIDTH = 120;
-const VIEW_HEIGHT = 100;
-const COLS = 10;
-const ROWS = 8;
-const ROW_HEIGHT = VIEW_HEIGHT / ROWS;
-const COL_WIDTH = VIEW_WIDTH / COLS;
-const INITIAL_POINTS = 80;
-const MAX_POINTS = 120;
-const POINT_INTERVAL = 120; // ms
-const ROUND_DURATION = 10; // seconds
-const START_BALANCE = 1000;
+const COLS = 48;
+const ROWS = 12;
+const VIEWBOX_SIZE = 100;
+const STEP_MS = 200; // 0.2s per step -> ~9.6s per full pass
+const MIN_FORWARD_COLS = 2;
 const MIN_STAKE = 10;
+const START_BALANCE = 1000;
+const MAX_RECENT_RESULTS = 8;
 
-type Point = { x: number; y: number; t: number };
-type ScreenPoint = Point & { screenX: number; screenY: number };
+type Point = { x: number; y: number };
+
+type BetStatus = 'active' | 'won' | 'lost';
 
 type Bet = {
   id: string;
@@ -22,109 +20,245 @@ type Bet = {
   boxY: number;
   stake: number;
   placedAt: number;
-  resolved: boolean;
-  roundId: number;
-  distance: number;
-  multiplier: number | 'refund';
-  hit?: boolean;
-  hitTimestamp?: number;
-  payout?: number;
+  segmentId: number;
+  multiplier: number;
+  status: BetStatus;
   resolvedAt?: number;
-};
-
-type BetSummary = {
-  count: number;
-  hit: boolean;
-  multiplierLabel: string;
+  payout?: number;
 };
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
-const randomDelta = () => Math.floor(Math.random() * 13) - 6; // -6..+6
+const randomBetween = (min: number, max: number) => Math.random() * (max - min) + min;
 
-const randomId = () => {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+const rowIndexFromY = (y: number) => {
+  const safe = clamp(y, 0, VIEWBOX_SIZE - Number.EPSILON);
+  const rowHeight = VIEWBOX_SIZE / ROWS;
+  const distanceFromBottom = VIEWBOX_SIZE - safe;
+  const raw = Math.floor(distanceFromBottom / rowHeight);
+  return Math.max(0, Math.min(ROWS - 1, raw));
+};
+
+const generateId = () => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID();
   }
   return Math.random().toString(36).slice(2);
 };
 
-const generateInitialPoints = (): Point[] => {
-  const now = Date.now();
-  const start = now - INITIAL_POINTS * POINT_INTERVAL;
-  let currentY = 50;
-  const next: Point[] = [];
-
-  for (let i = 0; i < INITIAL_POINTS; i += 1) {
-    const t = start + i * POINT_INTERVAL;
-    next.push({ x: i, y: currentY, t });
-    currentY = clamp(currentY + randomDelta(), 10, 90);
-  }
-
-  return next;
+const getBaseMultiplier = (dVert: number) => {
+  if (dVert === 0) return 1;
+  if (dVert === 1) return 1.3;
+  if (dVert === 2) return 1.7;
+  if (dVert === 3) return 2.3;
+  if (dVert === 4) return 3.2;
+  return 4;
 };
 
-const rowIndexFromY = (y: number) => {
-  const safe = clamp(y, 0, VIEW_HEIGHT - 0.001);
-  return Math.min(ROWS - 1, Math.max(0, Math.floor(safe / ROW_HEIGHT)));
+const getForwardBonus = (dHoriz: number) => {
+  const extraSteps = Math.max(0, dHoriz - MIN_FORWARD_COLS);
+  const raw = 1 + 0.03 * extraSteps;
+  return Math.min(raw, 1.25);
 };
 
-const getMultiplier = (distance: number): number | 'refund' => {
-  if (distance === 0) return 'refund';
-  if (distance === 1) return 1.3;
-  if (distance === 2) return 1.7;
-  if (distance === 3) return 2.2;
-  if (distance === 4) return 3.0;
-  return 3.5;
+const computeMultiplier = ({
+  headRow,
+  headColumn,
+  boxX,
+  boxY,
+}: {
+  headRow: number;
+  headColumn: number;
+  boxX: number;
+  boxY: number;
+}) => {
+  const dVert = Math.abs(boxY - headRow);
+  const base = getBaseMultiplier(dVert);
+  const dHoriz = boxX - headColumn;
+  const bonus = getForwardBonus(dHoriz);
+  return Number((base * bonus).toFixed(2));
 };
 
-const formatMultiplierBadge = (multiplier: number | 'refund') => {
-  if (multiplier === 'refund') return '↺';
-  return `x${multiplier.toFixed(1)}`;
+const formatDelta = (value: number) => {
+  if (!Number.isFinite(value)) return '0.00%';
+  const sign = value > 0 ? '+' : '';
+  return `${sign}${value.toFixed(2)}%`;
 };
-
-const formatPayout = (value?: number) => (value ? value.toLocaleString() : '0');
 
 export default function NopChartGame() {
-  const [points, setPoints] = useState<Point[]>(() => generateInitialPoints());
+  const [points, setPoints] = useState<Point[]>([]);
+  const [step, setStep] = useState(0);
+  const [segmentId, setSegmentId] = useState(0);
   const [balance, setBalance] = useState(START_BALANCE);
   const [stake, setStake] = useState(MIN_STAKE);
-  const [activeBets, setActiveBets] = useState<Bet[]>([]);
-  const [betHistory, setBetHistory] = useState<Bet[]>([]);
-  const [roundId, setRoundId] = useState(1);
-  const [roundTimeLeft, setRoundTimeLeft] = useState(ROUND_DURATION);
+  const [bets, setBets] = useState<Bet[]>([]);
   const [warning, setWarning] = useState<string | null>(null);
+  const [segmentStartY, setSegmentStartY] = useState<number | null>(null);
+  const [tenSecRefY, setTenSecRefY] = useState<number | null>(null);
+  const [lastTenSecUpdatedAt, setLastTenSecUpdatedAt] = useState<number>(Date.now());
 
-  const normalizedPoints = useMemo<ScreenPoint[]>(() => {
-    if (!points.length) return [];
-    const minX = points[0].x;
-    const maxX = points[points.length - 1].x;
-    const span = Math.max(maxX - minX, 1);
+  const columnWidth = VIEWBOX_SIZE / COLS;
+  const rowHeight = VIEWBOX_SIZE / ROWS;
 
-    return points.map((point) => ({
-      ...point,
-      screenX: ((point.x - minX) / span) * VIEW_WIDTH,
-      screenY: point.y,
-    }));
-  }, [points]);
+  const head = points[points.length - 1] ?? null;
+  const headColumn = head ? Math.round(head.x) : 0;
+  const headRow = head ? rowIndexFromY(head.y) : Math.floor(ROWS / 2);
+  const safeColumnThreshold = headColumn + MIN_FORWARD_COLS;
 
-  const latestPoint = normalizedPoints[normalizedPoints.length - 1];
-  const currentRow = latestPoint ? rowIndexFromY(latestPoint.screenY) : Math.floor(ROWS / 2);
-
-  const betGroups = useMemo(() => {
-    const map = new Map<string, BetSummary>();
+  const activeBets = useMemo(() => bets.filter((bet) => bet.status === 'active'), [bets]);
+  const recentResults = useMemo(
+    () =>
+      [...bets]
+        .filter((bet) => bet.status !== 'active')
+        .sort((a, b) => (b.resolvedAt ?? 0) - (a.resolvedAt ?? 0))
+        .slice(0, MAX_RECENT_RESULTS),
+    [bets],
+  );
+  const cellHighlights = useMemo(() => {
+    const map = new Map<string, number>();
     activeBets.forEach((bet) => {
       const key = `${bet.boxX}-${bet.boxY}`;
-      const badge = formatMultiplierBadge(bet.multiplier);
-      const existing = map.get(key);
-      map.set(key, {
-        count: (existing?.count ?? 0) + 1,
-        hit: Boolean(bet.hit) || existing?.hit === true,
-        multiplierLabel: existing?.multiplierLabel ?? badge,
-      });
+      map.set(key, (map.get(key) ?? 0) + 1);
     });
     return map;
   }, [activeBets]);
+
+  const linePoints = useMemo(
+    () =>
+      points
+        .map((point) => `${(point.x / (COLS - 1)) * VIEWBOX_SIZE},${point.y}`)
+        .join(' '),
+    [points],
+  );
+
+  const totalDeltaPct =
+    segmentStartY != null && segmentStartY !== 0 && head
+      ? ((head.y - segmentStartY) / segmentStartY) * 100
+      : 0;
+
+  const lastTenSecDeltaPct =
+    tenSecRefY != null && tenSecRefY !== 0 && head ? ((head.y - tenSecRefY) / tenSecRefY) * 100 : 0;
+
+  const startNewSegment = useCallback(() => {
+    const startY = randomBetween(20, 80);
+    setPoints([{ x: 0, y: startY }]);
+    setStep(0);
+    setSegmentId((prev) => prev + 1);
+    setSegmentStartY(startY);
+    setTenSecRefY(startY);
+    setLastTenSecUpdatedAt(Date.now());
+  }, []);
+
+  const resolveSegmentBets = useCallback((segmentToClose: number) => {
+    setBets((prev) => {
+      const now = Date.now();
+      let changed = false;
+      const next = prev.map((bet) => {
+        if (bet.segmentId === segmentToClose && bet.status === 'active') {
+          changed = true;
+          return { ...bet, status: 'lost', resolvedAt: now, payout: 0 };
+        }
+        return bet;
+      });
+      return changed ? next : prev;
+    });
+  }, []);
+
+  const handleSegmentEnd = useCallback(
+    (segmentToClose: number) => {
+      resolveSegmentBets(segmentToClose);
+      startNewSegment();
+    },
+    [resolveSegmentBets, startNewSegment],
+  );
+
+  useEffect(() => {
+    startNewSegment();
+  }, [startNewSegment]);
+
+  const hasStarted = points.length > 0;
+
+  useEffect(() => {
+    if (!hasStarted) return;
+    const id = window.setInterval(() => {
+      let advanced = false;
+      setPoints((prev) => {
+        if (!prev.length) return prev;
+        const last = prev[prev.length - 1];
+        if (last.x >= COLS - 1) {
+          return prev;
+        }
+        advanced = true;
+        const nextX = Math.min(last.x + 1, COLS - 1);
+        const pumpChance = Math.random();
+        const deltaY = pumpChance < 0.15 ? randomBetween(-30, 30) : randomBetween(-8, 8);
+        const nextY = clamp(last.y + deltaY, 0, 100);
+        return [...prev, { x: nextX, y: nextY }];
+      });
+
+      if (advanced) {
+        setStep((prev) => prev + 1);
+      }
+    }, STEP_MS);
+
+    return () => window.clearInterval(id);
+  }, [hasStarted]);
+
+  useEffect(() => {
+    if (!hasStarted) return;
+    if (step >= COLS - 1) {
+      handleSegmentEnd(segmentId);
+    }
+  }, [handleSegmentEnd, hasStarted, segmentId, step]);
+
+  useEffect(() => {
+    if (!head) return;
+    const now = Date.now();
+    if (now - lastTenSecUpdatedAt >= 10_000) {
+      setTenSecRefY(head.y);
+      setLastTenSecUpdatedAt(now);
+    }
+  }, [head, lastTenSecUpdatedAt]);
+
+  useEffect(() => {
+    if (!head) return;
+    setBets((prev) => {
+      const now = Date.now();
+      let changed = false;
+      let balanceDelta = 0;
+      const next = prev.map((bet) => {
+        if (bet.segmentId !== segmentId || bet.status !== 'active') {
+          return bet;
+        }
+
+        if (bet.boxX === headColumn && bet.boxY === headRow) {
+          const payout = Math.round(bet.stake * bet.multiplier);
+          balanceDelta += payout;
+          changed = true;
+          return { ...bet, status: 'won', resolvedAt: now, payout };
+        }
+
+        if (step > bet.boxX) {
+          changed = true;
+          return { ...bet, status: 'lost', resolvedAt: now, payout: 0 };
+        }
+
+        return bet;
+      });
+
+      if (balanceDelta > 0) {
+        setBalance((prevBalance) => prevBalance + balanceDelta);
+      }
+
+      return changed ? next : prev;
+    });
+  }, [head, headColumn, headRow, segmentId, step]);
+
+  useEffect(() => {
+    if (balance >= MIN_STAKE && stake > balance) {
+      setStake(Math.max(MIN_STAKE, Math.floor(balance / 10) * 10) || MIN_STAKE);
+    }
+  }, [balance, stake]);
 
   const handleStakeChange = (event: ChangeEvent<HTMLInputElement>) => {
     const raw = Number(event.target.value);
@@ -133,426 +267,333 @@ export default function NopChartGame() {
       return;
     }
     const normalized = Math.max(MIN_STAKE, Math.round(raw / 10) * 10);
-    const maxAllowed = balance >= MIN_STAKE ? balance : MIN_STAKE;
-    const nextStake = Math.min(maxAllowed, normalized);
-    setStake(nextStake);
+    setStake(Math.min(balance, normalized));
   };
 
-  const placeBet = (boxX: number, boxY: number) => {
-    let accepted = false;
-    setBalance((prev) => {
-      if (prev < stake) {
-        return prev;
+  const adjustStake = (delta: number) => {
+    setStake((prev) => {
+      const next = Math.max(MIN_STAKE, prev + delta);
+      return Math.min(balance, Math.round(next / 10) * 10);
+    });
+  };
+
+  const handleBoxClick = useCallback(
+    (boxX: number, boxY: number) => {
+      if (!head) return;
+      if (stake < MIN_STAKE) {
+        setWarning('Minimum stake is 10 NOP.');
+        return;
       }
-      accepted = true;
-      return prev - stake;
-    });
-
-    if (!accepted) {
-      setWarning('Not enough NOP balance for this stake.');
-      return;
-    }
-    setWarning(null);
-
-    const distance = Math.abs(boxY - currentRow);
-    const multiplier = getMultiplier(distance);
-    const bet: Bet = {
-      id: randomId(),
-      boxX,
-      boxY,
-      stake,
-      placedAt: Date.now(),
-      resolved: false,
-      roundId,
-      distance,
-      multiplier,
-    };
-
-    setActiveBets((prev) => [...prev, bet]);
-  };
-
-  const resolveRound = useCallback(() => {
-    setActiveBets((prevBets) => {
-      if (!prevBets.length) return prevBets;
-
-      const roundEnd = Date.now();
-      const resolvedBets = prevBets.map((bet) => {
-        const multiplier = bet.multiplier ?? getMultiplier(bet.distance);
-        let payout = 0;
-
-        if (multiplier === 'refund') {
-          payout = bet.stake;
-        } else if (bet.hit) {
-          payout = Math.round(bet.stake * multiplier);
-        }
-
-        return {
-          ...bet,
-          hit: Boolean(bet.hit),
-          payout,
-          resolved: true,
-          resolvedAt: roundEnd,
-        };
-      });
-
-      const totalReturn = resolvedBets.reduce((acc, bet) => acc + (bet.payout ?? 0), 0);
-      if (totalReturn > 0) {
-        setBalance((prevBalance) => prevBalance + totalReturn);
+      if (balance < stake) {
+        setWarning('Not enough NOP balance for this stake.');
+        return;
       }
-      setBetHistory((history) => [...resolvedBets, ...history].slice(0, 8));
-      return [];
-    });
-    setRoundId((prev) => prev + 1);
-    setRoundTimeLeft(ROUND_DURATION);
-  }, []);
+      if (boxX <= headColumn + MIN_FORWARD_COLS - 1) {
+        setWarning('Place predictions at least two columns ahead of the glowing head.');
+        return;
+      }
 
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      setRoundTimeLeft((prev) => (prev > 0 ? prev - 1 : prev));
-    }, 1000);
-    return () => window.clearInterval(timer);
-  }, []);
+      const multiplier = computeMultiplier({ headRow, headColumn, boxX, boxY });
+      const newBet: Bet = {
+        id: generateId(),
+        boxX,
+        boxY,
+        stake,
+        placedAt: Date.now(),
+        segmentId,
+        multiplier,
+        status: 'active',
+      };
 
-  useEffect(() => {
-    if (roundTimeLeft === 0) {
-      resolveRound();
-    }
-  }, [roundTimeLeft, resolveRound]);
-
-  useEffect(() => {
-    if (balance >= MIN_STAKE && stake > balance) {
-      setStake(balance);
-    }
-  }, [balance, stake]);
-
-  useEffect(() => {
-    const id = window.setInterval(() => {
-      setPoints((prev) => {
-        if (!prev.length) return prev;
-        const last = prev[prev.length - 1];
-        const nextY = clamp(last.y + randomDelta(), 10, 90);
-        const nextPoint: Point = { x: last.x + 1, y: nextY, t: Date.now() };
-        const combined = [...prev, nextPoint];
-        return combined.length > MAX_POINTS ? combined.slice(combined.length - MAX_POINTS) : combined;
-      });
-    }, POINT_INTERVAL);
-
-    return () => window.clearInterval(id);
-  }, []);
-
-  useEffect(() => {
-    if (!normalizedPoints.length) return;
-
-    setActiveBets((prev) => {
-      if (!prev.length) return prev;
-      let changed = false;
-      const next = prev.map((bet) => {
-        if (bet.hit) return bet;
-        const boxXStart = bet.boxX * COL_WIDTH;
-        const boxXEnd = boxXStart + COL_WIDTH;
-        const boxYStart = bet.boxY * ROW_HEIGHT;
-        const boxYEnd = boxYStart + ROW_HEIGHT;
-
-        const hitPoint = normalizedPoints.find(
-          (point) =>
-            point.t >= bet.placedAt &&
-            point.screenX >= boxXStart &&
-            point.screenX <= boxXEnd &&
-            point.screenY >= boxYStart &&
-            point.screenY <= boxYEnd,
-        );
-
-        if (hitPoint) {
-          changed = true;
-          return { ...bet, hit: true, hitTimestamp: hitPoint.t };
-        }
-        return bet;
-      });
-      return changed ? next : prev;
-    });
-  }, [normalizedPoints]);
-
-  const chartPoints = useMemo(
-    () => normalizedPoints.map((point) => `${point.screenX},${point.screenY}`).join(' '),
-    [normalizedPoints],
+      setBalance((prev) => prev - stake);
+      setBets((prev) => [newBet, ...prev]);
+      setWarning(null);
+    },
+    [balance, head, headColumn, headRow, segmentId, stake],
   );
 
-  const BoxGrid = () => {
-    const rows = Array.from({ length: ROWS }, (_, idx) => idx);
-    const columns = Array.from({ length: COLS }, (_, idx) => idx);
+  const gridRows = useMemo(() => Array.from({ length: ROWS }, (_, idx) => idx), []);
+  const gridCols = useMemo(() => Array.from({ length: COLS }, (_, idx) => idx), []);
 
-    return (
-      <g>
-        {rows.map((row) => (
-          <line
-            key={`row-${row}`}
-            x1={0}
-            x2={VIEW_WIDTH}
-            y1={row * ROW_HEIGHT}
-            y2={row * ROW_HEIGHT}
-            stroke="rgba(148, 163, 184, 0.25)"
-            strokeWidth={0.2}
-          />
-        ))}
-        {columns.map((col) => (
-          <line
-            key={`col-${col}`}
-            y1={0}
-            y2={VIEW_HEIGHT}
-            x1={col * COL_WIDTH}
-            x2={col * COL_WIDTH}
-            stroke="rgba(148, 163, 184, 0.18)"
-            strokeWidth={0.2}
-          />
-        ))}
-        {rows.map((row) =>
-          columns.map((col) => {
-            const key = `${col}-${row}`;
-            const summary = betGroups.get(key);
-            const isActive = Boolean(summary);
-            const fill = isActive ? 'rgba(79, 70, 229, 0.08)' : 'rgba(125, 211, 252, 0.08)';
-            const stroke = isActive ? 'rgba(79, 70, 229, 0.8)' : 'rgba(148, 163, 184, 0.4)';
-            return (
-              <g key={key}>
-                <rect
-                  x={col * COL_WIDTH + 0.3}
-                  y={row * ROW_HEIGHT + 0.3}
-                  width={COL_WIDTH - 0.6}
-                  height={ROW_HEIGHT - 0.6}
-                  rx={1.8}
-                  ry={1.8}
-                  fill={fill}
-                  stroke={stroke}
-                  strokeWidth={0.4}
-                  style={{ cursor: balance >= stake ? 'pointer' : 'not-allowed', transition: 'all 150ms ease' }}
-                  onClick={() => placeBet(col, row)}
-                  onMouseEnter={(event) => {
-                    event.currentTarget.setAttribute('fill', 'rgba(59, 130, 246, 0.18)');
-                  }}
-                  onMouseLeave={(event) => {
-                    event.currentTarget.setAttribute('fill', fill);
-                  }}
-                />
-                {summary && (
-                  <text
-                    x={(col + 1) * COL_WIDTH - 1.6}
-                    y={row * ROW_HEIGHT + 4}
-                    textAnchor="end"
-                    fontSize="3.2"
-                    fill="rgba(79, 70, 229, 0.9)"
-                  >
-                    {summary.multiplierLabel} · {summary.count}x
-                  </text>
-                )}
-              </g>
-            );
-          }),
-        )}
-      </g>
-    );
-  };
-
-  const ActiveBetsList = () => (
-    <div className="space-y-3">
-      {activeBets.length === 0 && (
-        <div className="rounded-xl border border-dashed border-slate-200 p-3 text-sm text-slate-500">
-          No active predictions. Tap a grid box to place a NOP bet.
-        </div>
-      )}
-      {activeBets.map((bet) => (
-        <div
-          key={bet.id}
-          className="flex flex-col rounded-2xl border border-slate-100 bg-slate-50/40 p-3 text-sm ring-1 ring-indigo-500/10"
-        >
-          <div className="flex items-center justify-between">
-            <span className="font-semibold text-slate-800">
-              Box {bet.boxX + 1} · Row {bet.boxY + 1}
-            </span>
-            <span className="text-xs text-slate-500">Stake {bet.stake} NOP</span>
-          </div>
-          <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-500">
-            <span className="rounded-full bg-white/80 px-2 py-1 text-[11px] font-semibold text-indigo-600 shadow-sm ring-1 ring-indigo-100">
-              {bet.multiplier === 'refund' ? 'Low risk · refund' : `x${bet.multiplier.toFixed(1)} reward`}
-            </span>
-            <span>Distance {bet.distance}</span>
-            <span className={bet.hit ? 'text-emerald-600 font-semibold' : 'text-[inherit]'}>
-              {bet.hit ? 'Line touched' : 'Waiting for touch'}
-            </span>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-
-  const RecentResults = () => (
-    <div className="space-y-3">
-      {betHistory.length === 0 && (
-        <div className="rounded-xl border border-dashed border-slate-200 p-3 text-sm text-slate-500">
-          Round history will appear here once bets settle.
-        </div>
-      )}
-      {betHistory.map((bet) => (
-        <div
-          key={`${bet.id}-${bet.resolvedAt}`}
-          className="flex items-center justify-between rounded-2xl border border-slate-100 bg-white p-3 text-sm ring-1 ring-slate-100"
-        >
-          <div>
-            <div className="font-semibold text-slate-800">
-              Box {bet.boxX + 1} · Row {bet.boxY + 1}
-            </div>
-            <div className="text-xs text-slate-500">
-              Round #{bet.roundId} · Stake {bet.stake} NOP
-            </div>
-          </div>
-          <div className="text-right">
-            <div
-              className={`text-sm font-semibold ${
-                bet.hit ? 'text-emerald-600' : bet.multiplier === 'refund' ? 'text-amber-500' : 'text-rose-500'
-              }`}
-            >
-              {bet.hit ? `+${formatPayout(bet.payout)} NOP` : bet.multiplier === 'refund' ? 'Refunded' : `-${bet.stake} NOP`}
-            </div>
-            <div className="text-xs text-slate-400">{bet.hit ? 'Hit' : 'Miss'}</div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
+  const canPlace = balance >= stake && stake >= MIN_STAKE;
 
   return (
-    <div className="px-4 py-8">
-      <div className="max-w-5xl mx-auto space-y-5">
-        <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm ring-1 ring-indigo-500/10">
-          <div className="flex flex-col gap-2">
-            <div className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-indigo-500 to-cyan-400/70 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white shadow-sm">
-              Mini Game · DeFi Arcade
+    <div className="min-h-[calc(100vh-80px)] bg-[#F5F8FF]">
+      <div className="max-w-6xl mx-auto w-full py-6 px-4 lg:px-0 flex flex-col gap-4">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-col">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-indigo-500">NOP Intelligence Layer</div>
+            <div className="text-2xl font-semibold text-slate-900">NopChart — Live Time Game</div>
+            <div className="text-[12px] text-slate-500">
+              Predict the path of a moving line. Hit the box, win NOP. Miss, you burn it.
             </div>
-            <h1 className="text-3xl font-semibold text-slate-900">NopChart</h1>
-            <p className="text-sm text-slate-500">
-              TradingView-like moving line game. Place NOP on prediction boxes. If the line touches your box, you win.
-              Closer boxes refund, farther boxes pay more.
-            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="rounded-full border border-amber-200 bg-white px-4 py-2 text-sm font-semibold text-amber-600 shadow-sm">
+              Balance <span className="text-slate-900">{balance.toLocaleString()} NOP</span>
+            </div>
+            <div className="rounded-full border border-indigo-200 bg-white px-4 py-2 text-sm font-semibold text-indigo-600 shadow-sm">
+              Stake {stake} NOP
+            </div>
           </div>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-[2fr,1fr]">
-          <div className="space-y-4">
-            <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm ring-1 ring-indigo-500/15">
-              <div className="mb-4 flex items-center justify-between">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2.4fr)_minmax(0,1fr)] gap-4">
+          <div className="flex flex-col gap-4">
+            <div className="rounded-2xl bg-white shadow-sm border border-slate-100 p-4 flex flex-col gap-3">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Live Chart</p>
-                  <p className="text-sm font-semibold text-slate-800">Round #{roundId}</p>
+                  <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Live chart</p>
+                  <p className="text-sm font-semibold text-slate-900">Segment #{segmentId || 1}</p>
                 </div>
-                <div className="rounded-full bg-gradient-to-r from-indigo-500 to-cyan-400 px-3 py-1 text-xs font-semibold text-white shadow">
-                  Ends in {roundTimeLeft}s
-                </div>
+                <div className="text-[11px] text-slate-500">~9s sweep · {COLS} cols</div>
               </div>
-              <div className="relative overflow-hidden rounded-2xl border border-slate-100 bg-gradient-to-b from-slate-50 to-white p-4 shadow-inner">
-                <svg viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`} className="h-64 w-full select-none">
+              <div className="relative">
+                <svg className="w-full h-[65vh] max-h-[520px]" viewBox={`0 0 ${VIEWBOX_SIZE} ${VIEWBOX_SIZE}`}>
                   <defs>
-                    <linearGradient id="nopChartLineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <linearGradient id="nopLine" x1="0%" y1="0%" x2="100%" y2="0%">
                       <stop offset="0%" stopColor="#6366F1" />
                       <stop offset="100%" stopColor="#22D3EE" />
                     </linearGradient>
-                    <linearGradient id="nopChartGlow" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor="rgba(99,102,241,0.28)" />
-                      <stop offset="100%" stopColor="rgba(14,165,233,0.05)" />
-                    </linearGradient>
                   </defs>
-                  <rect width={VIEW_WIDTH} height={VIEW_HEIGHT} rx={12} fill="url(#nopChartGlow)" opacity={0.4} />
-                  <BoxGrid />
-                  {normalizedPoints.length > 1 && (
-                    <polyline
-                      points={chartPoints}
-                      fill="none"
-                      stroke="url(#nopChartLineGradient)"
-                      strokeWidth={1.8}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="drop-shadow-[0_4px_12px_rgba(79,70,229,0.35)]"
+                  <rect
+                    x={0}
+                    y={0}
+                    width={VIEWBOX_SIZE}
+                    height={VIEWBOX_SIZE}
+                    rx={16}
+                    className="fill-white"
+                  />
+                  {head && (
+                    <rect
+                      x={0}
+                      y={0}
+                      width={Math.min(safeColumnThreshold, COLS) * columnWidth}
+                      height={VIEWBOX_SIZE}
+                      className="fill-slate-900/5"
+                      opacity={0.35}
+                      pointerEvents="none"
                     />
                   )}
-                  {latestPoint && (
+                  <g>
+                    {gridCols.map((col) =>
+                      gridRows.map((row) => {
+                        const key = `${col}-${row}`;
+                        const x = col * columnWidth;
+                        const y = VIEWBOX_SIZE - (row + 1) * rowHeight;
+                        const isAhead = col >= safeColumnThreshold;
+                        const isActive = cellHighlights.has(key);
+                        return (
+                          <rect
+                            key={key}
+                            x={x + 0.2}
+                            y={y + 0.2}
+                            width={columnWidth - 0.4}
+                            height={rowHeight - 0.4}
+                            rx={1.2}
+                            className={cn(
+                              'stroke-slate-200/40 fill-sky-200/5 transition-colors duration-150',
+                              isActive && 'fill-indigo-100/60 stroke-indigo-400/70',
+                              canPlace && isAhead && 'cursor-pointer hover:fill-sky-200/20',
+                              (!canPlace || !isAhead) && 'cursor-not-allowed opacity-60',
+                            )}
+                            strokeWidth={0.4}
+                            onClick={() => (canPlace && isAhead ? handleBoxClick(col, row) : undefined)}
+                          />
+                        );
+                      }),
+                    )}
+                  </g>
+                  {points.length > 1 && (
+                    <polyline
+                      points={linePoints}
+                      fill="none"
+                      stroke="url(#nopLine)"
+                      strokeWidth={1.5}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="drop-shadow-[0_8px_16px_rgba(79,70,229,0.25)]"
+                    />
+                  )}
+                  {head && (
                     <circle
-                      cx={latestPoint.screenX}
-                      cy={latestPoint.screenY}
-                      r={2.6}
-                      fill="#F5C76A"
-                      stroke="#FBBF24"
-                      strokeWidth={0.6}
+                      cx={(head.x / (COLS - 1)) * VIEWBOX_SIZE}
+                      cy={head.y}
+                      r={2.3}
+                      className="fill-[#F5C76A] stroke-[#FBBF24]"
+                      strokeWidth={0.7}
                     />
                   )}
                 </svg>
+                <div className="absolute bottom-4 left-4 rounded-full bg-white/90 px-3 py-1 text-[11px] font-medium text-slate-600 shadow">
+                  Safe zone: place bets ≥ {MIN_FORWARD_COLS} cols ahead
+                </div>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm ring-1 ring-indigo-500/10">
-              <div className="flex flex-col gap-2 border-b border-slate-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="rounded-2xl bg-white shadow-sm border border-slate-100 p-4 flex flex-col gap-4">
+              <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Account</p>
+                  <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Stake control</p>
                   <p className="text-lg font-semibold text-slate-900">
-                    Balance: <span className="text-amber-500">{balance.toLocaleString()} NOP</span>
+                    {stake.toLocaleString()} <span className="text-xs text-slate-500">NOP per prediction</span>
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <label className="text-xs font-semibold text-slate-500" htmlFor="stake-input">
-                    Stake per prediction
-                  </label>
+                  <button
+                    type="button"
+                    className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-600 hover:border-slate-300"
+                    onClick={() => adjustStake(-10)}
+                  >
+                    -10
+                  </button>
                   <input
-                    id="stake-input"
                     type="number"
                     min={MIN_STAKE}
                     step={10}
                     value={stake}
                     onChange={handleStakeChange}
-                    className="h-11 w-28 rounded-xl border border-slate-200 bg-slate-50 px-3 text-right text-sm font-semibold text-slate-800 shadow-inner focus:border-indigo-400 focus:outline-none"
+                    className="h-11 w-24 rounded-xl border border-slate-200 bg-slate-50 px-3 text-right text-sm font-semibold text-slate-800 shadow-inner focus:border-indigo-400 focus:outline-none"
                   />
+                  <button
+                    type="button"
+                    className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-600 hover:border-slate-300"
+                    onClick={() => adjustStake(10)}
+                  >
+                    +10
+                  </button>
+                  <button
+                    type="button"
+                    className="rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-600 hover:bg-indigo-100"
+                    onClick={() => adjustStake(50)}
+                  >
+                    +50
+                  </button>
                 </div>
               </div>
-              {warning && <p className="mt-3 rounded-xl bg-rose-50 px-4 py-2 text-sm text-rose-600">{warning}</p>}
-              <p className="mt-3 text-sm text-slate-500">
-                Click on any boxes to place NOP. The line must touch your box before the round ends. Same-row bets refund; farther rows increase multiplier.
+              {warning && (
+                <div className="rounded-xl border border-rose-100 bg-rose-50 px-4 py-2 text-sm text-rose-600">{warning}</div>
+              )}
+              <p className="text-sm text-slate-500">
+                Place predictions ahead of the moving line. If the line touches your box you are paid instantly based on distance.
+                Once the column falls behind the head, the stake burns.
               </p>
-            </div>
-
-            <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm ring-1 ring-indigo-500/10">
-              <div className="mb-3 flex items-center justify-between">
-                <p className="text-sm font-semibold text-slate-800">Active Predictions</p>
-                <span className="text-xs text-slate-400">{activeBets.length} bets</span>
-              </div>
-              <ActiveBetsList />
             </div>
           </div>
 
-          <div className="space-y-4">
-            <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm ring-1 ring-indigo-500/10 space-y-4">
-              <div>
-                <p className="text-xs uppercase tracking-wide text-slate-500">Round status</p>
-                <p className="text-2xl font-semibold text-slate-900">
-                  {roundTimeLeft}s <span className="text-base text-slate-400">remaining</span>
-                </p>
+          <div className="flex flex-col gap-4">
+            <div className="rounded-2xl bg-white shadow-sm border border-slate-100 p-4 flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <div className="text-sm font-semibold text-slate-900">Live Δ%</div>
+                <div className="text-[11px] text-slate-500">Segment ~10s</div>
               </div>
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-3 text-center">
-                  <p className="text-xs text-slate-500">Round</p>
-                  <p className="text-lg font-semibold text-indigo-600">#{roundId}</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-3">
+                  <span className="text-[11px] text-slate-500">From start</span>
+                  <div
+                    className={cn(
+                      'text-lg font-semibold',
+                      totalDeltaPct > 0 && 'text-emerald-500',
+                      totalDeltaPct < 0 && 'text-rose-500',
+                      totalDeltaPct === 0 && 'text-slate-500',
+                    )}
+                  >
+                    {formatDelta(totalDeltaPct)}
+                  </div>
                 </div>
-                <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-3 text-center">
-                  <p className="text-xs text-slate-500">Active bets</p>
-                  <p className="text-lg font-semibold text-slate-900">{activeBets.length}</p>
+                <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-3">
+                  <span className="text-[11px] text-slate-500">Last ~10s</span>
+                  <div
+                    className={cn(
+                      'text-lg font-semibold',
+                      lastTenSecDeltaPct > 0 && 'text-emerald-500',
+                      lastTenSecDeltaPct < 0 && 'text-rose-500',
+                      lastTenSecDeltaPct === 0 && 'text-slate-500',
+                    )}
+                  >
+                    {formatDelta(lastTenSecDeltaPct)}
+                  </div>
                 </div>
               </div>
-              <div className="rounded-2xl border border-dashed border-slate-200 p-3 text-xs text-slate-500">
-                Line touches a prediction box → bet is marked as hit. Payouts trigger when the round timer resets.
+              <div className="rounded-xl border border-dashed border-slate-200 px-3 py-2 text-xs text-slate-500">
+                Distance to the line is the main risk. Forward columns add up to +25% bonus multiplier.
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm ring-1 ring-indigo-500/10">
-              <div className="mb-3 flex items-center justify-between">
-                <p className="text-sm font-semibold text-slate-800">Recent Results</p>
-                <span className="text-xs text-slate-400">{betHistory.length} settled</span>
+            <div className="rounded-2xl bg-white shadow-sm border border-slate-100 p-4 flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <div className="text-sm font-semibold text-slate-900">Active bets</div>
+                <span className="text-[11px] text-slate-500">{activeBets.length} live</span>
               </div>
-              <RecentResults />
+              {activeBets.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-slate-200 px-3 py-4 text-sm text-slate-500">
+                  No live predictions. Tap a grid box ahead of the line to queue one.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {activeBets.slice(0, 6).map((bet) => (
+                    <div
+                      key={bet.id}
+                      className="rounded-2xl border border-slate-100 bg-slate-50/60 px-3 py-2 text-sm"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-slate-900">
+                          C{bet.boxX + 1} · R{bet.boxY + 1}
+                        </span>
+                        <span className="text-[11px] text-slate-500">Stake {bet.stake} NOP</span>
+                      </div>
+                      <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
+                        <span className="rounded-full bg-white px-2 py-0.5 font-semibold text-indigo-600 shadow-sm">
+                          x{bet.multiplier.toFixed(2)}
+                        </span>
+                        <span>Segment #{bet.segmentId}</span>
+                        <span>{bet.boxX - headColumn} cols ahead</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="rounded-2xl bg-white shadow-sm border border-slate-100 p-4 flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <div className="text-sm font-semibold text-slate-900">Recent wins & burns</div>
+                <span className="text-[11px] text-slate-500">{recentResults.length} events</span>
+              </div>
+              {recentResults.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-slate-200 px-3 py-4 text-sm text-slate-500">
+                  Results will appear once bets hit or expire.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {recentResults.map((bet) => (
+                    <div
+                      key={`${bet.id}-${bet.resolvedAt}`}
+                      className="rounded-2xl border border-slate-100 bg-white px-3 py-2 text-sm"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-semibold text-slate-900">
+                            C{bet.boxX + 1} · R{bet.boxY + 1}
+                          </p>
+                          <p className="text-[11px] text-slate-500">Stake {bet.stake} NOP</p>
+                        </div>
+                        <div
+                          className={cn(
+                            'text-sm font-semibold',
+                            bet.status === 'won' ? 'text-emerald-500' : 'text-rose-500',
+                          )}
+                        >
+                          {bet.status === 'won'
+                            ? `+${(bet.payout ?? 0).toLocaleString()}`
+                            : `-${bet.stake.toLocaleString()}`}{' '}
+                          NOP
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
