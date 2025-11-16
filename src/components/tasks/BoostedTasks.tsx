@@ -229,20 +229,12 @@ export default function BoostedTasks() {
         <div className="text-[12px] font-medium text-slate-400">
           ({claimedCount}/{totalTasks})
         </div>
-      </div>
-      <div className="h-px w-full rounded-full bg-slate-200/80" />
-
-      {err ? (
-        <div className="rounded-2xl border border-rose-100 bg-rose-50/80 px-3 py-2 text-[12px] font-medium text-rose-700">
-          {err}
         </div>
-      ) : null}
+        <div className="h-px w-full rounded-full bg-slate-200/80" />
 
-      {notice ? (
-        <div className="rounded-2xl border border-slate-100 bg-slate-50/80 px-3 py-2 text-[12px] text-slate-600">
-          {notice}
-        </div>
-      ) : null}
+        {err ? <p className="text-[11px] font-semibold text-rose-600">{err}</p> : null}
+
+        {notice ? <p className="text-[11px] text-slate-500">{notice}</p> : null}
 
       <div className="space-y-3">
         {showSkeleton
