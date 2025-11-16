@@ -78,7 +78,6 @@ export function TaskCard({
       );
     }
 
-    // claimed
     return (
       <div className="text-[11px] font-medium text-emerald-600 bg-emerald-50 rounded-full px-2.5 py-0.5">
         Claimed
