@@ -44,6 +44,22 @@ const FALLBACK_SIGNALS: MarketSignal[] = [
     signal: "Bearish",
     score: 69,
   },
+  {
+    symbol: "ZK/USDT",
+    price: 0.42,
+    change24h: 3.2,
+    volume: 560000000,
+    signal: "Bullish",
+    score: 66,
+  },
+  {
+    symbol: "BNB/USDT",
+    price: 568.4,
+    change24h: 0.78,
+    volume: 2100000000,
+    signal: "Neutral",
+    score: 73,
+  },
 ];
 
 const sentimentBadgeClasses: Record<MarketSignal["signal"], string> = {

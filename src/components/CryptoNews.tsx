@@ -13,7 +13,7 @@ type RemoteNewsItem = {
 };
 
 const API_BASE = PUBLIC_ENV.apiBase || "/api";
-const MAX_NEWS_ITEMS = 3;
+const MAX_NEWS_ITEMS = 6;
 const FALLBACK_IMAGE = "/placeholder.svg";
 
 const timeFormatter = new Intl.RelativeTimeFormat("en", {
