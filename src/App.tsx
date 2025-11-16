@@ -11,6 +11,7 @@ import Settings from "./pages/Settings";
 import Admin from "./pages/Admin";
 import Contributes from "./pages/Contributes";
 import Games from "./pages/Games";
+import NopChartGame from "./pages/games/NopChart";
 import Flappy from "./pages/games/Flappy";
 import Runner from "./pages/games/Runner";
 import Memory from "./pages/games/Memory";
@@ -61,15 +62,16 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route element={<AppShell />}>
-              <Route path="/" element={<Index />} />
-              <Route path="/explore" element={<Explore />} />
-              <Route path="/contributes" element={<Contributes />} />
-              <Route path="/wallet" element={<WalletPage />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/games" element={<Games />} />
-              <Route path="/games/flappy" element={<Flappy />} />
-              <Route path="/games/runner" element={<Runner />} />
+              <Route element={<AppShell />}>
+                <Route path="/" element={<Index />} />
+                <Route path="/explore" element={<Explore />} />
+                <Route path="/contributes" element={<Contributes />} />
+                <Route path="/wallet" element={<WalletPage />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/games" element={<Games />} />
+                <Route path="/games/nopchart" element={<NopChartGame />} />
+                <Route path="/games/flappy" element={<Flappy />} />
+                <Route path="/games/runner" element={<Runner />} />
               <Route path="/games/memory" element={<Memory />} />
               <Route path="/games/reaction" element={<Reaction />} />
               <Route path="/about" element={<About />} />
