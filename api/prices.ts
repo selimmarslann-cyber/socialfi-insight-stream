@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getMarketSnapshot } from "./shared/binance";
+import { getMarketSnapshot } from "./shared/binance.js";
 
 const HEADERS = {
   "Access-Control-Allow-Origin": "*",
