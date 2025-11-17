@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -15,6 +16,9 @@ import { useWalletStore } from '@/lib/store';
 import type { WalletTx } from '@/types/wallet';
 import { DashboardCard } from '@/components/layout/visuals/DashboardCard';
 import { DashboardSectionTitle } from '@/components/layout/visuals/DashboardSectionTitle';
+import { computeProtocolFee } from '@/lib/protocol/fees';
+import { fetchUserSocialPositions } from '@/lib/protocol/positions';
+import { fetchReputationScore } from '@/lib/protocol/reputation';
 
 const tokenMeta = {
   USDT: {
@@ -35,6 +39,12 @@ const actionLabels: Record<WalletAction, string> = {
   buy: 'Buy NOP',
   send: 'Send',
 };
+
+const usd = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  maximumFractionDigits: 2,
+});
 
 export default function WalletPage() {
   const {
@@ -87,6 +97,32 @@ export default function WalletPage() {
       locked: Math.min(nop, 2600),
     },
   ];
+
+  const positionsQuery = useQuery({
+    queryKey: ['social-positions', address],
+    queryFn: () => fetchUserSocialPositions(address ?? ''),
+    enabled: Boolean(address),
+  });
+
+  const reputationQuery = useQuery({
+    queryKey: ['reputation-score', address],
+    queryFn: () => fetchReputationScore(address ?? ''),
+    enabled: Boolean(address),
+  });
+
+  const openPositions = useMemo(() => {
+    if (!positionsQuery.data) return [];
+    return positionsQuery.data.filter((position) => position.status === 'open');
+  }, [positionsQuery.data]);
+
+  const projectedFees = useMemo(() => {
+    return openPositions.reduce((total, position) => {
+      const entryPrice = typeof position.entry_price_usd === 'number' ? position.entry_price_usd : 0;
+      const sizeNop =
+        typeof position.size_nop === 'number' ? position.size_nop : Number(position.size_nop ?? 0);
+      return total + computeProtocolFee(entryPrice * sizeNop).protocolFeeUsd;
+    }, 0);
+  }, [openPositions]);
 
   const onCloseDialog = () => {
     setActiveAction(null);
@@ -205,6 +241,104 @@ export default function WalletPage() {
             <TokenCard key={token.symbol} {...token} />
           ))}
         </section>
+
+          <DashboardCard className="space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <DashboardSectionTitle label="Protocol" title="Your Social Positions" />
+              <span className="text-xs font-semibold text-slate-500">
+                Projected fees {usd.format(projectedFees)}
+              </span>
+            </div>
+
+            {positionsQuery.isLoading ? (
+              <div className="space-y-2">
+                {Array.from({ length: 3 }).map((_, index) => (
+                  <div key={index} className="h-16 rounded-xl bg-slate-50" />
+                ))}
+              </div>
+            ) : openPositions.length === 0 ? (
+              <p className="text-sm text-slate-500">
+                No open positions yet. Register your next NOP trade to build on-chain reputation.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {openPositions.map((position) => {
+                  const entryPrice = typeof position.entry_price_usd === 'number' ? position.entry_price_usd : null;
+                  const sizeNop =
+                    typeof position.size_nop === 'number' ? position.size_nop : Number(position.size_nop ?? 0);
+                  const fees = computeProtocolFee((entryPrice ?? 0) * sizeNop);
+                  const txHash = position.tx_hash_open ?? '';
+                  return (
+                    <div key={position.id} className="rounded-xl border border-slate-100 p-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                              position.direction === 'long'
+                                ? 'bg-emerald-50 text-emerald-600'
+                                : 'bg-red-50 text-red-600'
+                            }`}
+                          >
+                            {position.direction.toUpperCase()}
+                          </span>
+                          <span className="text-sm font-semibold text-slate-900">
+                            {sizeNop.toLocaleString(undefined, { maximumFractionDigits: 2 })} NOP
+                          </span>
+                        </div>
+                        <span className="text-[11px] capitalize text-slate-500">{position.status}</span>
+                      </div>
+                      <div className="mt-2 grid grid-cols-3 gap-3 text-[11px] text-slate-500">
+                        <div>
+                          <p className="uppercase tracking-widest">Entry</p>
+                          <p className="text-slate-900">{entryPrice ? usd.format(entryPrice) : '—'}</p>
+                        </div>
+                        <div>
+                          <p className="uppercase tracking-widest">Tx</p>
+                          <p className="text-slate-900">
+                            {txHash ? `${txHash.slice(0, 6)}…${txHash.slice(-4)}` : '—'}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="uppercase tracking-widest">Protocol fee</p>
+                          <p className="text-slate-900">{usd.format(fees.protocolFeeUsd)}</p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-3">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Reputation summary</p>
+              {reputationQuery.isLoading ? (
+                <div className="mt-2 h-16 rounded-lg bg-white" />
+              ) : reputationQuery.data ? (
+                <div className="mt-3 grid grid-cols-3 gap-3 text-sm text-slate-600">
+                  <div>
+                    <p className="text-[11px] uppercase tracking-widest">Win rate</p>
+                    <p className="text-base font-semibold text-slate-900">
+                      {(reputationQuery.data.win_rate ?? 0).toFixed(1)}%
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] uppercase tracking-widest">Realized PnL</p>
+                    <p className="text-base font-semibold text-slate-900">
+                      {usd.format(reputationQuery.data.realized_pnl_usd ?? 0)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] uppercase tracking-widest">Open trades</p>
+                    <p className="text-base font-semibold text-slate-900">
+                      {reputationQuery.data.open_positions ?? 0}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <p className="mt-2 text-sm text-slate-500">No reputation data yet.</p>
+              )}
+            </div>
+          </DashboardCard>
 
         <DashboardCard className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-2">

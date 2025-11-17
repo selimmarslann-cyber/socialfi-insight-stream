@@ -328,128 +328,216 @@ export type Database = {
           created_at?: string | null
         }
       }
-      profiles: {
-        Row: {
-          id: string
-          username: string | null
-          avatar_url: string | null
-          bio: string | null
-          wallet_address: string | null
-          nop_points: number
-          is_admin: boolean
-          created_at: string | null
-          updated_at: string | null
+        profiles: {
+          Row: {
+            id: string
+            username: string | null
+            avatar_url: string | null
+            bio: string | null
+            wallet_address: string | null
+            nop_points: number
+            is_admin: boolean
+            created_at: string | null
+            updated_at: string | null
+          }
+          Insert: {
+            id: string
+            username?: string | null
+            avatar_url?: string | null
+            bio?: string | null
+            wallet_address?: string | null
+            nop_points?: number
+            is_admin?: boolean
+            created_at?: string | null
+            updated_at?: string | null
+          }
+          Update: {
+            id?: string
+            username?: string | null
+            avatar_url?: string | null
+            bio?: string | null
+            wallet_address?: string | null
+            nop_points?: number
+            is_admin?: boolean
+            created_at?: string | null
+            updated_at?: string | null
+          }
         }
-        Insert: {
-          id: string
-          username?: string | null
-          avatar_url?: string | null
-          bio?: string | null
-          wallet_address?: string | null
-          nop_points?: number
-          is_admin?: boolean
-          created_at?: string | null
-          updated_at?: string | null
+        ratings: {
+          Row: {
+            id: number
+            post_id: number
+            rater_id: string
+            score: number
+            created_at: string | null
+          }
+          Insert: {
+            id?: number
+            post_id: number
+            rater_id: string
+            score: number
+            created_at?: string | null
+          }
+          Update: {
+            id?: number
+            post_id?: number
+            rater_id?: string
+            score?: number
+            created_at?: string | null
+          }
         }
-        Update: {
-          id?: string
-          username?: string | null
-          avatar_url?: string | null
-          bio?: string | null
-          wallet_address?: string | null
-          nop_points?: number
-          is_admin?: boolean
-          created_at?: string | null
-          updated_at?: string | null
+        reputation_scores: {
+          Row: {
+            user_address: string
+            total_positions: number
+            open_positions: number
+            win_rate: number | null
+            realized_pnl_usd: number
+            avg_holding_hours: number | null
+            last_active_at: string | null
+            last_computed_at: string
+            created_at: string
+          }
+          Insert: {
+            user_address: string
+            total_positions?: number
+            open_positions?: number
+            win_rate?: number | null
+            realized_pnl_usd?: number
+            avg_holding_hours?: number | null
+            last_active_at?: string | null
+            last_computed_at?: string
+            created_at?: string
+          }
+          Update: {
+            user_address?: string
+            total_positions?: number
+            open_positions?: number
+            win_rate?: number | null
+            realized_pnl_usd?: number
+            avg_holding_hours?: number | null
+            last_active_at?: string | null
+            last_computed_at?: string
+            created_at?: string
+          }
         }
-      }
-      ratings: {
-        Row: {
-          id: number
-          post_id: number
-          rater_id: string
-          score: number
-          created_at: string | null
+        user_task_rewards: {
+          Row: {
+            id: string
+            user_id: string
+            task_key: string
+            reward_nop: number
+            completed_at: string | null
+            claimed_at: string | null
+            created_at: string | null
+            updated_at: string | null
+          }
+          Insert: {
+            id?: string
+            user_id: string
+            task_key: string
+            reward_nop?: number
+            completed_at?: string | null
+            claimed_at?: string | null
+            created_at?: string | null
+            updated_at?: string | null
+          }
+          Update: {
+            id?: string
+            user_id?: string
+            task_key?: string
+            reward_nop?: number
+            completed_at?: string | null
+            claimed_at?: string | null
+            created_at?: string | null
+            updated_at?: string | null
+          }
         }
-        Insert: {
-          id?: number
-          post_id: number
-          rater_id: string
-          score: number
-          created_at?: string | null
+        user_tasks: {
+          Row: {
+            id: string
+            user_id: string
+            task_id: string
+            status: "pending" | "completed" | "claimed"
+            completed_at: string | null
+            claimed_at: string | null
+            created_at: string | null
+            updated_at: string | null
+          }
+          Insert: {
+            id?: string
+            user_id: string
+            task_id: string
+            status?: "pending" | "completed" | "claimed"
+            completed_at?: string | null
+            claimed_at?: string | null
+            created_at?: string | null
+            updated_at?: string | null
+          }
+          Update: {
+            id?: string
+            user_id?: string
+            task_id?: string
+            status?: "pending" | "completed" | "claimed"
+            completed_at?: string | null
+            claimed_at?: string | null
+            created_at?: string | null
+            updated_at?: string | null
+          }
         }
-        Update: {
-          id?: number
-          post_id?: number
-          rater_id?: string
-          score?: number
-          created_at?: string | null
+        social_positions: {
+          Row: {
+            id: string
+            user_address: string
+            contribute_id: string | null
+            direction: "long" | "short"
+            size_nop: number
+            entry_price_usd: number | null
+            exit_price_usd: number | null
+            opened_at: string
+            closed_at: string | null
+            status: "open" | "closed" | "liquidated"
+            realized_pnl_usd: number | null
+            tx_hash_open: string
+            tx_hash_close: string | null
+            chain_id: number | null
+            created_at: string
+          }
+          Insert: {
+            id?: string
+            user_address: string
+            contribute_id?: string | null
+            direction: "long" | "short"
+            size_nop: number
+            entry_price_usd?: number | null
+            exit_price_usd?: number | null
+            opened_at?: string
+            closed_at?: string | null
+            status?: "open" | "closed" | "liquidated"
+            realized_pnl_usd?: number | null
+            tx_hash_open: string
+            tx_hash_close?: string | null
+            chain_id?: number | null
+            created_at?: string
+          }
+          Update: {
+            id?: string
+            user_address?: string
+            contribute_id?: string | null
+            direction?: "long" | "short"
+            size_nop?: number
+            entry_price_usd?: number | null
+            exit_price_usd?: number | null
+            opened_at?: string
+            closed_at?: string | null
+            status?: "open" | "closed" | "liquidated"
+            realized_pnl_usd?: number | null
+            tx_hash_open?: string
+            tx_hash_close?: string | null
+            chain_id?: number | null
+            created_at?: string
+          }
         }
-      }
-      user_task_rewards: {
-        Row: {
-          id: string
-          user_id: string
-          task_key: string
-          reward_nop: number
-          completed_at: string | null
-          claimed_at: string | null
-          created_at: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          task_key: string
-          reward_nop?: number
-          completed_at?: string | null
-          claimed_at?: string | null
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          task_key?: string
-          reward_nop?: number
-          completed_at?: string | null
-          claimed_at?: string | null
-          created_at?: string | null
-          updated_at?: string | null
-        }
-      }
-      user_tasks: {
-        Row: {
-          id: string
-          user_id: string
-          task_id: string
-          status: "pending" | "completed" | "claimed"
-          completed_at: string | null
-          claimed_at: string | null
-          created_at: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          task_id: string
-          status?: "pending" | "completed" | "claimed"
-          completed_at?: string | null
-          claimed_at?: string | null
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          task_id?: string
-          status?: "pending" | "completed" | "claimed"
-          completed_at?: string | null
-          claimed_at?: string | null
-          created_at?: string | null
-          updated_at?: string | null
-        }
-      }
     }
     Views: {
       [_ in never]: never

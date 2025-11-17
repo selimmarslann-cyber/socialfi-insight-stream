@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AIMarketBar } from "@/components/ai/AIMarketBar";
-import TopUsersCard from "@/components/TopUsersCard";
 import { PostComposer } from "@/components/post/PostComposer";
 import { FeedList } from "@/components/feed/FeedList";
 import { DashboardCard } from "@/components/layout/visuals/DashboardCard";
 import { DashboardSectionTitle } from "@/components/layout/visuals/DashboardSectionTitle";
 import { MarketMicroChart } from "@/components/market/MarketMicroChart";
 import { PUBLIC_ENV } from "@/config/env";
+import TopUsersCard from "@/components/TopUsersCard";
+import { IntelligenceFeed } from "@/components/intel/IntelligenceFeed";
 
 type PriceSignal = {
   symbol: string;
@@ -90,10 +91,13 @@ const Index = () => {
         </div>
       </DashboardCard>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.8fr)_minmax(0,1fr)]">
-        <AIMarketBar />
-        <TopUsersCard title="Top Operators" period="weekly" limit={5} />
-      </div>
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
+          <AIMarketBar />
+          <div className="space-y-4">
+            <IntelligenceFeed />
+            <TopUsersCard title="Top Operators" limit={5} />
+          </div>
+        </div>
 
       <section className="space-y-3">
         <DashboardSectionTitle label="Community" title="Share Intelligence" />
