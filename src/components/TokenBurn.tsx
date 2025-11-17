@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, useId } from "react";
 import type { BurnStats } from "@/types/admin";
+import { DashboardCard } from "@/components/layout/visuals/DashboardCard";
+import { DashboardSectionTitle } from "@/components/layout/visuals/DashboardSectionTitle";
 
 const BURN_ENDPOINT = "/api/burn";
 const DIGIT_COUNT = 8;
@@ -52,46 +54,36 @@ export default function TokenBurn() {
   );
 
   return (
-    <section
-      className="rounded-2xl bg-white shadow-sm border border-slate-100 p-6 flex flex-col items-center gap-4 w-full text-center dark:bg-slate-900 dark:border-slate-700"
-      aria-busy={loading}
-      aria-live="polite"
-    >
+    <DashboardCard className="flex flex-col items-center gap-4 text-center" aria-busy={loading} aria-live="polite">
+      <DashboardSectionTitle label="Tokenomics" title="Total NOP Burned" />
       <FlameIcon />
-      <div className="flex flex-col items-center gap-1">
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-          NOP Burn Counter
-        </h3>
-        {loading ? (
-          <span className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
-            {data ? "Refreshing…" : "Updating…"}
-          </span>
-        ) : null}
-      </div>
+      {loading ? (
+        <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+          {data ? "Refreshing…" : "Updating…"}
+        </span>
+      ) : null}
 
       <div
-        className="mt-1 w-full rounded-xl bg-slate-50 border border-indigo-100 px-4 py-3 flex gap-1 justify-center dark:bg-slate-800 dark:border-slate-700"
+        className="w-full rounded-xl border border-indigo-100 bg-slate-50 px-4 py-3 dark:border-white/10 dark:bg-white/5"
         aria-label="Burn digits counter"
       >
-        {digits.map((digit, index) => (
-          <span
-            key={`${digit}-${index}`}
-            className={`w-6 h-8 rounded-md bg-white shadow-xs flex items-center justify-center text-sm font-mono font-semibold text-amber-500 border border-amber-100 dark:bg-slate-900 dark:border-amber-400/40 dark:text-amber-400 ${
-              loading ? "animate-pulse" : ""
-            }`}
-          >
-            {digit}
-          </span>
-        ))}
+        <div className="flex flex-wrap justify-center gap-1">
+          {digits.map((digit, index) => (
+            <span
+              key={`${digit}-${index}`}
+              className={`flex h-9 w-7 items-center justify-center rounded-md border border-amber-100 bg-white font-mono text-sm font-semibold text-amber-500 shadow-sm dark:border-amber-400/40 dark:bg-white/5 dark:text-amber-300 ${
+                loading ? "animate-pulse" : ""
+              }`}
+            >
+              {digit}
+            </span>
+          ))}
+        </div>
       </div>
 
       <div className="flex flex-col items-center gap-1">
-        <div className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          Total burned
-        </div>
-        <div className="text-xl font-semibold text-amber-500 tracking-wide dark:text-amber-400">
-          {valueLabel} NOP
-        </div>
+        <div className="text-xs uppercase tracking-[0.2em] text-slate-500">Total burned</div>
+        <div className="text-xl font-semibold text-amber-500 tabular-nums dark:text-amber-300">{valueLabel} NOP</div>
       </div>
 
       {error ? (
@@ -100,13 +92,13 @@ export default function TokenBurn() {
           <button
             type="button"
             onClick={load}
-            className="mt-2 text-sm font-semibold text-indigo-600 underline-offset-4 hover:underline dark:text-indigo-400"
+            className="mt-2 text-sm font-semibold text-indigo-600 underline-offset-4 hover:underline dark:text-indigo-300"
           >
             Retry
           </button>
         </div>
       ) : null}
-    </section>
+    </DashboardCard>
   );
 }
 

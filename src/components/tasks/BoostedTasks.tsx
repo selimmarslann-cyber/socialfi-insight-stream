@@ -9,6 +9,8 @@ import TaskCard, {
   type TaskIconVariant,
   type TaskState,
 } from "@/components/tasks/TaskCard";
+import { DashboardCard } from "@/components/layout/visuals/DashboardCard";
+import { DashboardSectionTitle } from "@/components/layout/visuals/DashboardSectionTitle";
 
 type BoostedTaskRow = Database["public"]["Tables"]["boosted_tasks"]["Row"];
 type UserTaskRow = Database["public"]["Tables"]["user_tasks"]["Row"];
@@ -220,17 +222,12 @@ export default function BoostedTasks() {
   const showSkeleton = !err && state.length === 0;
 
   return (
-    <section className="rounded-3xl border border-slate-100 bg-white px-4 pt-4 pb-3 shadow-sm flex flex-col gap-3">
-      <div className="flex items-baseline justify-between">
-        <div className="flex flex-col gap-1">
-          <div className="text-[15px] font-semibold text-slate-900">Boosted Tasks</div>
-          <div className="text-[12px] text-slate-500">Complete tasks &amp; earn NOP</div>
-        </div>
-        <div className="text-[12px] font-medium text-slate-400">
-          ({claimedCount}/{totalTasks})
-        </div>
-      </div>
-      <div className="h-px w-full rounded-full bg-slate-200/80" />
+    <DashboardCard className="p-4 md:p-5">
+      <DashboardSectionTitle
+        label="Onboarding"
+        title="Boosted Tasks"
+        action={<span className="text-xs font-semibold text-slate-500">({claimedCount}/{totalTasks})</span>}
+      />
 
       {err ? (
         <div className="rounded-2xl border border-rose-100 bg-rose-50/80 px-3 py-2 text-[12px] font-medium text-rose-700">
@@ -244,15 +241,15 @@ export default function BoostedTasks() {
         </div>
       ) : null}
 
-      <div className="space-y-3">
+      <div className="mt-3 space-y-3">
         {showSkeleton
           ? Array.from({ length: totalTasks }).map((_, index) => (
               <div
                 key={`boosted-task-skeleton-${index}`}
-                className="rounded-2xl border border-slate-100 bg-slate-50/40 px-3 py-2.5 flex items-center justify-between gap-3"
+                className="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50/40 px-3 py-2.5"
               >
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="h-7 w-7 rounded-full bg-white/80" />
+                <div className="flex items-center gap-2.5">
+                  <div className="h-8 w-8 rounded-full bg-white/80" />
                   <div className="space-y-1">
                     <div className="h-3 w-28 rounded-full bg-slate-100" />
                     <div className="h-3 w-20 rounded-full bg-slate-100" />
@@ -277,6 +274,6 @@ export default function BoostedTasks() {
               />
             ))}
       </div>
-    </section>
+    </DashboardCard>
   );
 }

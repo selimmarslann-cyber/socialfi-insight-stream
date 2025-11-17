@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { PenSquare, Sparkles, User, Wallet } from "lucide-react";
+import { Check, PenSquare, Sparkles, User, Wallet } from "lucide-react";
 
 export type TaskState = "locked" | "ready" | "claimed";
 
@@ -42,11 +42,11 @@ export function TaskCard({
   const Icon = iconVisuals[iconVariant] ?? iconVisuals.default;
 
   const iconWrapperClassName = clsx(
-    "h-7 w-7 rounded-full flex items-center justify-center text-[13px] font-medium",
-    iconVariant === "signup" && "bg-indigo-100 text-indigo-600",
-    iconVariant === "deposit" && "bg-sky-100 text-sky-600",
-    iconVariant === "contribute" && "bg-amber-100 text-amber-600",
-    iconVariant === "default" && "bg-slate-100 text-slate-600",
+    "flex h-9 w-9 items-center justify-center rounded-2xl border text-[13px] font-medium",
+    iconVariant === "signup" && "border-indigo-100 bg-indigo-50 text-indigo-600",
+    iconVariant === "deposit" && "border-cyan-100 bg-cyan-50 text-cyan-600",
+    iconVariant === "contribute" && "border-amber-100 bg-amber-50 text-amber-600",
+    iconVariant === "default" && "border-slate-100 bg-slate-50 text-slate-600",
   );
 
   const renderAction = () => {
@@ -60,7 +60,7 @@ export function TaskCard({
             }
           }}
           disabled={busy}
-          className="text-[11px] font-medium text-white bg-gradient-to-r from-indigo-500 to-cyan-500 hover:from-indigo-600 hover:to-cyan-600 rounded-full px-3 py-0.5 leading-none shadow-sm transition disabled:opacity-60 disabled:cursor-not-allowed"
+          className="inline-flex items-center rounded-full bg-gradient-to-r from-[var(--color-accent-indigo)] to-[var(--color-accent-cyan)] px-3 py-1 text-xs font-semibold text-white shadow-sm transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {busy ? "Claiming…" : "Claim reward"}
         </button>
@@ -69,36 +69,37 @@ export function TaskCard({
 
     if (state === "locked") {
       return (
-        <div className="text-[11px] font-medium text-slate-500 bg-slate-100 rounded-full px-3 py-0.5 leading-none">
-          Complete requirement
+        <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-500">
+          Complete first
         </div>
       );
     }
 
     return (
-      <div className="text-[11px] font-medium text-emerald-600 bg-emerald-50 rounded-full px-3 py-0.5 leading-none">
+      <div className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600">
+        <Check className="h-3 w-3" />
         Claimed
       </div>
     );
   };
 
   return (
-    <div className="rounded-2xl border border-slate-100 bg-slate-50/40 px-3 py-2.5 flex items-center justify-between gap-3">
+    <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200/70 bg-white px-3 py-2.5 shadow-sm">
       <div className="flex items-center gap-2.5 min-w-0">
         <div className={iconWrapperClassName}>
           <Icon className="h-3.5 w-3.5" strokeWidth={1.8} />
         </div>
         <div className="flex flex-col min-w-0">
-          <div className="text-[13px] font-semibold text-slate-900 truncate">{title}</div>
-          <div className="text-[11px] leading-snug text-slate-500 line-clamp-2">
+          <div className="text-sm font-semibold text-slate-900 truncate">{title}</div>
+          <div className="text-xs leading-snug text-slate-500 line-clamp-2">
             {description || "Detaylar yakında eklenecek."}
           </div>
         </div>
       </div>
 
       <div className="flex flex-col items-end gap-1 shrink-0">
-        <div className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5">
-          <span className="text-[11px] font-semibold text-amber-700">
+        <div className="inline-flex items-center rounded-full border border-amber-200/70 bg-amber-50/80 px-2.5 py-0.5">
+          <span className="text-xs font-semibold text-amber-700 tabular-nums">
             +{formatReward(reward)} NOP
           </span>
         </div>

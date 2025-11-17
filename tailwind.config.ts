@@ -5,7 +5,7 @@ export default {
   darkMode: ["class"],
   content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
   prefix: "",
-  theme: {
+    theme: {
     container: {
       center: true,
       padding: "2rem",
@@ -13,7 +13,7 @@ export default {
         "2xl": "1400px",
       },
     },
-    extend: {
+      extend: {
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono', 'monospace'],
@@ -64,6 +64,26 @@ export default {
           DEFAULT: "hsl(var(--warning))",
           foreground: "hsl(var(--warning-foreground))",
         },
+          surface: {
+            DEFAULT: "var(--color-surface)",
+            muted: "var(--color-surface-muted)",
+            elevated: "var(--color-surface-elevated)",
+          },
+          brand: {
+            indigo: "var(--color-accent-indigo)",
+            cyan: "var(--color-accent-cyan)",
+            gradient: "var(--color-accent-gradient)",
+            gold: "var(--color-chip-gold)",
+          },
+          text: {
+            primary: "var(--color-text-primary)",
+            secondary: "var(--color-text-secondary)",
+            muted: "var(--color-text-muted)",
+          },
+          intent: {
+            danger: "var(--color-danger)",
+            success: "var(--color-success)",
+          },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -76,9 +96,34 @@ export default {
         },
       },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+          lg: "var(--radius-card)",
+          md: "var(--radius-input)",
+          sm: "calc(var(--radius-input) - 2px)",
+          card: "var(--radius-card)",
+          chip: "var(--radius-chip)",
+          button: "var(--radius-button)",
+          input: "var(--radius-input)",
+        },
+        spacing: {
+          page: "var(--space-page)",
+          section: "var(--space-section)",
+          "card-padding": "var(--space-card-padding)",
+          "grid-gap": "var(--space-grid-gap)",
+        },
+        boxShadow: {
+          "card-elevated": "var(--shadow-elevated-card)",
+          "card-soft": "var(--shadow-elevated-subtle)",
+        },
+        backgroundImage: {
+          "brand-gradient": "var(--color-accent-gradient)",
+        },
+        fontSize: {
+          "ds-h1": ["var(--type-h1-size)", { lineHeight: "1.2", fontWeight: "600" }],
+          "ds-h2": ["var(--type-h2-size)", { lineHeight: "1.25", fontWeight: "600" }],
+          "ds-h3": ["var(--type-h3-size)", { lineHeight: "1.3", fontWeight: "600" }],
+          "ds-body": ["var(--type-body-size)", { lineHeight: "1.55" }],
+          "ds-label": ["var(--type-label-size)", { lineHeight: "1", letterSpacing: "0.12em", fontWeight: "600" }],
+          "ds-mono": ["var(--type-mono-size)", { lineHeight: "1.2", fontFamily: "'JetBrains Mono', monospace" }],
       },
       keyframes: {
         "accordion-down": {

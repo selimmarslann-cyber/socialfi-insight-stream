@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
-import { Container } from "@/components/layout/Container";
 import { ContributeCard } from "@/components/ContributeCard";
 import { fetchContributes } from "@/lib/contributes";
+import { DashboardCard } from "@/components/layout/visuals/DashboardCard";
+import { DashboardSectionTitle } from "@/components/layout/visuals/DashboardSectionTitle";
 
 const Contributes = () => {
   const { data, isLoading } = useQuery({
@@ -10,26 +11,34 @@ const Contributes = () => {
   });
 
   return (
-    <Container>
-      <div className="max-w-5xl mx-auto space-y-6 py-8">
-        <div>
-          <h1 className="text-3xl font-bold">Contributes</h1>
-          <p className="muted">Pool erişimi olan katkıları buradan takip edebilirsiniz.</p>
+    <div className="space-y-5">
+      <DashboardCard>
+        <DashboardSectionTitle label="Pools" title="Contributes" />
+        <p className="text-sm text-slate-500">
+          Follow the latest community pools, view pool charts, and access onboarding steps before each listing opens.
+        </p>
+      </DashboardCard>
+
+      {isLoading ? (
+        <DashboardCard>
+          <p className="text-sm text-slate-500">Loading pools…</p>
+        </DashboardCard>
+      ) : null}
+
+      {!isLoading && (data?.length ?? 0) === 0 ? (
+        <DashboardCard>
+          <p className="text-sm text-slate-500">Henüz aktif katkı bulunmuyor.</p>
+        </DashboardCard>
+      ) : null}
+
+      {!isLoading && data ? (
+        <div className="grid gap-4">
+          {data.map((item) => (
+            <ContributeCard key={item.id} item={item} />
+          ))}
         </div>
-
-        {isLoading && <p className="muted">Yükleniyor...</p>}
-
-        {!isLoading && (data?.length ?? 0) === 0 && <p className="muted">Henüz aktif katkı bulunmuyor.</p>}
-
-        {!isLoading && data && (
-          <div className="grid gap-4">
-            {data.map((item) => (
-              <ContributeCard key={item.id} item={item} />
-            ))}
-          </div>
-        )}
-      </div>
-    </Container>
+      ) : null}
+    </div>
   );
 };
 

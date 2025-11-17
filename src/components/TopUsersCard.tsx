@@ -2,6 +2,8 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { fetchTopUsers, shortId, type Period, type LeaderboardRow } from '@/lib/leaderboard';
 import { cn } from '@/lib/utils';
+import { DashboardCard } from '@/components/layout/visuals/DashboardCard';
+import { DashboardSectionTitle } from '@/components/layout/visuals/DashboardSectionTitle';
 
 function GoldChip({ children }: { children: ReactNode }) {
   return (
@@ -78,21 +80,18 @@ export default function TopUsersCard({
   ];
 
   return (
-    <div className={cn('flex h-full flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm', className)}>
-      <div className="border-b border-slate-100 bg-gradient-to-r from-indigo-500/10 to-cyan-400/10 px-4 pt-3 pb-2">
-        <div className="mb-2 flex items-center justify-between">
-          <span className="text-sm font-semibold text-slate-900">{title}</span>
-          <span className="text-[11px] text-slate-500">Curated by NOP AI Engine</span>
-        </div>
-        <div className="inline-flex rounded-full bg-slate-900/5 p-1 text-[11px] font-semibold text-slate-500">
+    <DashboardCard className={cn("flex h-full flex-col gap-4", className)}>
+      <div className="flex flex-col gap-2">
+        <DashboardSectionTitle label="Social Intelligence" title={title} />
+        <div className="inline-flex rounded-full border border-slate-200/70 bg-slate-50 p-1 text-[11px] font-semibold text-slate-500">
           {tabs.map((item) => (
             <button
               key={item.value}
               type="button"
               onClick={() => setTab(item.value)}
               className={cn(
-                'rounded-full px-3 py-1 transition',
-                tab === item.value ? 'bg-white text-slate-900 shadow' : 'text-slate-500',
+                "min-w-[70px] rounded-full px-3 py-1 transition",
+                tab === item.value ? "bg-white text-slate-900 shadow-sm" : "hover:text-slate-900",
               )}
             >
               {item.label}
@@ -104,15 +103,15 @@ export default function TopUsersCard({
       <div className="flex flex-1 flex-col divide-y divide-slate-100">
         {rows === null
           ? Array.from({ length: limit }).map((_, index) => (
-              <div key={index} className="px-4 py-2.5">
-                <div className="h-12 rounded-xl bg-slate-50 animate-pulse" />
+              <div key={index} className="px-1 py-2.5">
+                <div className="h-12 rounded-2xl bg-slate-50" />
               </div>
             ))
           : null}
 
-          {Array.isArray(rows) && rows.length > 0
-            ? rows.map((row, index) => (
-              <div key={row.user_id} className="flex items-center justify-between px-4 py-2.5">
+        {Array.isArray(rows) && rows.length > 0
+          ? rows.map((row, index) => (
+              <div key={row.user_id} className="flex items-center justify-between px-1 py-2.5">
                 <div className="flex items-center gap-3">
                   <Rank index={index} />
                   <Avatar name={row.profiles?.username || null} id={row.user_id} />
@@ -127,9 +126,9 @@ export default function TopUsersCard({
           : null}
 
         {Array.isArray(rows) && rows.length === 0 ? (
-          <div className="px-4 py-4 text-sm text-slate-500">No users yet.</div>
+          <div className="px-1 py-4 text-sm text-slate-500">No users yet.</div>
         ) : null}
       </div>
-    </div>
+    </DashboardCard>
   );
 }

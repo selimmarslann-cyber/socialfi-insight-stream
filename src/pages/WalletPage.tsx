@@ -5,7 +5,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Container } from '@/components/layout/Container';
 import { WalletConnectButton } from '@/components/wallet/WalletConnectButton';
 import { BalanceHeader } from '@/components/wallet/BalanceHeader';
 import { ActionBar, WalletAction } from '@/components/wallet/ActionBar';
@@ -14,6 +13,8 @@ import { TxTable } from '@/components/wallet/TxTable';
 import { Badge } from '@/components/ui/badge';
 import { useWalletStore } from '@/lib/store';
 import type { WalletTx } from '@/types/wallet';
+import { DashboardCard } from '@/components/layout/visuals/DashboardCard';
+import { DashboardSectionTitle } from '@/components/layout/visuals/DashboardSectionTitle';
 
 const tokenMeta = {
   USDT: {
@@ -162,96 +163,85 @@ export default function WalletPage() {
     onCloseDialog();
   };
 
-  if (!connected) {
-    return (
-      <Container>
-        <div className="mx-auto flex max-w-3xl flex-col gap-6 py-16 text-center">
-          <div className="rounded-3xl border border-indigo-500/10 bg-white/80 p-12 shadow-xl backdrop-blur">
-            <Badge className="mx-auto mb-4 rounded-full bg-indigo-500/10 px-4 py-1 text-sm font-semibold text-indigo-600">
-              Wallet
-            </Badge>
-            <h1 className="text-3xl font-semibold text-slate-900">Connect your wallet</h1>
-            <p className="mt-3 text-sm text-slate-600">
-              Preview balances, yield analytics and transaction history with a single secure
-              connection.
+    if (!connected) {
+      return (
+        <div className="mx-auto max-w-3xl space-y-5 py-10 text-center">
+          <DashboardCard className="space-y-4">
+            <DashboardSectionTitle label="Wallet" title="Connect your wallet" />
+            <p className="text-sm text-slate-600">
+              Preview balances, yield analytics, and transaction history by connecting your wallet securely.
             </p>
-            <div className="mt-6 flex justify-center">
+            <div className="flex justify-center">
               <WalletConnectButton />
             </div>
-          </div>
+          </DashboardCard>
         </div>
-      </Container>
-    );
-  }
+      );
+    }
 
-  return (
-    <Container>
-      <div className="space-y-8 py-10">
-        <BalanceHeader
-          address={address}
-          totalUsd={totalUsd}
-          totalNop={nop}
-          usdtBalance={usdt}
-          nopBalance={nop}
-          chainId={chainId}
-          onChainChange={setChainId}
-          stats={stats}
-        />
+    return (
+      <div className="space-y-6 py-6">
+        <section className="space-y-3">
+          <DashboardSectionTitle label="Wallet" title="Your NOP Intelligence Wallet" />
+          <BalanceHeader
+            address={address}
+            totalUsd={totalUsd}
+            totalNop={nop}
+            usdtBalance={usdt}
+            nopBalance={nop}
+            chainId={chainId}
+            onChainChange={setChainId}
+            stats={stats}
+          />
+        </section>
 
-        <ActionBar disabled={!connected} onSelect={handleActionSelect} />
+        <DashboardCard className="space-y-4">
+          <DashboardSectionTitle label="Actions" title="Boost your portfolio" />
+          <ActionBar disabled={!connected} onSelect={handleActionSelect} />
+        </DashboardCard>
 
-        <section className="grid gap-5 md:grid-cols-2">
+        <section className="grid gap-4 md:grid-cols-2">
           {tokens.map((token) => (
             <TokenCard key={token.symbol} {...token} />
           ))}
         </section>
 
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-semibold text-slate-900">Transactions</h2>
-              <p className="text-sm text-slate-500">
-                Detailed history of deposits, swaps and rewards
-              </p>
-            </div>
+        <DashboardCard className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <DashboardSectionTitle label="History" title="Transactions" />
             <Badge variant="secondary" className="rounded-full bg-slate-100 text-xs text-slate-600">
               Updated {format(new Date(), 'HH:mm')}
             </Badge>
           </div>
           <TxTable transactions={transactions} />
-        </section>
-      </div>
+        </DashboardCard>
 
-      <Dialog open={Boolean(activeAction)} onOpenChange={(open) => (!open ? onCloseDialog() : null)}>
-        {activeAction && (
-          <DialogContent className="max-w-md rounded-2xl">
-            <DialogHeader>
-              <DialogTitle>{actionLabels[activeAction]}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="amount">Amount</Label>
-                <Input
-                  id="amount"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={actionAmount}
-                  onChange={(event) => setActionAmount(event.target.value)}
-                  placeholder="0.00"
-                />
+        <Dialog open={Boolean(activeAction)} onOpenChange={(open) => (!open ? onCloseDialog() : null)}>
+          {activeAction && (
+            <DialogContent className="max-w-md rounded-2xl">
+              <DialogHeader>
+                <DialogTitle>{actionLabels[activeAction]}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="amount">Amount</Label>
+                  <Input
+                    id="amount"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={actionAmount}
+                    onChange={(event) => setActionAmount(event.target.value)}
+                    placeholder="0.00"
+                  />
+                </div>
+                <Button type="button" className="w-full" onClick={handleSubmit}>
+                  Confirm {actionLabels[activeAction]}
+                </Button>
               </div>
-              <Button
-                type="button"
-                className="w-full"
-                onClick={handleSubmit}
-              >
-                Confirm {actionLabels[activeAction]}
-              </Button>
-            </div>
-          </DialogContent>
-        )}
-      </Dialog>
-    </Container>
-  );
+            </DialogContent>
+          )}
+        </Dialog>
+      </div>
+    );
 }
