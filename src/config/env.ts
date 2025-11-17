@@ -28,6 +28,15 @@ export const PUBLIC_ENV = {
   adminToken: readMetaValue("VITE_ADMIN_TOKEN"),
 };
 
+export const PROTOCOL_ENV = {
+  nopTokenAddress: readMetaValue("VITE_NOP_TOKEN_ADDRESS"),
+  l2RpcUrl: readMetaValue("VITE_L2_RPC_URL"),
+  dexScreenerBase: readMetaValue(
+    "VITE_DEXSCREENER_API_BASE",
+    "https://api.dexscreener.com/latest/dex",
+  ),
+};
+
 export const SUPABASE_REQUIRED_VARS = [
   SUPABASE_PUBLIC_URL_KEY,
   SUPABASE_PUBLIC_ANON_KEY,

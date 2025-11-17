@@ -637,6 +637,118 @@ on public.game_sessions
 for insert
 with check (auth.uid() = user_id);
 
+-- ---------------------------------------------------------------------
+-- Protocol social positions & reputation
+-- ---------------------------------------------------------------------
+
+create table if not exists public.social_positions (
+  id uuid primary key default gen_random_uuid(),
+  user_address text not null,
+  contribute_id uuid,
+  direction text not null check (direction in ('long', 'short')),
+  size_nop numeric(36,18) not null,
+  entry_price_usd numeric(24,8),
+  exit_price_usd numeric(24,8),
+  opened_at timestamptz not null default now(),
+  closed_at timestamptz,
+  status text not null default 'open' check (status in ('open', 'closed', 'liquidated')),
+  realized_pnl_usd numeric(24,8),
+  tx_hash_open text not null,
+  tx_hash_close text,
+  chain_id integer,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_social_positions_user_address
+  on public.social_positions (lower(user_address));
+
+alter table public.social_positions enable row level security;
+
+drop policy if exists "social_positions_select_public" on public.social_positions;
+create policy "social_positions_select_public"
+on public.social_positions
+for select
+using (true);
+
+drop policy if exists "social_positions_insert_self" on public.social_positions;
+create policy "social_positions_insert_self"
+on public.social_positions
+for insert
+with check (
+  auth.role() = 'service_role'
+  or (
+    auth.uid() is not null
+    and exists (
+      select 1
+      from public.profiles p
+      where p.id = auth.uid()
+        and p.wallet_address is not null
+        and lower(p.wallet_address) = lower(user_address)
+    )
+  )
+);
+
+drop policy if exists "social_positions_update_self" on public.social_positions;
+create policy "social_positions_update_self"
+on public.social_positions
+for update
+using (
+  auth.role() = 'service_role'
+  or (
+    auth.uid() is not null
+    and exists (
+      select 1
+      from public.profiles p
+      where p.id = auth.uid()
+        and p.wallet_address is not null
+        and lower(p.wallet_address) = lower(user_address)
+    )
+  )
+)
+with check (
+  auth.role() = 'service_role'
+  or (
+    auth.uid() is not null
+    and exists (
+      select 1
+      from public.profiles p
+      where p.id = auth.uid()
+        and p.wallet_address is not null
+        and lower(p.wallet_address) = lower(user_address)
+    )
+  )
+);
+
+create table if not exists public.reputation_scores (
+  user_address text primary key,
+  total_positions integer not null default 0,
+  open_positions integer not null default 0,
+  win_rate numeric(5,2),
+  realized_pnl_usd numeric(24,8) not null default 0,
+  avg_holding_hours numeric(12,4),
+  last_active_at timestamptz,
+  last_computed_at timestamptz not null default now(),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_reputation_scores_realized_pnl
+  on public.reputation_scores (realized_pnl_usd desc);
+
+alter table public.reputation_scores enable row level security;
+
+drop policy if exists "reputation_scores_select_public" on public.reputation_scores;
+create policy "reputation_scores_select_public"
+on public.reputation_scores
+for select
+using (true);
+
+drop policy if exists "reputation_scores_manage_auth" on public.reputation_scores;
+create policy "reputation_scores_manage_auth"
+on public.reputation_scores
+for all
+using (auth.role() = 'service_role' or auth.uid() is not null)
+with check (auth.role() = 'service_role' or auth.uid() is not null);
+
 -- =====================================================================
 -- End of schema
 -- =====================================================================

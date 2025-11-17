@@ -1,79 +1,63 @@
 import { getSupabase } from "@/lib/supabaseClient";
 
-export type Period = "daily" | "weekly" | "total";
-
-export type LeaderboardRow = {
-  user_id: string;
-  total_score: number | null;
-  daily_score: number | null;
-  weekly_score: number | null;
-  profiles?: {
-    username?: string | null;
-  } | null;
+export type ReputationLeaderboardRow = {
+  user_address: string;
+  realized_pnl_usd: number;
+  win_rate: number | null;
+  total_positions: number;
+  open_positions: number;
 };
 
-const FALLBACK_TOP_USERS: LeaderboardRow[] = [
+const FALLBACK_TOP_USERS: ReputationLeaderboardRow[] = [
   {
-    user_id: "mock-signalqueen",
-    total_score: 48200,
-    weekly_score: 18950,
-    daily_score: 920,
-    profiles: { username: "signalqueen" },
+    user_address: "0x9d8a***alpha",
+    realized_pnl_usd: 18450,
+    win_rate: 68.5,
+    total_positions: 42,
+    open_positions: 3,
   },
   {
-    user_id: "mock-layer2labs",
-    total_score: 45120,
-    weekly_score: 17540,
-    daily_score: 860,
-    profiles: { username: "layer2labs" },
+    user_address: "0x1be3***labs",
+    realized_pnl_usd: 14280,
+    win_rate: 61.2,
+    total_positions: 37,
+    open_positions: 5,
   },
   {
-    user_id: "mock-yieldsmith",
-    total_score: 42990,
-    weekly_score: 16220,
-    daily_score: 740,
-    profiles: { username: "yieldsmith" },
+    user_address: "0xa32f***intel",
+    realized_pnl_usd: 12940,
+    win_rate: 72.4,
+    total_positions: 29,
+    open_positions: 2,
   },
   {
-    user_id: "mock-airdropalpha",
-    total_score: 40750,
-    weekly_score: 14980,
-    daily_score: 610,
-    profiles: { username: "airdropalpha" },
+    user_address: "0x4c91***feeds",
+    realized_pnl_usd: 11280,
+    win_rate: 58.1,
+    total_positions: 34,
+    open_positions: 4,
   },
   {
-    user_id: "mock-nopwhale",
-    total_score: 39810,
-    weekly_score: 13740,
-    daily_score: 520,
-    profiles: { username: "nopwhale" },
+    user_address: "0x6db0***boost",
+    realized_pnl_usd: 9875,
+    win_rate: 55.3,
+    total_positions: 31,
+    open_positions: 1,
   },
 ];
 
 const takeFallback = (limit: number) => FALLBACK_TOP_USERS.slice(0, limit);
 
-export async function fetchTopUsers(
-  period: Period,
-  limit = 5,
-): Promise<LeaderboardRow[]> {
+export async function fetchTopUsers(limit = 5): Promise<ReputationLeaderboardRow[]> {
   const sb = getSupabase();
-  const col =
-    period === "daily"
-      ? "daily_score"
-      : period === "weekly"
-        ? "weekly_score"
-        : "total_score";
-
   if (!sb) {
     return takeFallback(limit);
   }
 
   const { data, error } = await sb
-    .from<LeaderboardRow>("gaming_scores")
-    .select(
-      "user_id,total_score,daily_score,weekly_score,profiles(username)",
-    )
-    .order(col, { ascending: false })
+    .from<ReputationLeaderboardRow>("reputation_scores")
+    .select("user_address,realized_pnl_usd,win_rate,total_positions,open_positions")
+    .order("realized_pnl_usd", { ascending: false })
     .limit(limit);
 
   if (error) {
@@ -89,5 +73,8 @@ export async function fetchTopUsers(
 }
 
 export function shortId(id: string) {
+  if (id.length <= 8) {
+    return id;
+  }
   return `${id.slice(0, 4)}…${id.slice(-4)}`;
 }
