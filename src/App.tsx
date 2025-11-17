@@ -30,12 +30,15 @@ import Support from "./pages/Support";
 import Features from "./pages/Features";
 import Roadmap from "./pages/Roadmap";
 import FAQ from "./pages/FAQ";
+import Docs from "./pages/Docs";
 import DocsApi from "./pages/DocsApi";
 import Community from "./pages/Community";
 import Status from "./pages/Status";
 import LegalPrivacy from "./pages/legal/LegalPrivacy";
 import LegalTerms from "./pages/legal/LegalTerms";
 import LegalCookies from "./pages/legal/LegalCookies";
+import Litepaper from "./pages/Litepaper";
+import Onboarding from "./pages/Onboarding";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -60,12 +63,20 @@ const App = () => (
                 <Route path="/explore" element={<Explore />} />
                 <Route path="/contributes" element={<Contributes />} />
                 <Route path="/wallet" element={<WalletPage />} />
-                <Route path="/settings" element={<Settings />} />
+                  <Route path="/settings" element={<Settings />} />
               <Route path="/about" element={<About />} />
               <Route path="/whitepaper" element={<Whitepaper />} />
               <Route path="/tokenomics" element={<Tokenomics />} />
+                  <Route path="/litepaper" element={<Litepaper />} />
                 <Route path="/features" element={<Features />} />
-                <Route path="/roadmap" element={<Roadmap />} />
+                  <Route path="/roadmap" element={<Roadmap />} />
+                  <Route path="/onboarding" element={<Onboarding />} />
+                  <Route path="/docs" element={<Docs />} />
+                  <Route path="/docs/whitepaper" element={<Whitepaper />} />
+                  <Route path="/docs/tokenomics" element={<Tokenomics />} />
+                  <Route path="/docs/litepaper" element={<Litepaper />} />
+                  <Route path="/docs/onboarding" element={<Onboarding />} />
+                  <Route path="/docs/roadmap" element={<Roadmap />} />
                 <Route path="/faq" element={<FAQ />} />
                 <Route path="/docs/api" element={<DocsApi />} />
                 <Route path="/community" element={<Community />} />

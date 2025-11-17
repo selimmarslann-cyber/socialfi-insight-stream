@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Compass, Flame, LayoutDashboard, LineChart, Settings, Shield, Wallet2 } from "lucide-react";
+import { BookOpen, Compass, Flame, LayoutDashboard, LineChart, Settings, Shield, Wallet2 } from "lucide-react";
 import { SidebarNav } from "@/components/navigation/SidebarNav";
 import { useAuthStore } from "@/lib/store";
 import { DashboardCard } from "@/components/layout/visuals/DashboardCard";
@@ -11,6 +11,7 @@ const baseNavItems = [
   { label: "Contributes", href: "/contributes", icon: LineChart },
   { label: "Wallet", href: "/wallet", icon: Wallet2 },
   { label: "Burn", href: "/burn", icon: Flame },
+  { label: "Docs", href: "/docs", icon: BookOpen },
   { label: "Settings", href: "/settings", icon: Settings },
 ];
 
