@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+// NOTE: This games module is experimental and not part of the core NOP Intelligence Layer
+// production app. It is currently excluded from navigation and main flows as of PHASE 2.
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { addScore, bestOf } from '@/lib/games/localStore';
 
 type Card = {
@@ -41,15 +43,14 @@ export default function Memory() {
 
   useEffect(() => {
     reset();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [reset]);
 
-  const reset = () => {
+  const reset = useCallback(() => {
     setCards(createDeck());
     setSteps(0);
     stepsRef.current = 0;
     finishedRef.current = false;
-  };
+  }, []);
 
   const saveScore = (value: number) => {
     if (finishedRef.current) return;

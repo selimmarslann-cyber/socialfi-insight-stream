@@ -1,3 +1,5 @@
+// DEPRECATED: This booster UI has been superseded by BoostedTasks + TaskCard (PHASE 2).
+// It is kept only for reference and is not used in the main app.
 import { Zap, Calendar } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';

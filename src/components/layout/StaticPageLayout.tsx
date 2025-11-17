@@ -25,9 +25,6 @@ export const StaticPageLayout = ({ children }: StaticPageLayoutProps) => {
               <Link className="transition hover:text-[color:var(--text-primary)]" to="/contributes">
                 Contribute
               </Link>
-              <Link className="transition hover:text-[color:var(--text-primary)]" to="/games">
-                Games
-              </Link>
               <Link className="transition hover:text-[color:var(--text-primary)]" to="/wallet">
                 Wallet
               </Link>

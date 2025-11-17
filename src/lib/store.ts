@@ -3,9 +3,7 @@ import { generateRefCode } from '@/lib/utils';
 import type { WalletTx } from '@/types/wallet';
 import type { Post } from '@/types/feed';
 
-const ADMIN_SESSION_KEY = "nop_admin_session";
-const ADMIN_USERNAME = "admin";
-const ADMIN_PASSWORD = "adminadmin";
+const ADMIN_DISABLED_NOTICE = "Admin access is disabled in this preview build.";
 
 interface AuthState {
   isAdmin: boolean;
@@ -43,30 +41,17 @@ interface WalletState {
   addTx: (tx: WalletTx) => void;
 }
 
-const getInitialAdminState = () => {
-  if (typeof window === "undefined") return false;
-  return window.localStorage.getItem(ADMIN_SESSION_KEY) === "true";
-};
-
-export const useAuthStore = create<AuthState>((set) => ({
-  isAdmin: getInitialAdminState(),
-  login: (username, password) => {
-    const success = username === ADMIN_USERNAME && password === ADMIN_PASSWORD;
-    if (success) {
-      if (typeof window !== "undefined") {
-        window.localStorage.setItem(ADMIN_SESSION_KEY, "true");
-      }
-      set({ isAdmin: true });
-    } else {
-      set({ isAdmin: false });
+export const useAuthStore = create<AuthState>(() => ({
+  isAdmin: false,
+  login: (_username, _password) => {
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem("nop_admin_session");
     }
-    return success;
+    console.info(ADMIN_DISABLED_NOTICE);
+    return false;
   },
   logout: () => {
-    if (typeof window !== "undefined") {
-      window.localStorage.removeItem(ADMIN_SESSION_KEY);
-    }
-    set({ isAdmin: false });
+    console.info(ADMIN_DISABLED_NOTICE);
   },
 }));
 

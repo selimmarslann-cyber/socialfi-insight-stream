@@ -1,3 +1,5 @@
+// DEPRECATED: This booster UI has been superseded by BoostedTasks + TaskCard (PHASE 2).
+// It is kept only for reference and is not used in the main app.
 import { useEffect, useMemo, useState } from 'react';
 import type { MouseEvent } from 'react';
 import { Link } from 'react-router-dom';
