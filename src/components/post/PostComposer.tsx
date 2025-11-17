@@ -23,6 +23,7 @@ import { supabaseAdminHint } from "@/lib/supabaseClient";
 import { useFeedStore, useWalletStore } from "@/lib/store";
 import type { Post } from "@/types/feed";
 import { ImageGrid } from "./ImageGrid";
+import { createPost } from "@/lib/actions";
 
 const hashtagSuggestions = [
   "#Bitcoin",
@@ -202,15 +203,15 @@ export const PostComposer = () => {
     }
   };
 
-  const handleSubmit = async () => {
-    if (!canSubmit) {
-      setError("Add at least 3 characters or an image");
-      return;
-    }
+    const handleSubmit = async () => {
+      if (!canSubmit) {
+        setError("Add at least 3 characters or an image");
+        return;
+      }
 
-    try {
-      setIsSubmitting(true);
-      setError(null);
+      try {
+        setIsSubmitting(true);
+        setError(null);
 
         const sanitized = sanitizeContent(content.trim());
         const userId = address ?? "guest";
@@ -222,46 +223,56 @@ export const PostComposer = () => {
                 ),
               )
             : [];
-
-        const authorLabel = address
-          ? `${address.slice(0, 6)}…${address.slice(-4)}`
-          : "Guest Analyst";
-        const authorUsername = address
-          ? address.slice(-8).toLowerCase()
-          : "guest";
         const tags = extractHashtags(sanitized);
 
-        const newPost: Post = {
-          id: `local-${Date.now()}`,
-          author: {
-            username: authorUsername,
-            displayName: authorLabel,
-            score: 0,
-            refCode: refCode || "nop00000",
-            verified: false,
-          },
-          content: sanitized,
-          images: uploadedUrls,
-          attachments: uploadedUrls,
-          score: estimatedReward,
-          createdAt: new Date().toISOString(),
-          contributedAmount: 0,
-          tags,
-          engagement: { upvotes: 0, comments: 0, tips: 0, shares: 0 },
-        };
+        if (supabaseReady) {
+          const created = await createPost({
+            content: sanitized,
+            attachments: uploadedUrls,
+            tags,
+          });
+          prependPost(created);
+          toast.success("Contribution shared with the network");
+        } else {
+          const authorLabel = address
+            ? `${address.slice(0, 6)}…${address.slice(-4)}`
+            : "Guest Analyst";
+          const authorUsername = address ? address.slice(-8).toLowerCase() : "guest";
 
-        prependPost(newPost);
+          const newPost: Post = {
+            id: `local-${Date.now()}`,
+            author: {
+              username: authorUsername,
+              displayName: authorLabel,
+              score: 0,
+              refCode: refCode || "nop00000",
+              verified: false,
+            },
+            content: sanitized,
+            images: uploadedUrls,
+            attachments: uploadedUrls,
+            score: estimatedReward,
+            createdAt: new Date().toISOString(),
+            contributedAmount: 0,
+            tags,
+            engagement: { upvotes: 0, comments: 0, tips: 0, shares: 0 },
+          };
+
+          prependPost(newPost);
+          toast.info("Contribution shared locally. Enable Supabase to sync.");
+        }
+
         await queryClient.invalidateQueries({ queryKey: ["feed"] });
-
-        toast.success("Contribution shared with the network");
         resetComposer();
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to publish contribution");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+      } catch (err) {
+        console.error(err);
+        const message =
+          err instanceof Error ? err.message : "Failed to publish contribution";
+        toast.error(message);
+      } finally {
+        setIsSubmitting(false);
+      }
+    };
 
     return (
       <Card className="rounded-2xl border border-slate-100 bg-white shadow-sm">

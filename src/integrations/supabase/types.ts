@@ -296,38 +296,73 @@ export type Database = {
           created_at?: string | null
         }
       }
-      posts: {
-        Row: {
-          id: number
-          author_id: string
-          text: string
-          media_url: string | null
-          tags: string[] | null
-          is_investable: boolean
-          invest_open: boolean
-          created_at: string | null
+        posts: {
+          Row: {
+            id: number
+            author_id: string
+            text: string
+            media_url: string | null
+            tags: string[] | null
+            is_investable: boolean
+            invest_open: boolean
+            created_at: string | null
+            ai_signal: string | null
+            ai_volatility: string | null
+            ai_mm_activity: string | null
+            ai_score: number | null
+            ai_last_updated_at: string | null
+          }
+          Insert: {
+            id?: number
+            author_id: string
+            text: string
+            media_url?: string | null
+            tags?: string[] | null
+            is_investable?: boolean
+            invest_open?: boolean
+            created_at?: string | null
+            ai_signal?: string | null
+            ai_volatility?: string | null
+            ai_mm_activity?: string | null
+            ai_score?: number | null
+            ai_last_updated_at?: string | null
+          }
+          Update: {
+            id?: number
+            author_id?: string
+            text?: string
+            media_url?: string | null
+            tags?: string[] | null
+            is_investable?: boolean
+            invest_open?: boolean
+            created_at?: string | null
+            ai_signal?: string | null
+            ai_volatility?: string | null
+            ai_mm_activity?: string | null
+            ai_score?: number | null
+            ai_last_updated_at?: string | null
+          }
         }
-        Insert: {
-          id?: number
-          author_id: string
-          text: string
-          media_url?: string | null
-          tags?: string[] | null
-          is_investable?: boolean
-          invest_open?: boolean
-          created_at?: string | null
+        post_likes: {
+          Row: {
+            id: number
+            post_id: number
+            user_id: string
+            created_at: string | null
+          }
+          Insert: {
+            id?: number
+            post_id: number
+            user_id: string
+            created_at?: string | null
+          }
+          Update: {
+            id?: number
+            post_id?: number
+            user_id?: string
+            created_at?: string | null
+          }
         }
-        Update: {
-          id?: number
-          author_id?: string
-          text?: string
-          media_url?: string | null
-          tags?: string[] | null
-          is_investable?: boolean
-          invest_open?: boolean
-          created_at?: string | null
-        }
-      }
       profiles: {
         Row: {
           id: string

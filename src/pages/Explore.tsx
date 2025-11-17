@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Search, Sparkles, LineChart, TrendingUp } from 'lucide-react';
 import { Container } from '@/components/layout/Container';
 import { Input } from '@/components/ui/input';
@@ -7,6 +8,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { PostCard } from '@/components/feed/PostCard';
 import { mockPosts } from '@/lib/mock-api';
+import { fetchFeed } from '@/lib/feed-service';
 import TopUsersCard from '@/components/TopUsersCard';
 import { useFeedStore } from '@/lib/store';
 import type { Post } from '@/types/feed';
@@ -73,15 +75,23 @@ const API_BASE = PUBLIC_ENV.apiBase || '/api';
 
 const Explore = () => {
   const userPosts = useFeedStore((state) => state.userPosts);
+  const {
+    data: feedData,
+    isLoading: feedLoading,
+  } = useQuery({
+    queryKey: ['explore-feed'],
+    queryFn: () => fetchFeed({ limit: 40 }),
+  });
   const [tab, setTab] = useState<ExploreTab>('all');
   const [query, setQuery] = useState('');
   const [marketItems, setMarketItems] = useState<MarketRow[]>([]);
   const [marketLoading, setMarketLoading] = useState(false);
   const [marketError, setMarketError] = useState<string | null>(null);
 
+  const remotePosts = feedData?.items ?? mockPosts;
   const combinedPosts = useMemo(
-    () => [...userPosts, ...mockPosts],
-    [userPosts],
+    () => [...userPosts, ...remotePosts],
+    [userPosts, remotePosts],
   );
 
   const posts = useMemo(
@@ -158,32 +168,41 @@ const Explore = () => {
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-500">
               <Sparkles className="h-3.5 w-3.5 text-indigo-500" />
-              {mockPosts.length} signals · ${fundedVolume.toLocaleString()} NOP funded in 24h
+              {`${remotePosts.length} signals · $${fundedVolume.toLocaleString()} NOP funded in 24h`}
             </div>
           </div>
 
-          <Tabs value={tab} onValueChange={(value) => setTab(value as ExploreTab)}>
-            <TabsList className="grid w-full grid-cols-3 rounded-2xl bg-slate-100 p-1">
-              <TabsTrigger value="all" className="rounded-2xl text-sm">
-                All
-              </TabsTrigger>
-              <TabsTrigger value="funded" className="rounded-2xl text-sm">
-                Funded
-              </TabsTrigger>
-              <TabsTrigger value="trending" className="rounded-2xl text-sm">
-                Trending
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value={tab} className="mt-6 space-y-5">
-              {posts.length === 0 ? (
-                <Card className="rounded-3xl border border-dashed border-indigo-200 bg-indigo-50/40 p-10 text-center text-sm text-slate-500">
-                  Nothing surfaced with that filter yet. Try a broader query.
-                </Card>
-              ) : (
-                posts.map((post) => <PostCard key={post.id} post={post} />)
-              )}
-            </TabsContent>
-          </Tabs>
+            <Tabs value={tab} onValueChange={(value) => setTab(value as ExploreTab)}>
+              <TabsList className="grid w-full grid-cols-3 rounded-2xl bg-slate-100 p-1">
+                <TabsTrigger value="all" className="rounded-2xl text-sm">
+                  All
+                </TabsTrigger>
+                <TabsTrigger value="funded" className="rounded-2xl text-sm">
+                  Funded
+                </TabsTrigger>
+                <TabsTrigger value="trending" className="rounded-2xl text-sm">
+                  Trending
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value={tab} className="mt-6 space-y-5">
+                {feedLoading && !feedData ? (
+                  <div className="space-y-4">
+                    {Array.from({ length: 3 }).map((_, index) => (
+                      <Card
+                        key={`explore-feed-skeleton-${index}`}
+                        className="h-36 animate-pulse rounded-3xl border border-indigo-50 bg-slate-50"
+                      />
+                    ))}
+                  </div>
+                ) : posts.length === 0 ? (
+                  <Card className="rounded-3xl border border-dashed border-indigo-200 bg-indigo-50/40 p-10 text-center text-sm text-slate-500">
+                    Nothing surfaced with that filter yet. Try a broader query.
+                  </Card>
+                ) : (
+                  posts.map((post) => <PostCard key={post.id} post={post} />)
+                )}
+              </TabsContent>
+            </Tabs>
         </section>
 
           <aside className="space-y-6">

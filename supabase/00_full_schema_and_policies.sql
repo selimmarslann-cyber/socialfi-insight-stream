@@ -235,6 +235,34 @@ for update
 using (auth.uid() = rater_id)
 with check (auth.uid() = rater_id);
 
+create table if not exists public.post_likes (
+  id bigserial primary key,
+  post_id bigint not null references public.posts(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  unique (post_id, user_id)
+);
+
+alter table public.post_likes enable row level security;
+
+drop policy if exists "post_likes_select_public" on public.post_likes;
+create policy "post_likes_select_public"
+on public.post_likes
+for select
+using (true);
+
+drop policy if exists "post_likes_insert_own" on public.post_likes;
+create policy "post_likes_insert_own"
+on public.post_likes
+for insert
+with check (auth.uid() = user_id);
+
+drop policy if exists "post_likes_delete_own" on public.post_likes;
+create policy "post_likes_delete_own"
+on public.post_likes
+for delete
+using (auth.uid() = user_id);
+
 -- ---------------------------------------------------------------------
 -- Boosted tasks & rewards
 -- ---------------------------------------------------------------------

@@ -3,7 +3,7 @@ import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PostCard } from './PostCard';
-import { fetchFeed } from '@/lib/mock-api';
+import { fetchFeed } from '@/lib/feed-service';
 import { useFeedStore } from '@/lib/store';
 
 export const FeedList = () => {
@@ -16,9 +16,9 @@ export const FeedList = () => {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useInfiniteQuery({
-    queryKey: ['feed'],
-    queryFn: ({ pageParam }) => fetchFeed(pageParam),
+    } = useInfiniteQuery({
+      queryKey: ['feed'],
+      queryFn: ({ pageParam }) => fetchFeed({ cursor: pageParam }),
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     initialPageParam: undefined as string | undefined,
   });

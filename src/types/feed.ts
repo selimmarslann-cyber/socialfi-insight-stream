@@ -1,3 +1,28 @@
+export interface PostCommentAuthor {
+  id: string;
+  username?: string;
+  displayName: string;
+  avatar?: string;
+}
+
+export interface PostComment {
+  id: string;
+  postId: string;
+  text: string;
+  createdAt: string;
+  author: PostCommentAuthor;
+}
+
+export interface PostViewerState {
+  liked: boolean;
+  rating?: number | null;
+}
+
+export interface PostRatingSummary {
+  average: number;
+  count: number;
+}
+
 export interface Post {
   id: string;
   author: {
@@ -27,6 +52,9 @@ export interface Post {
     tips: number;
     shares: number;
   };
+  comments?: PostComment[];
+  ratingSummary?: PostRatingSummary;
+  viewerState?: PostViewerState;
 }
 
 export interface FeedResponse {
@@ -37,4 +65,6 @@ export interface FeedResponse {
 export interface CreatePostInput {
   content: string;
   taskId?: string;
+  attachments?: string[];
+  tags?: string[];
 }

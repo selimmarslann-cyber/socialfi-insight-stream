@@ -16,7 +16,7 @@ export default function PostBox({ userId }: { userId?: string }) {
       console.warn("PostBox invoked without userId; relying on Supabase session");
     }
 
-    await createPost(value);
+    await createPost({ content: value });
     setText("");
   };
 
