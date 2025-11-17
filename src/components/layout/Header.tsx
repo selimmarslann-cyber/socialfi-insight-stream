@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Moon, Sun, Search, User } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -66,63 +66,72 @@ export const Header = () => {
             </div>
 
             <div className="relative hidden flex-1 max-w-md md:block">
-              <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[color:var(--menu-muted)]" />
-              <Input
-                placeholder="Search market intel…"
-                className="h-11 rounded-full border-none pl-11 pr-4 text-sm shadow-inner focus-visible:ring-2"
-                style={{
-                  background: 'color-mix(in srgb, var(--bg-card) 90%, transparent)',
-                  color: 'var(--text-primary)',
-                  boxShadow: 'inset 0 1px 2px rgba(15, 23, 42, 0.06)',
-                }}
-              />
+                <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[color:var(--menu-muted)]" />
+                <Input
+                  placeholder="Search market intel…"
+                  className="h-11 rounded-full border-none pl-11 pr-4 text-sm shadow-inner focus-visible:ring-2"
+                  style={{
+                    background: 'color-mix(in srgb, var(--bg-card) 90%, transparent)',
+                    color: 'var(--text-primary)',
+                    boxShadow: 'inset 0 1px 2px rgba(15, 23, 42, 0.06)',
+                  }}
+                />
             </div>
 
             <div className="flex items-center gap-2">
-              <NopCounter />
-              <Button
-                variant="ghost"
-                size="icon"
-                className="hidden h-9 w-9 rounded-full shadow-sm transition md:flex"
-                style={{
-                  border: '1px solid color-mix(in srgb, var(--ring) 50%, transparent)',
-                  background: 'color-mix(in srgb, var(--bg-card) 88%, transparent)',
-                  color: 'var(--text-secondary)',
-                }}
-                onClick={handleToggle}
-                aria-label="Toggle theme"
-                aria-pressed={resolvedMode === 'dark'}
-              >
-                <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-              </Button>
-              <WalletConnectButton />
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-label="User menu"
-                    className="h-9 w-9 rounded-full shadow-sm transition"
-                    style={{
-                      border: '1px solid color-mix(in srgb, var(--ring) 50%, transparent)',
-                      background: 'color-mix(in srgb, var(--bg-card) 88%, transparent)',
-                      color: 'var(--text-secondary)',
-                    }}
-                  >
-                    <User className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
+                <NopCounter />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="hidden h-9 w-9 rounded-full shadow-sm transition md:flex"
+                  style={{
+                    border: '1px solid color-mix(in srgb, var(--ring) 50%, transparent)',
+                    background: 'color-mix(in srgb, var(--bg-card) 88%, transparent)',
+                    color: 'var(--text-secondary)',
+                  }}
+                  onClick={handleToggle}
+                  aria-label="Toggle theme"
+                  aria-pressed={resolvedMode === 'dark'}
+                >
+                  <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                  <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                </Button>
+                <WalletConnectButton />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="hidden rounded-full px-4 font-semibold sm:inline-flex"
+                  asChild
+                >
+                  <Link to="/admin">Admin Girişi</Link>
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label="User menu"
+                      className="h-9 w-9 rounded-full shadow-sm transition"
+                      style={{
+                        border: '1px solid color-mix(in srgb, var(--ring) 50%, transparent)',
+                        background: 'color-mix(in srgb, var(--bg-card) 88%, transparent)',
+                        color: 'var(--text-secondary)',
+                      }}
+                    >
+                      <User className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem
-                      onSelect={() =>
-                        toast.info("Profile customization is coming soon.")
-                      }
+                      onSelect={() => toast.info("Profile customization is coming soon.")}
                     >
                       Profile
                     </DropdownMenuItem>
                     <DropdownMenuItem onSelect={() => navigate("/settings")}>
                       Settings
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => navigate("/admin")}>
+                      Admin Panel
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onSelect={() =>
@@ -131,9 +140,9 @@ export const Header = () => {
                     >
                       Sign Out
                     </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
           </div>
         </Container>
         </header>

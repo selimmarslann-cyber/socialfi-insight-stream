@@ -4,8 +4,9 @@ import type { WalletTx } from '@/types/wallet';
 import type { Post } from '@/types/feed';
 
 const ADMIN_SESSION_KEY = "nop_admin_session";
-const ADMIN_USERNAME = "admin";
-const ADMIN_PASSWORD = "adminadmin";
+export const ADMIN_USERNAME = "selimmarslann@gmail.com";
+const NORMALIZED_ADMIN_USERNAME = ADMIN_USERNAME.toLowerCase();
+export const ADMIN_PASSWORD = "admin";
 
 interface AuthState {
   isAdmin: boolean;
@@ -51,7 +52,9 @@ const getInitialAdminState = () => {
 export const useAuthStore = create<AuthState>((set) => ({
   isAdmin: getInitialAdminState(),
   login: (username, password) => {
-    const success = username === ADMIN_USERNAME && password === ADMIN_PASSWORD;
+    const normalizedInput = username.trim().toLowerCase();
+    const success =
+      normalizedInput === NORMALIZED_ADMIN_USERNAME && password === ADMIN_PASSWORD;
     if (success) {
       if (typeof window !== "undefined") {
         window.localStorage.setItem(ADMIN_SESSION_KEY, "true");
