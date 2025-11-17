@@ -1,72 +1,62 @@
-import { Home, Compass, Wallet, Settings, Shield, Menu, LineChart } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { SidebarNav } from '@/components/navigation/SidebarNav';
-import { useAuthStore } from '@/lib/store';
-import BoostedTasks from '@/components/BoostedTasks';
+import { useMemo } from "react";
+import { Compass, Flame, LayoutDashboard, LineChart, Settings, Shield, Wallet2 } from "lucide-react";
+import { SidebarNav } from "@/components/navigation/SidebarNav";
+import { useAuthStore } from "@/lib/store";
+import { DashboardCard } from "@/components/layout/visuals/DashboardCard";
+import { DashboardSectionTitle } from "@/components/layout/visuals/DashboardSectionTitle";
 
-const navItems = [
-  { label: 'Home', href: '/', icon: Home },
-  { label: 'Explore', href: '/explore', icon: Compass },
-  { label: 'Contributes', href: '/contributes', icon: LineChart },
-  { label: 'Wallet', href: '/wallet', icon: Wallet },
-  { label: 'Settings', href: '/settings', icon: Settings },
+const baseNavItems = [
+  { label: "Dashboard", href: "/", icon: LayoutDashboard },
+  { label: "Explore", href: "/explore", icon: Compass },
+  { label: "Contributes", href: "/contributes", icon: LineChart },
+  { label: "Wallet", href: "/wallet", icon: Wallet2 },
+  { label: "Burn", href: "/burn", icon: Flame },
+  { label: "Settings", href: "/settings", icon: Settings },
+];
+
+const networkStats = [
+  { label: "Network TVL", value: "$128.4M", delta: "+2.1%" },
+  { label: "NOP Burned (7d)", value: "38,240", delta: "+12%" },
+  { label: "Signal Accuracy", value: "87%", delta: "+1.4%" },
 ];
 
 export const LeftRail = () => {
   const { isAdmin } = useAuthStore();
-
-  const allNavItems = [
-    ...navItems,
-    ...(isAdmin
-      ? [{ label: 'Admin Panel', href: '/admin', icon: Shield, isAdmin: true }]
-      : []),
-  ];
+  const navItems = useMemo(
+    () =>
+      [
+        ...baseNavItems,
+        ...(isAdmin ? [{ label: "Admin Panel", href: "/admin", icon: Shield, isAdmin: true }] : []),
+      ] as const,
+    [isAdmin],
+  );
 
   return (
-    <>
-      {/* Desktop */}
-      <aside
-        className="sticky top-20 hidden h-[calc(100vh-5rem)] w-[280px] space-y-6 overflow-y-auto rounded-2xl p-3 backdrop-blur lg:block"
-        style={{
-          background: 'var(--bg-card)',
-          border: '1px solid var(--ring)',
-          boxShadow: 'var(--shadow-card)',
-        }}
-      >
-        <div className="space-y-6">
-          <SidebarNav items={allNavItems} />
-          <BoostedTasks />
-        </div>
-      </aside>
+    <div className="space-y-4 lg:space-y-5">
+      <DashboardCard>
+        <DashboardSectionTitle label="Navigate" title="Intelligence Views" />
+        <SidebarNav items={navItems} />
+      </DashboardCard>
 
-      {/* Mobile */}
-      <Sheet>
-        <SheetTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="fixed bottom-4 right-4 z-50 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg lg:hidden"
-            aria-label="Open menu"
-          >
-            <Menu className="h-6 w-6" />
-          </Button>
-        </SheetTrigger>
-        <SheetContent
-          side="left"
-          className="w-[280px] overflow-y-auto"
-          style={{
-            background: 'var(--bg-card)',
-            borderRight: '1px solid var(--ring)',
-            boxShadow: 'var(--shadow-card)',
-          }}
-        >
-          <div className="space-y-6 pt-6">
-            <SidebarNav items={allNavItems} />
-            <BoostedTasks />
-          </div>
-        </SheetContent>
-      </Sheet>
-    </>
+      <DashboardCard>
+        <DashboardSectionTitle label="Network Pulse" title="NOP Snapshot" />
+        <div className="space-y-3">
+          {networkStats.map((stat) => (
+            <div
+              key={stat.label}
+              className="flex items-center justify-between rounded-2xl border border-slate-100/80 bg-slate-50/60 px-3 py-2"
+            >
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                  {stat.label}
+                </p>
+                <p className="text-sm font-semibold text-slate-900 tabular-nums">{stat.value}</p>
+              </div>
+              <span className="text-xs font-semibold text-emerald-600">{stat.delta}</span>
+            </div>
+          ))}
+        </div>
+      </DashboardCard>
+    </div>
   );
 };

@@ -1,9 +1,9 @@
-import type { CSSProperties } from 'react';
-import { LucideIcon } from 'lucide-react';
-import { NavLink } from '@/components/NavLink';
-import { Badge } from '@/components/ui/badge';
+import { LucideIcon } from "lucide-react";
+import { NavLink } from "@/components/NavLink";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
-interface NavItem {
+export interface SidebarNavItem {
   label: string;
   href: string;
   icon: LucideIcon;
@@ -11,86 +11,46 @@ interface NavItem {
 }
 
 interface SidebarNavProps {
-  items: NavItem[];
+  items: SidebarNavItem[];
 }
+
+const baseLinkClass =
+  "group flex items-center gap-3 rounded-2xl border border-transparent px-3 py-2 text-sm font-medium text-slate-500 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-100 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-background)]";
+const activeLinkClass = "bg-white text-slate-900 border-slate-200 shadow-sm";
+const iconBaseClass =
+  "flex h-9 w-9 items-center justify-center rounded-2xl border border-slate-200/60 bg-white/80 text-slate-500 transition group-hover:border-indigo-200 group-hover:text-indigo-600";
+const iconActiveClass = "border-indigo-200 bg-indigo-50 text-indigo-600 shadow-sm";
 
 export const SidebarNav = ({ items }: SidebarNavProps) => {
   const regularItems = items.filter((item) => !item.isAdmin);
   const adminItems = items.filter((item) => item.isAdmin);
 
-  const hoverStyle = 'hover:bg-[var(--hover-bg)] hover:text-[var(--menu-active)]';
-
-  const linkStyle = (isActive: boolean): CSSProperties & { '--hover-bg': string } => ({
-    color: isActive ? 'var(--menu-active)' : 'var(--menu-item)',
-    background: isActive ? 'var(--surface-subtle)' : 'transparent',
-    borderColor: isActive ? 'var(--ring)' : 'transparent',
-    '--hover-bg': 'color-mix(in srgb, var(--surface-subtle) 70%, transparent)',
-  });
-
-  const iconContainerStyle = (isActive: boolean): CSSProperties => ({
-    borderColor: isActive
-      ? 'color-mix(in srgb, var(--ring) 65%, transparent)'
-      : 'color-mix(in srgb, var(--ring) 40%, transparent)',
-    background: isActive
-      ? 'color-mix(in srgb, var(--surface-subtle) 90%, transparent)'
-      : 'color-mix(in srgb, var(--bg-card) 85%, transparent)',
-    color: isActive ? 'var(--menu-active)' : 'color-mix(in srgb, var(--menu-muted) 70%, var(--menu-item))',
-  });
-
   return (
     <nav className="space-y-1">
       {regularItems.map((item) => (
-        <NavLink
-          key={item.href}
-          to={item.href}
-          end={item.href === '/'}
-          className={`group flex h-10 items-center gap-3 rounded-[12px] border border-transparent px-3 text-sm transition ${hoverStyle}`}
-          style={({ isActive }) => linkStyle(isActive)}
-        >
+        <NavLink key={item.href} to={item.href} end={item.href === "/"} className={baseLinkClass} activeClassName={activeLinkClass}>
           {({ isActive }) => (
             <>
-              <span
-                className="flex h-8 w-8 items-center justify-center rounded-xl border shadow-sm transition"
-                style={iconContainerStyle(isActive)}
-              >
+              <span className={cn(iconBaseClass, isActive && iconActiveClass)}>
                 <item.icon className="h-4 w-4" />
               </span>
-              <span className="text-sm font-medium">{item.label}</span>
+              <span>{item.label}</span>
             </>
           )}
         </NavLink>
       ))}
 
-      {adminItems.length > 0 && (
-        <div
-          className="mt-4 border-t pt-4"
-          style={{ borderColor: 'color-mix(in srgb, var(--ring) 30%, transparent)' }}
-        >
+      {adminItems.length > 0 ? (
+        <div className="mt-4 border-t border-slate-100 pt-4">
           {adminItems.map((item) => (
-            <NavLink
-              key={item.href}
-              to={item.href}
-              className={`group flex h-10 items-center gap-3 rounded-[12px] border border-transparent px-3 text-sm transition ${hoverStyle}`}
-              style={({ isActive }) => linkStyle(isActive)}
-            >
+            <NavLink key={item.href} to={item.href} className={baseLinkClass} activeClassName={activeLinkClass}>
               {({ isActive }) => (
                 <>
-                  <span
-                    className="flex h-8 w-8 items-center justify-center rounded-xl border shadow-sm transition"
-                    style={iconContainerStyle(isActive)}
-                  >
+                  <span className={cn(iconBaseClass, isActive && iconActiveClass)}>
                     <item.icon className="h-4 w-4 flex-shrink-0" />
                   </span>
-                  <span className="text-sm font-medium">{item.label}</span>
-                  <Badge
-                    variant="secondary"
-                    className="ml-auto text-xs font-semibold"
-                    style={{
-                      background: 'color-mix(in srgb, var(--brand-gold) 18%, transparent)',
-                      color: 'var(--menu-item)',
-                      border: '1px solid color-mix(in srgb, var(--ring) 40%, transparent)',
-                    }}
-                  >
+                  <span>{item.label}</span>
+                  <Badge className="ml-auto rounded-full border border-amber-200/70 bg-amber-50/80 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-amber-600">
                     Admin
                   </Badge>
                 </>
@@ -98,7 +58,7 @@ export const SidebarNav = ({ items }: SidebarNavProps) => {
             </NavLink>
           ))}
         </div>
-      )}
+      ) : null}
     </nav>
   );
 };

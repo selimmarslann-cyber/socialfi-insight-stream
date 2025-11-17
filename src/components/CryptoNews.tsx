@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PUBLIC_ENV } from "@/config/env";
 import { cn } from "@/lib/utils";
+import { DashboardCard } from "@/components/layout/visuals/DashboardCard";
+import { DashboardSectionTitle } from "@/components/layout/visuals/DashboardSectionTitle";
 
 type RemoteNewsItem = {
   id: string;
@@ -172,15 +174,15 @@ export default function CryptoNews({ className }: CryptoNewsProps) {
     if (!hasItems) {
       return null;
     }
-    return items.map((item) => (
-      <a
-        key={item.id}
-        href={item.link}
-        target="_blank"
-        rel="noreferrer"
-        className="group flex items-center gap-3 py-2"
-      >
-        <div className="h-9 w-9 flex-shrink-0 overflow-hidden rounded-md border border-slate-100 bg-slate-100">
+      return items.map((item) => (
+        <a
+          key={item.id}
+          href={item.link}
+          target="_blank"
+          rel="noreferrer"
+          className="group flex items-center gap-3 rounded-2xl border border-slate-100/80 bg-white/80 px-3 py-2 transition hover:border-indigo-200 hover:bg-slate-50"
+        >
+          <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-xl border border-slate-100 bg-slate-100">
           <img
             src={item.imageUrl || FALLBACK_IMAGE}
             alt={item.source}
@@ -192,11 +194,11 @@ export default function CryptoNews({ className }: CryptoNewsProps) {
             }}
           />
         </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-xs font-medium text-slate-900 line-clamp-2 group-hover:text-indigo-600">
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-slate-900 line-clamp-2 group-hover:text-indigo-600">
             {item.title}
           </p>
-          <div className="text-[11px] text-slate-500">
+            <div className="text-xs text-slate-500">
             {item.source} • {toRelativeTime(item.publishedAt)}
           </div>
         </div>
@@ -205,31 +207,17 @@ export default function CryptoNews({ className }: CryptoNewsProps) {
   }, [hasItems, items]);
 
   return (
-    <div
-      className={cn(
-        "rounded-2xl border border-slate-100 bg-white p-5 shadow-sm",
-        className,
-      )}
-    >
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-semibold text-slate-900">
-            Crypto News — AI Signals
-          </p>
-          <p className="text-[11px] text-slate-500">
-            Realtime feeds scored by the NOP AI Engine
-          </p>
-        </div>
-      </div>
+    <DashboardCard className={cn("p-4 md:p-5", className)}>
+      <DashboardSectionTitle label="Market Pulse" title="Crypto News" />
 
       {loading && !hasItems ? (
-        <div className="mt-4 space-y-3">
+        <div className="space-y-3">
           {Array.from({ length: MAX_NEWS_ITEMS }).map((_, index) => (
-            <div key={index} className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-md bg-slate-100 animate-pulse" />
+            <div key={index} className="flex items-center gap-3 rounded-2xl border border-slate-100/80 bg-slate-50/60 px-3 py-2">
+              <div className="h-10 w-10 rounded-xl bg-white/80" />
               <div className="flex-1 space-y-2">
-                <div className="h-3 w-3/4 rounded-full bg-slate-100 animate-pulse" />
-                <div className="h-3 w-1/2 rounded-full bg-slate-100 animate-pulse" />
+                <div className="h-3 w-3/4 rounded-full bg-slate-100" />
+                <div className="h-3 w-1/3 rounded-full bg-slate-100" />
               </div>
             </div>
           ))}
@@ -237,17 +225,15 @@ export default function CryptoNews({ className }: CryptoNewsProps) {
       ) : null}
 
       {!loading && hasItems ? (
-        <div className="mt-4 divide-y divide-slate-100">{headlineList}</div>
+        <div className="space-y-3">{headlineList}</div>
       ) : null}
 
       {!loading && !hasItems && !error ? (
-        <p className="mt-4 text-sm text-slate-500">
-          No AI-curated signals yet. Check back shortly.
-        </p>
+        <p className="text-xs text-slate-500">No AI-curated signals yet. Check back shortly.</p>
       ) : null}
 
       {error ? (
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50/80 px-3 py-2 text-xs text-amber-700">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50/80 px-3 py-2 text-xs text-amber-700">
           <span className="font-semibold">{error}</span>
           <Button
             type="button"
@@ -260,6 +246,6 @@ export default function CryptoNews({ className }: CryptoNewsProps) {
           </Button>
         </div>
       ) : null}
-    </div>
+    </DashboardCard>
   );
 }
