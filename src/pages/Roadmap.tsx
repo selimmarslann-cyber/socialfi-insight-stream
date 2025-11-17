@@ -1,24 +1,42 @@
-import StaticPageLayout from "@/components/layout/StaticPageLayout";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DashboardCard } from "@/components/layout/visuals/DashboardCard";
+import { DashboardSectionTitle } from "@/components/layout/visuals/DashboardSectionTitle";
 import { usePageMetadata } from "@/hooks/usePageMetadata";
 
 const roadmapPhases = [
   {
-    title: "Phase 01 · Validation",
-    bullets: ["Manual curation of insights", "Proof-of-burn leaderboard", "Wallet-linked identity"],
+    title: "Phase 0 – Internal Prototype",
+    timeframe: "Q1–Q2 2024",
+    objectives: ["Validate social position logging", "Reputation heuristics", "AI-powered moderation loops"],
+    tech: ["Supabase schema for social_positions", "Basic wallet connect", "CSV-based fee calculator"],
+    goToMarket: ["Closed alpha with internal operators", "Weekly signal reviews", "Manual burn tracking"],
   },
   {
-    title: "Phase 02 · Automation",
-    bullets: ["AI-assisted scoring and anomaly tracing", "Boosted task hub", "On-chain payout vaults"],
+    title: "Phase 1 – Clean Dashboard",
+    timeframe: "Q3 2024",
+    objectives: ["Ship Explore, Wallet, Boosted Tasks, burn transparency"],
+    tech: ["React AppShell", "Modular cards", "Token burn + news widgets"],
+    goToMarket: ["Soft launch to 200 traders", "Office hours", "Prep exchange diligence"],
   },
   {
-    title: "Phase 03 · Markets",
-    bullets: [
-      "Permissionless signal pools",
-      "NOP-denominated staking",
-      "Automated dispute resolution with burn slashing",
-    ],
+    title: "Phase 2 – Protocol Positions & Reputation",
+    timeframe: "Q4 2024 – Q1 2025",
+    objectives: ["Production social_positions + reputation_scores", "Intelligence-feed API", "Fee modeling"],
+    tech: ["Tx-hash registration flow", "Alpha Score recalculations", "Wallet fee summaries"],
+    goToMarket: ["Public beta", "Partner dashboards", "Data room for listings"],
+  },
+  {
+    title: "Phase 3 – On-chain Fee Routing & Treasury",
+    timeframe: "H1 2025",
+    objectives: ["Route 1% fee on-chain", "Automate burns", "Treasury payouts"],
+    tech: ["Fee split contracts", "Scheduled burn executor", "Treasury dashboard"],
+    goToMarket: ["Campaigns with DEX/CEX partners", "Burn announcements", "Ecosystem grants"],
+  },
+  {
+    title: "Phase 4 – Governance & Multi-chain Expansion",
+    timeframe: "H2 2025",
+    objectives: ["Activate NOP staking + governance", "Multi-chain adapters", "Protocol-owned liquidity"],
+    tech: ["Staking & delegation contracts", "Cross-chain reputation sync", "Liquidity vaults"],
+    goToMarket: ["Governance launch", "Portfolio tracker integrations", "Institutional expansion"],
   },
 ];
 
@@ -29,46 +47,61 @@ const Roadmap = () => {
   });
 
   return (
-    <StaticPageLayout>
-      <section className="space-y-8">
-        <div className="space-y-4 rounded-3xl border border-[color:var(--ring)] bg-[color:var(--bg-card)] p-8 shadow-sm">
-          <Badge variant="outline" className="rounded-full border border-amber-400/40 text-xs text-amber-300">
-            Coming soon
-          </Badge>
-          <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">
-              Flight plan
-            </p>
-            <h1 className="text-3xl font-semibold text-[color:var(--text-primary)]">
-              Roadmap
-            </h1>
-            <p className="text-sm text-[color:var(--text-secondary)]">
-              Releases ship progressively across quarters. The outline below keeps contributors aligned even while specs are finalised.
-            </p>
-          </div>
-        </div>
+    <div className="space-y-5">
+      <DashboardCard className="space-y-3">
+        <DashboardSectionTitle label="Roadmap" title="Phase-by-phase plan" />
+        <p className="text-sm text-slate-600">
+          The intelligence layer is staged for exchange readiness: prototype (Phase 0), clean dashboard (Phase 1), protocol
+          mechanics (Phase 2), on-chain fee routing (Phase 3), and governance + multi-chain expansion (Phase 4).
+        </p>
+      </DashboardCard>
 
-        <div className="grid gap-5 lg:grid-cols-3">
-          {roadmapPhases.map((phase) => (
-            <Card key={phase.title} className="border border-[color:var(--ring)] bg-[color:var(--bg-card)]">
-              <CardHeader>
-                <CardTitle className="text-base text-[color:var(--text-primary)]">{phase.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm text-[color:var(--text-secondary)]">
-                  {phase.bullets.map((bullet) => (
-                    <li key={bullet} className="flex items-start gap-2">
-                      <span className="mt-1 h-1.5 w-1.5 rounded-full bg-indigo-400" />
-                      <span>{bullet}</span>
+      <div className="grid gap-4 xl:grid-cols-2">
+        {roadmapPhases.map((phase) => (
+          <DashboardCard key={phase.title} className="space-y-3 border border-slate-100">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h3 className="text-lg font-semibold text-slate-900">{phase.title}</h3>
+              <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">{phase.timeframe}</span>
+            </div>
+            <div className="grid gap-4 md:grid-cols-3">
+              <section>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Objectives</p>
+                <ul className="mt-2 space-y-1.5 text-sm text-slate-600">
+                  {phase.objectives.map((item) => (
+                    <li key={item} className="flex gap-2">
+                      <span className="mt-1 h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                      <span>{item}</span>
                     </li>
                   ))}
                 </ul>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </section>
-    </StaticPageLayout>
+              </section>
+              <section>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Tech milestones</p>
+                <ul className="mt-2 space-y-1.5 text-sm text-slate-600">
+                  {phase.tech.map((item) => (
+                    <li key={item} className="flex gap-2">
+                      <span className="mt-1 h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+              <section>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Go-to-market</p>
+                <ul className="mt-2 space-y-1.5 text-sm text-slate-600">
+                  {phase.goToMarket.map((item) => (
+                    <li key={item} className="flex gap-2">
+                      <span className="mt-1 h-1.5 w-1.5 rounded-full bg-amber-500" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            </div>
+          </DashboardCard>
+        ))}
+      </div>
+    </div>
   );
 };
 
