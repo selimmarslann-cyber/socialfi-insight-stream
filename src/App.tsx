@@ -10,14 +10,7 @@ import WalletPage from "./pages/WalletPage";
 import Settings from "./pages/Settings";
 import Admin from "./pages/Admin";
 import Contributes from "./pages/Contributes";
-import Games from "./pages/Games";
-import NopChartGame from "./pages/games/NopChart";
-import Flappy from "./pages/games/Flappy";
-import Runner from "./pages/games/Runner";
-import Memory from "./pages/games/Memory";
-import Reaction from "./pages/games/Reaction";
 import AdminContributeDetail from "./pages/admin/ContributeDetail";
-import GamesAdmin from "./pages/admin/GamesAdmin";
 import PoolOverview from "./pages/pool/PoolOverview";
 import PoolBuy from "./pages/pool/PoolBuy";
 import PoolSell from "./pages/pool/PoolSell";
@@ -68,12 +61,6 @@ const App = () => (
                 <Route path="/contributes" element={<Contributes />} />
                 <Route path="/wallet" element={<WalletPage />} />
                 <Route path="/settings" element={<Settings />} />
-                <Route path="/games" element={<Games />} />
-                <Route path="/games/nopchart" element={<NopChartGame />} />
-                <Route path="/games/flappy" element={<Flappy />} />
-                <Route path="/games/runner" element={<Runner />} />
-              <Route path="/games/memory" element={<Memory />} />
-              <Route path="/games/reaction" element={<Reaction />} />
               <Route path="/about" element={<About />} />
               <Route path="/whitepaper" element={<Whitepaper />} />
               <Route path="/tokenomics" element={<Tokenomics />} />
@@ -95,7 +82,6 @@ const App = () => (
               <Route path="/contact" element={<Contact />} />
               <Route path="/support" element={<Support />} />
               <Route path="/admin" element={<Admin />} />
-              <Route path="/admin/games" element={<GamesAdmin />} />
               <Route path="/admin/contributes/:id" element={<AdminContributeDetail />} />
               <Route path="/pool/:postId" element={<PoolOverview />} />
               <Route path="/pool/:postId/chart" element={<PoolChart />} />

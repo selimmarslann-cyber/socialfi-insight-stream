@@ -1,3 +1,6 @@
+// WARNING / TODO: Admin burn panel is currently a mock-only UI.
+// No real admin token or on-chain write is performed in this PHASE 2 build.
+// A secure, server-side authenticated admin channel must be implemented in a later phase.
 import { FormEvent, useEffect, useState } from "react";
 import { Flame, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import type { BurnStats } from "@/types/admin";
-import { PUBLIC_ENV } from "@/config/env";
 
 const BURN_ENDPOINT = "/api/burn";
 const DIGIT_COUNT = 8;
@@ -59,36 +61,15 @@ export const BurnPanel = () => {
         return;
       }
 
-      const payload = {
+      toast.info(
+        "Preview build only. In production this would send a signed admin request to update burn stats.",
+      );
+      console.info("[burn-panel] Mock payload", {
         total: Number(form.total),
         last24h: Number(form.last24h || "0"),
         series,
-      };
-
-      const adminToken = PUBLIC_ENV.adminToken;
-      if (!adminToken) {
-        toast.error(
-          "VITE_ADMIN_TOKEN eksik. Yetkili erişim için env değerini ekleyin.",
-        );
-        return;
-      }
-
-      const response = await fetch(BURN_ENDPOINT, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${adminToken}`,
-        },
-        body: JSON.stringify(payload),
       });
-
-      if (!response.ok) {
-        throw new Error(`burn_update_${response.status}`);
-      }
-
-      toast.success("Burn verileri güncellendi");
     } catch (error) {
-      toast.error("Burn verileri güncellenemedi");
       console.error(error);
     } finally {
       setSaving(false);

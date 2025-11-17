@@ -1,3 +1,5 @@
+// NOTE: This games module is experimental and not part of the core NOP Intelligence Layer
+// production app. It is currently excluded from navigation and main flows as of PHASE 2.
 export type GameKey = 'nopchart' | 'flappy' | 'runner' | 'memory' | 'reaction';
 
 export type ScoreRow = { score: number; ts: number; address?: string };

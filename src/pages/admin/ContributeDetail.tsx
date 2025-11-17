@@ -56,8 +56,10 @@ export default function AdminContributeDetail() {
       <Container>
         <div className="max-w-2xl mx-auto text-center py-16">
           <Shield className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-          <h2 className="text-2xl font-bold mb-2">403 - Access Denied</h2>
-          <p className="text-muted-foreground">This page is only accessible to administrators</p>
+          <h2 className="text-2xl font-bold mb-2">Admin features disabled</h2>
+          <p className="text-muted-foreground">
+            Pool controls are offline in this PHASE 2 preview. A secure ops console returns with the MPC rollout.
+          </p>
         </div>
       </Container>
     );

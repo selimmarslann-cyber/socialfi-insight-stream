@@ -1,3 +1,5 @@
+// NOTE: This games module is experimental and not part of the core NOP Intelligence Layer
+// production app. It is currently excluded from navigation and main flows as of PHASE 2.
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { bestOf, GameKey, getScores } from '@/lib/games/localStore';

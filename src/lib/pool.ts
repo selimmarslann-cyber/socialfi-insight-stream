@@ -11,15 +11,22 @@ const FACTORY_ABI = [
 
 const SHARES_ABI = ["function balanceOf(address,uint256) view returns (uint256)"] as const;
 
+type BrowserProviderSource = ConstructorParameters<typeof BrowserProvider>[0];
+
 type ReadProvider = BrowserProvider | JsonRpcProvider;
 
 let providerPromise: Promise<ReadProvider> | null = null;
 
 const resolveProvider = (): Promise<ReadProvider> => {
   if (!providerPromise) {
+    const injected =
+      typeof window === "undefined"
+        ? null
+        : ((window as Window & { ethereum?: unknown }).ethereum as BrowserProviderSource | undefined) ?? null;
+
     // Prefer wallet provider when available, otherwise fall back to public RPC.
-    if (typeof window !== "undefined" && (window as Window & { ethereum?: unknown }).ethereum) {
-      providerPromise = Promise.resolve(new BrowserProvider((window as Window & { ethereum?: any }).ethereum, CHAIN_ID));
+    if (injected) {
+      providerPromise = Promise.resolve(new BrowserProvider(injected, CHAIN_ID));
     } else {
       providerPromise = Promise.resolve(new JsonRpcProvider(PUBLIC_ZKSYNC_RPC, CHAIN_ID));
     }

@@ -1,3 +1,5 @@
+// NOTE: This games module is experimental and not part of the core NOP Intelligence Layer
+// production app. It is currently excluded from navigation and main flows as of PHASE 2.
 import { useEffect, useState } from 'react';
 import { Shield } from 'lucide-react';
 import { Container } from '@/components/layout/Container';
@@ -56,8 +58,10 @@ export default function GamesAdmin() {
       <Container>
         <div className="mx-auto max-w-2xl py-16 text-center">
           <Shield className="mx-auto mb-4 h-16 w-16 text-muted-foreground" />
-          <h2 className="mb-2 text-2xl font-bold">403 - Access Denied</h2>
-          <p className="text-muted-foreground">Bu sayfa yalnızca yöneticiler tarafından görüntülenebilir.</p>
+          <h2 className="mb-2 text-2xl font-bold">Admin features disabled</h2>
+          <p className="text-muted-foreground">
+            Games moderation tools are parked for PHASE 2. A secure admin channel ships alongside the MPC rollout.
+          </p>
         </div>
       </Container>
     );

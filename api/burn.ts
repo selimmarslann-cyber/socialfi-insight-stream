@@ -150,7 +150,7 @@ const last24h: number =
     : (row.last24h ?? row.last_24h ?? 0);
 
 // series her zaman BurnSeriesPoint[] olsun
-let rawSeries = row.series ?? row.series_data ?? row.history;
+const rawSeries = row.series ?? row.series_data ?? row.history;
 
 const series: BurnSeriesPoint[] =
   typeof rawSeries === "string"

@@ -1,3 +1,5 @@
+// DEPRECATED: Legacy component from an earlier iteration of the feed UI.
+// Not used in the current NOP Intelligence Layer core flows (PHASE 2).
 import { useEffect, useState } from 'react'
 
 import { supabase } from '@/lib/supabaseClient'
