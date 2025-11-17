@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { fetchTopUsers, type Period, shortId } from '@/lib/leaderboard';
+import { fetchTopUsers, type Period, type LeaderboardRow, shortId } from '@/lib/leaderboard';
 import { cn } from '@/lib/utils';
 
 function GoldChip({ children }: { children: ReactNode }) {
@@ -58,8 +58,8 @@ export default function TopUsersCard({
   period = 'weekly',
   limit = 5,
   className,
-}: TopUsersCardProps) {
-  const [rows, setRows] = useState<any[] | null>(null);
+  }: TopUsersCardProps) {
+    const [rows, setRows] = useState<LeaderboardRow[] | null>(null);
   const [tab, setTab] = useState<Period>(period as Period);
   const col = useMemo(() => (tab === 'daily' ? 'daily_score' : tab === 'weekly' ? 'weekly_score' : 'total_score'), [tab]);
 
@@ -110,8 +110,8 @@ export default function TopUsersCard({
             ))
           : null}
 
-        {Array.isArray(rows) && rows.length > 0
-          ? rows.map((row: any, index: number) => (
+          {Array.isArray(rows) && rows.length > 0
+            ? rows.map((row, index) => (
               <div key={row.user_id} className="flex items-center justify-between px-4 py-2.5">
                 <div className="flex items-center gap-3">
                   <Rank index={index} />

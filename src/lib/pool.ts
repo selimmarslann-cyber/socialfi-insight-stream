@@ -1,4 +1,4 @@
-import { BrowserProvider, Contract, JsonRpcProvider } from "ethers";
+import { BrowserProvider, Contract, JsonRpcProvider, type Eip1193Provider } from "ethers";
 import { FACTORY_ADDRESS, CHAIN_ID } from "./config";
 
 const PUBLIC_ZKSYNC_RPC = "https://mainnet.era.zksync.io";
@@ -15,14 +15,19 @@ type ReadProvider = BrowserProvider | JsonRpcProvider;
 
 let providerPromise: Promise<ReadProvider> | null = null;
 
+const getInjectedProvider = (): Eip1193Provider | undefined => {
+  if (typeof window === "undefined") {
+    return undefined;
+  }
+  return (window as Window & { ethereum?: Eip1193Provider }).ethereum;
+};
+
 const resolveProvider = (): Promise<ReadProvider> => {
   if (!providerPromise) {
-    // Prefer wallet provider when available, otherwise fall back to public RPC.
-    if (typeof window !== "undefined" && (window as Window & { ethereum?: unknown }).ethereum) {
-      providerPromise = Promise.resolve(new BrowserProvider((window as Window & { ethereum?: any }).ethereum, CHAIN_ID));
-    } else {
-      providerPromise = Promise.resolve(new JsonRpcProvider(PUBLIC_ZKSYNC_RPC, CHAIN_ID));
-    }
+    const injected = getInjectedProvider();
+    providerPromise = injected
+      ? Promise.resolve(new BrowserProvider(injected, CHAIN_ID))
+      : Promise.resolve(new JsonRpcProvider(PUBLIC_ZKSYNC_RPC, CHAIN_ID));
   }
   return providerPromise;
 };

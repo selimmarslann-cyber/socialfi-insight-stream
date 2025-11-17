@@ -2,7 +2,7 @@ import { getSupabase } from "@/lib/supabaseClient";
 
 export type Period = "daily" | "weekly" | "total";
 
-type LeaderboardRow = {
+export type LeaderboardRow = {
   user_id: string;
   total_score: number | null;
   daily_score: number | null;

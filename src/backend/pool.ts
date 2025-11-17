@@ -11,12 +11,14 @@ type SellPayload = {
   minPayout: string;
 };
 
+type StatusError = Error & { status?: number };
+
 const ensurePoolEnabled = async (contributeId: string) => {
   // Simple guard to mirror backend 403 expectation.
   const contribute = await fetchContribute(contributeId);
   if (contribute.poolEnabled !== true) {
-    const error = new Error("Pool disabled");
-    (error as any).status = 403;
+    const error: StatusError = new Error("Pool disabled");
+    error.status = 403;
     throw error;
   }
   return contribute;

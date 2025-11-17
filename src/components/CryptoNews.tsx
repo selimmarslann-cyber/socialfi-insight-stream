@@ -15,6 +15,14 @@ type RemoteNewsItem = {
 const API_BASE = PUBLIC_ENV.apiBase || "/api";
 const MAX_NEWS_ITEMS = 6;
 const FALLBACK_IMAGE = "/placeholder.svg";
+const FALLBACK_THUMBNAILS = [
+  "https://images.unsplash.com/photo-1611078489935-0cb964025772?auto=format&fit=crop&w=240&h=240&q=80",
+  "https://images.unsplash.com/photo-1485823035859-95b61705a65a?auto=format&fit=crop&w=240&h=240&q=80",
+  "https://images.unsplash.com/photo-1503602642458-232111445657?auto=format&fit=crop&w=240&h=240&q=80",
+  "https://images.unsplash.com/photo-1454165805436-0dd755642fe2?auto=format&fit=crop&w=240&h=240&q=80",
+  "https://images.unsplash.com/photo-1556740749-887f6717d7e4?auto=format&fit=crop&w=240&h=240&q=80",
+  "https://images.unsplash.com/photo-1450101215322-bf5cd27642fc?auto=format&fit=crop&w=240&h=240&q=80",
+] as const;
 
 const fallbackTimestamp = (minutesAgo: number) =>
   new Date(Date.now() - minutesAgo * 60 * 1000).toISOString();
@@ -26,7 +34,7 @@ const FALLBACK_NEWS: RemoteNewsItem[] = [
       "Bitcoin ETF inflows push price back above $65K as liquidity returns",
     link: "https://www.coindesk.com/markets/2024/05/21/bitcoin-etf-inflows-push-price",
     source: "CoinDesk",
-    imageUrl: FALLBACK_IMAGE,
+    imageUrl: FALLBACK_THUMBNAILS[0],
     publishedAt: fallbackTimestamp(45),
   },
   {
@@ -34,7 +42,7 @@ const FALLBACK_NEWS: RemoteNewsItem[] = [
     title: "Ethereum core devs lock timeline for the Pectra upgrade in Q1 2025",
     link: "https://www.theblock.co/post/pectra-upgrade-timeline",
     source: "The Block",
-    imageUrl: FALLBACK_IMAGE,
+    imageUrl: FALLBACK_THUMBNAILS[1],
     publishedAt: fallbackTimestamp(90),
   },
   {
@@ -43,7 +51,7 @@ const FALLBACK_NEWS: RemoteNewsItem[] = [
       "US stablecoin bill advances as committee adds stronger reserve language",
     link: "https://www.bloomberg.com/news/articles/stablecoin-bill-committee-advance",
     source: "Bloomberg Crypto",
-    imageUrl: FALLBACK_IMAGE,
+    imageUrl: FALLBACK_THUMBNAILS[2],
     publishedAt: fallbackTimestamp(135),
   },
   {
@@ -52,7 +60,7 @@ const FALLBACK_NEWS: RemoteNewsItem[] = [
       "Layer-2 usage hits new ATH with 28M daily transactions across the stack",
     link: "https://messari.io/article/layer2-daily-txs-ath",
     source: "Messari",
-    imageUrl: FALLBACK_IMAGE,
+    imageUrl: FALLBACK_THUMBNAILS[3],
     publishedAt: fallbackTimestamp(180),
   },
   {
@@ -61,7 +69,7 @@ const FALLBACK_NEWS: RemoteNewsItem[] = [
       "Institutional staking products see record demand ahead of new SEC clarity",
     link: "https://decrypt.co/187000/institutional-staking-demand-sec",
     source: "Decrypt",
-    imageUrl: FALLBACK_IMAGE,
+    imageUrl: FALLBACK_THUMBNAILS[4],
     publishedAt: fallbackTimestamp(225),
   },
   {
@@ -70,7 +78,7 @@ const FALLBACK_NEWS: RemoteNewsItem[] = [
       "AI-linked tokens rally as new frontier funds rotate into data infrastructure",
     link: "https://cointelegraph.com/news/ai-crypto-rally-data-infrastructure",
     source: "Cointelegraph",
-    imageUrl: FALLBACK_IMAGE,
+    imageUrl: FALLBACK_THUMBNAILS[5],
     publishedAt: fallbackTimestamp(270),
   },
 ];

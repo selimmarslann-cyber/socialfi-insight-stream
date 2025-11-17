@@ -42,7 +42,7 @@ const HEADERS = {
 const DEFAULT_IMAGE = "/placeholder.svg";
 const CACHE_TTL_MS = 60 * 1000;
 const REQUIRED_ITEMS = 3;
-const MAX_ITEMS = REQUIRED_ITEMS;
+const MAX_ITEMS = 6;
 const FALLBACK_FEEDS = [
   "https://decrypt.co/feed",
   "https://cointelegraph.com/rss",
@@ -109,6 +109,12 @@ const pickImageFromItem = (item: CustomItem): string | undefined => {
   return sanitizeImageUrl(media);
 };
 
+const buildLogoFromLink = (primary?: string, backup?: string): string | undefined => {
+  const host = hostnameFromUrl(primary) ?? hostnameFromUrl(backup);
+  if (!host) return undefined;
+  return `https://logo.clearbit.com/${host}?size=256&format=png`;
+};
+
 const normalizeItem = (
   item: CustomItem,
   fallbackSource: string,
@@ -126,10 +132,10 @@ const normalizeItem = (
     return null;
   }
 
-  const image = pickImageFromItem(item);
-  if (!image) {
-    return null;
-  }
+  const image =
+    pickImageFromItem(item) ??
+    buildLogoFromLink(link, fallbackSource) ??
+    DEFAULT_IMAGE;
   const identifier = item.guid ?? `${source}-${link}`;
 
   return {
