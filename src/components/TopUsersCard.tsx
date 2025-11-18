@@ -1,10 +1,11 @@
 'use client';
 // NOTE: This card is currently parked outside the main 2025 dashboard layout; TrendingUsers powers the homepage list.
-import { useEffect, useState, type ReactNode } from 'react';
-import { fetchTopUsers, shortId, type ReputationLeaderboardRow } from '@/lib/leaderboard';
-import { cn } from '@/lib/utils';
-import { DashboardCard } from '@/components/layout/visuals/DashboardCard';
-import { DashboardSectionTitle } from '@/components/layout/visuals/DashboardSectionTitle';
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { shortId } from "@/lib/leaderboard";
+import { fetchTopAlphaUsers, type AlphaUser } from "@/lib/reputation";
+import { cn } from "@/lib/utils";
+import { DashboardCard } from "@/components/layout/visuals/DashboardCard";
+import { DashboardSectionTitle } from "@/components/layout/visuals/DashboardSectionTitle";
 
 function GoldChip({ children }: { children: ReactNode }) {
   return (
@@ -48,58 +49,92 @@ type TopUsersCardProps = {
 };
 
 export default function TopUsersCard({
-  title = 'Top Operators',
+  title = "Top Operators",
   limit = 5,
   className,
 }: TopUsersCardProps) {
-  const [rows, setRows] = useState<ReputationLeaderboardRow[] | null>(null);
+  const [users, setUsers] = useState<AlphaUser[] | null>(null);
 
   useEffect(() => {
+    let mounted = true;
+    setUsers(null);
     (async () => {
-      setRows(null);
-      const data = await fetchTopUsers(limit);
-      setRows(data);
+      try {
+        const data = await fetchTopAlphaUsers({ limit, withinDays: 7 });
+        if (mounted) {
+          setUsers(data);
+        }
+      } catch (error) {
+        console.warn("[TopUsersCard] failed to fetch alpha users", error);
+        if (mounted) {
+          setUsers([]);
+        }
+      }
     })();
+    return () => {
+      mounted = false;
+    };
   }, [limit]);
+
+  const isLoading = users === null;
+  const hasData = Array.isArray(users) && users.length > 0;
+
+  const volumeFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat(undefined, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
+      }),
+    [],
+  );
 
   return (
     <DashboardCard className={cn("flex h-full flex-col gap-4", className)}>
       <div className="flex flex-col gap-1.5">
         <DashboardSectionTitle label="Protocol" title={title} />
         <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-slate-400">
-          Ranked by realized PnL & win rate
+          Ranked by Alpha Score (7d volume)
         </p>
       </div>
 
       <div className="flex flex-1 flex-col divide-y divide-slate-100">
-        {rows === null
+        {isLoading
           ? Array.from({ length: limit }).map((_, index) => (
-              <div key={index} className="px-1 py-2.5">
+              <div key={`alpha-skeleton-${index}`} className="px-1 py-2.5">
                 <div className="h-12 rounded-2xl bg-slate-50" />
               </div>
             ))
           : null}
 
-        {Array.isArray(rows) && rows.length > 0
-          ? rows.map((row, index) => (
-              <div key={row.user_address} className="flex items-center justify-between px-1 py-2.5">
+        {hasData
+          ? users!.map((user, index) => (
+              <div
+                key={`${user.walletAddress}-${index}`}
+                className="flex items-center justify-between px-1 py-2.5"
+              >
                 <div className="flex items-center gap-3">
                   <Rank index={index} />
-                  <Avatar address={row.user_address} />
+                  <Avatar address={user.walletAddress} />
                   <div className="flex flex-col">
-                    <span className="text-xs font-semibold text-slate-900">{shortId(row.user_address)}</span>
+                    <span className="text-xs font-semibold text-slate-900">
+                      {shortId(user.walletAddress)}
+                    </span>
                     <span className="text-[11px] text-slate-500">
-                      Win rate {(row.win_rate ?? 0).toFixed(1)}% • {row.total_positions} trades
+                      {user.trades} trades • {volumeFormatter.format(user.volumeNop)} NOP
                     </span>
                   </div>
                 </div>
-                <GoldChip>{row.realized_pnl_usd >= 0 ? `+${row.realized_pnl_usd.toFixed(0)}$` : `${row.realized_pnl_usd.toFixed(0)}$`}</GoldChip>
+                <GoldChip>
+                  α {volumeFormatter.format(user.score)}
+                </GoldChip>
               </div>
             ))
           : null}
 
-        {Array.isArray(rows) && rows.length === 0 ? (
-          <div className="px-1 py-4 text-sm text-slate-500">No operators yet.</div>
+        {Array.isArray(users) && users.length === 0 && !isLoading ? (
+          <div className="px-1 py-4 text-sm text-slate-500">
+            No on-chain activity yet. Trade a pool to appear here.
+          </div>
         ) : null}
       </div>
     </DashboardCard>

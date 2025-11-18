@@ -407,6 +407,41 @@ for insert
 with check (auth.uid() = user_id);
 
 -- ---------------------------------------------------------------------
+-- Trade logs / on-chain reputation
+-- ---------------------------------------------------------------------
+
+create table if not exists public.nop_trades (
+  id uuid primary key default gen_random_uuid(),
+  wallet_address text not null,
+  post_id bigint not null,
+  side text not null check (side in ('buy','sell')),
+  amount_nop numeric(38, 18) not null,
+  tx_hash text not null,
+  chain_id bigint not null default 11155111,
+  executed_at timestamptz not null default now(),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_nop_trades_wallet on public.nop_trades (wallet_address);
+create index if not exists idx_nop_trades_post on public.nop_trades (post_id);
+create index if not exists idx_nop_trades_executed_at on public.nop_trades (executed_at desc);
+create index if not exists idx_nop_trades_side on public.nop_trades (side);
+
+alter table public.nop_trades enable row level security;
+
+drop policy if exists "nop_trades_select_public" on public.nop_trades;
+create policy "nop_trades_select_public"
+on public.nop_trades
+for select
+using (true);
+
+drop policy if exists "nop_trades_insert_service" on public.nop_trades;
+create policy "nop_trades_insert_service"
+on public.nop_trades
+for insert
+with check (auth.role() = 'service_role');
+
+-- ---------------------------------------------------------------------
 -- Contact form
 -- ---------------------------------------------------------------------
 

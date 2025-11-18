@@ -1,19 +1,18 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ContributeCard } from "@/components/ContributeCard";
-import { fetchContributes } from "@/lib/contributes";
-import type { Contribute } from "@/lib/types";
+import {
+  fetchContributesWithStats,
+  type ContributeWithStats,
+} from "@/lib/contributes";
 import { DashboardCard } from "@/components/layout/visuals/DashboardCard";
 import { DashboardSectionTitle } from "@/components/layout/visuals/DashboardSectionTitle";
 import BoostedTasks from "@/components/BoostedTasks";
 import TokenBurn from "@/components/TokenBurn";
 
-const sortByWeeklyScore = (items: Contribute[]) =>
-  [...items].sort((a, b) => (b.weeklyScore ?? 0) - (a.weeklyScore ?? 0));
-
-const withDemoPoolFallback = (items: Contribute[]): Contribute[] => {
+const withDemoPoolFallback = (items: ContributeWithStats[]): ContributeWithStats[] => {
   if (items.length > 0) {
-    return sortByWeeklyScore(items);
+    return items;
   }
 
   return [
@@ -24,6 +23,7 @@ const withDemoPoolFallback = (items: Contribute[]): Contribute[] => {
       author: "@nop_demo",
       tags: ["demo", "onchain", "nop"],
       weeklyScore: 999,
+      weeklyVolumeNop: 0,
       poolEnabled: true,
       contractPostId: 1,
       description:
@@ -34,13 +34,17 @@ const withDemoPoolFallback = (items: Contribute[]): Contribute[] => {
 
 const Contributes = () => {
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["contributes"],
-    queryFn: fetchContributes,
+    queryKey: ["contributes-with-stats"],
+    queryFn: fetchContributesWithStats,
   });
 
   const contributes = useMemo(() => {
-    if (data) return withDemoPoolFallback(data);
-    if (isError) return withDemoPoolFallback([]);
+    if (Array.isArray(data)) {
+      return withDemoPoolFallback(data);
+    }
+    if (isError) {
+      return withDemoPoolFallback([]);
+    }
     return [];
   }, [data, isError]);
 
@@ -54,6 +58,9 @@ const Contributes = () => {
           <p className="text-sm-2 leading-relaxed text-text-secondary">
             Follow the latest community pools, view on-chain BUY / SELL flows, and explore weekly popular positions.
           </p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-text-muted">
+              Ordered by 7-day NOP volume
+            </p>
         </DashboardCard>
 
         <div className="grid gap-5 lg:grid-cols-[minmax(0,2.1fr)_minmax(0,1.1fr)] lg:gap-6">

@@ -296,6 +296,41 @@ export type Database = {
           created_at?: string | null
         }
       }
+        nop_trades: {
+          Row: {
+            id: string
+            wallet_address: string
+            post_id: number
+            side: "buy" | "sell"
+            amount_nop: number
+            tx_hash: string
+            chain_id: number
+            executed_at: string
+            created_at: string
+          }
+          Insert: {
+            id?: string
+            wallet_address: string
+            post_id: number
+            side: "buy" | "sell"
+            amount_nop: number
+            tx_hash: string
+            chain_id?: number
+            executed_at?: string
+            created_at?: string
+          }
+          Update: {
+            id?: string
+            wallet_address?: string
+            post_id?: number
+            side?: "buy" | "sell"
+            amount_nop?: number
+            tx_hash?: string
+            chain_id?: number
+            executed_at?: string
+            created_at?: string
+          }
+        }
       posts: {
         Row: {
           id: number
