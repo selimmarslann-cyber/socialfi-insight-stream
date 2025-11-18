@@ -226,10 +226,10 @@ export const PostComposer = () => {
         const authorLabel = address
           ? `${address.slice(0, 6)}…${address.slice(-4)}`
           : "Guest Analyst";
-        const authorUsername = address
-          ? address.slice(-8).toLowerCase()
-          : "guest";
+        const authorUsername = address ? address.slice(-8).toLowerCase() : "guest";
         const tags = extractHashtags(sanitized);
+
+        const contractPostId = Date.now();
 
         const newPost: Post = {
           id: `local-${Date.now()}`,
@@ -247,6 +247,8 @@ export const PostComposer = () => {
           createdAt: new Date().toISOString(),
           contributedAmount: 0,
           tags,
+          poolEnabled: true,
+          contractPostId,
           engagement: { upvotes: 0, comments: 0, tips: 0, shares: 0 },
         };
 

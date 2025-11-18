@@ -14,6 +14,7 @@ import { Post } from '@/types/feed';
 import { ImageGrid } from '@/components/post/ImageGrid';
 import { AIInsightStrip } from '@/components/ai/AIInsightStrip';
 import { toast } from 'sonner';
+import { TradeActions } from '@/components/pool/TradeActions';
 
 interface PostCardProps {
   post: Post;
@@ -37,6 +38,7 @@ export const PostCard = ({ post }: PostCardProps) => {
     () => (post.attachments?.length ? post.attachments : post.images ?? []),
     [post.attachments, post.images],
   );
+  const canTrade = post.poolEnabled === true && typeof post.contractPostId === "number";
   const handleAction = (action: "upvote" | "comment" | "share" | "tip") => {
     const labels: Record<typeof action, string> = {
       upvote: "Upvotes",
@@ -147,6 +149,9 @@ export const PostCard = ({ post }: PostCardProps) => {
           mmActivity={post.aiMmActivity}
           score={post.aiScore}
         />
+          {canTrade ? (
+            <TradeActions contractPostId={post.contractPostId} className="bg-white/80" />
+          ) : null}
       </footer>
     </article>
   );

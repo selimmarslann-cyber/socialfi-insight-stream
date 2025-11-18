@@ -1,65 +1,125 @@
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { depositToContribute, withdrawFromContribute, getUserPosition } from "@/lib/pool";
+import { Badge } from "@/components/ui/badge";
 import { formatUnits } from "ethers";
 import type { Contribute } from "@/lib/types";
+import { TradeActions } from "@/components/pool/TradeActions";
+import { getUserPosition } from "@/lib/pool";
 
 type ContributeCardProps = {
   item: Contribute;
 };
 
 function ContributeCard({ item }: ContributeCardProps) {
-  const [amount, setAmount] = useState(100);
-  const [txState, setTxState] = useState<null | "buy" | "sell">(null);
-  const [positionWei, setPositionWei] = useState("0");
+  const [positionWei, setPositionWei] = useState<bigint>(0n);
+  const [isSyncingPosition, setIsSyncingPosition] = useState(false);
 
-  const refreshPosition = async () => {
-    try {
-      if (!window.ethereum) return;
-      const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-      const address = accounts[0];
-      const pos = await getUserPosition(address, item.contractPostId);
-      setPositionWei(pos.toString());
-    } catch {}
-  };
+  const isPoolActive =
+    item.poolEnabled === true && typeof item.contractPostId === "number";
 
-  const handleTransaction = async (mode: "buy" | "sell") => {
+  const refreshPosition = useCallback(async () => {
+    if (!isPoolActive) return;
+    if (typeof window === "undefined" || !window.ethereum) return;
+
     try {
-      setTxState(mode);
-      if (mode === "buy") {
-        await depositToContribute(item.contractPostId, amount);
-      } else {
-        await withdrawFromContribute(item.contractPostId, amount);
-      }
-      await refreshPosition();
-    } catch (err) {
-      console.error(err);
+      setIsSyncingPosition(true);
+      const accounts = (await window.ethereum.request({
+        method: "eth_requestAccounts",
+      })) as string[];
+      const address = accounts?.[0];
+      if (!address) return;
+      const result = await getUserPosition(address, item.contractPostId);
+      const rawValue =
+        typeof result === "bigint"
+          ? result
+          : typeof result === "object" && result !== null && "toString" in result
+          ? BigInt((result as { toString: () => string }).toString())
+          : BigInt(result ?? 0);
+      setPositionWei(rawValue);
+    } catch (error) {
+      console.error("[ContributeCard] Failed to fetch position", error);
     } finally {
-      setTxState(null);
+      setIsSyncingPosition(false);
     }
-  };
+  }, [isPoolActive, item.contractPostId]);
 
   useEffect(() => {
-    refreshPosition();
-  }, []);
+    void refreshPosition();
+  }, [refreshPosition]);
+
+  const formattedPosition = useMemo(
+    () => formatUnits(positionWei ?? 0n, 18),
+    [positionWei],
+  );
 
   return (
-    <Card className="p-4">
-      <h3 className="font-semibold">{item.title}</h3>
-
-      <div className="mt-3 flex gap-3">
-        <Button onClick={() => handleTransaction("buy")} disabled={txState !== null}>
-          {txState === "buy" ? "Processing…" : "Buy / Deposit"}
-        </Button>
-
-        <Button variant="outline" onClick={() => handleTransaction("sell")} disabled={txState !== null}>
-          {txState === "sell" ? "Processing…" : "Sell / Withdraw"}
-        </Button>
+    <Card className="space-y-5 rounded-3xl border border-slate-200/70 bg-white/95 p-5 shadow-sm">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Weekly popular pool
+          </p>
+          <h3 className="text-xl font-semibold text-slate-900">{item.title}</h3>
+          {item.subtitle ? (
+            <p className="text-sm text-slate-500">{item.subtitle}</p>
+          ) : null}
+          {item.author ? (
+            <p className="text-xs font-semibold text-slate-500">by {item.author}</p>
+          ) : null}
+        </div>
+        <div className="flex items-center gap-4">
+          {typeof item.weeklyScore === "number" ? (
+            <div className="text-right">
+              <p className="text-xs text-slate-500">Weekly score</p>
+              <p className="text-2xl font-semibold text-slate-900">
+                {item.weeklyScore}
+              </p>
+            </div>
+          ) : null}
+          <Badge
+            variant={isPoolActive ? "secondary" : "outline"}
+            className={isPoolActive ? "bg-emerald-50 text-emerald-600" : ""}
+          >
+            {isPoolActive ? "Active" : "Locked"}
+          </Badge>
+        </div>
       </div>
 
-      <p className="text-sm text-muted-foreground mt-3">
-        Your on-chain position: {formatUnits(positionWei, 18)} NOP
+      {item.tags?.length ? (
+        <div className="flex flex-wrap gap-2 text-xs text-slate-600">
+          {item.tags.map((tag) => (
+            <span
+              key={tag}
+              className="rounded-full bg-slate-100 px-3 py-1 font-semibold"
+            >
+              {tag.startsWith("#") ? tag : `#${tag}`}
+            </span>
+          ))}
+        </div>
+      ) : null}
+
+      {item.description ? (
+        <p className="text-sm leading-relaxed text-slate-600">
+          {item.description}
+        </p>
+      ) : null}
+
+      {isPoolActive ? (
+        <TradeActions
+          contractPostId={item.contractPostId}
+          onSettled={refreshPosition}
+          className="bg-slate-50/80"
+        />
+      ) : (
+        <div className="rounded-2xl border border-dashed border-slate-200 p-4 text-sm text-slate-500">
+          Pool will open soon. Follow this contribution for launch updates.
+        </div>
+      )}
+
+      <p className="text-xs text-slate-500">
+        Your on-chain position:{" "}
+        <span className="font-semibold text-slate-900">{formattedPosition} NOP</span>
+        {isSyncingPosition ? " · Syncing…" : null}
       </p>
     </Card>
   );
