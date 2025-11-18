@@ -54,26 +54,26 @@ export default function TokenBurn() {
   );
 
   return (
-    <DashboardCard className="flex flex-col items-center gap-4 text-center" aria-busy={loading} aria-live="polite">
+      <DashboardCard className="flex flex-col items-center gap-4 text-center" aria-busy={loading} aria-live="polite">
       <DashboardSectionTitle label="Tokenomics" title="Total NOP Burned" />
       <FlameIcon />
       {loading ? (
-        <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+          <span className="text-xs-2 font-semibold uppercase tracking-[0.2em] text-text-muted">
           {data ? "Refreshing…" : "Updating…"}
         </span>
       ) : null}
 
       <div
-        className="w-full rounded-xl border border-indigo-100 bg-slate-50 px-4 py-3 dark:border-white/10 dark:bg-white/5"
+          className="w-full rounded-card border border-border-subtle bg-surface-muted px-4 py-3"
         aria-label="Burn digits counter"
       >
         <div className="flex flex-wrap justify-center gap-1">
           {digits.map((digit, index) => (
             <span
               key={`${digit}-${index}`}
-              className={`flex h-9 w-7 items-center justify-center rounded-md border border-amber-100 bg-white font-mono text-sm font-semibold text-amber-500 shadow-sm dark:border-amber-400/40 dark:bg-white/5 dark:text-amber-300 ${
-                loading ? "animate-pulse" : ""
-              }`}
+                className={`flex h-9 w-7 items-center justify-center rounded-md border border-border-subtle bg-white font-mono text-sm font-semibold text-text-primary shadow-subtle/40 ${
+                  loading ? "animate-pulse opacity-80" : ""
+                }`}
             >
               {digit}
             </span>
@@ -82,17 +82,17 @@ export default function TokenBurn() {
       </div>
 
       <div className="flex flex-col items-center gap-1">
-        <div className="text-xs uppercase tracking-[0.2em] text-slate-500">Total burned</div>
-        <div className="text-xl font-semibold text-amber-500 tabular-nums dark:text-amber-300">{valueLabel} NOP</div>
+          <div className="text-xs-2 uppercase tracking-[0.2em] text-text-muted">Total burned</div>
+          <div className="text-2xl-2 font-semibold text-text-primary tabular-nums">{valueLabel} NOP</div>
       </div>
 
       {error ? (
-        <div className="w-full rounded-xl border border-rose-100 bg-rose-50/70 px-3 py-2 text-sm text-rose-600 dark:border-rose-400/40 dark:bg-rose-500/20">
+          <div className="w-full rounded-card border border-error/20 bg-error/5 px-3 py-2 text-sm-2 text-error">
           <p>{error}</p>
           <button
             type="button"
             onClick={load}
-            className="mt-2 text-sm font-semibold text-indigo-600 underline-offset-4 hover:underline dark:text-indigo-300"
+              className="mt-2 text-sm-2 font-semibold text-text-primary underline-offset-4 hover:underline"
           >
             Retry
           </button>
@@ -102,13 +102,13 @@ export default function TokenBurn() {
   );
 }
 
-const FlameIcon = () => {
+  const FlameIcon = () => {
   const gradientId = useId();
   const flameGradientId = `${gradientId}-flame`;
   const innerGradientId = `${gradientId}-inner`;
 
-  return (
-    <div className="w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-indigo-500 to-cyan-400 shadow-lg">
+    return (
+      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[radial-gradient(circle_at_top_right,#4F46E5,#06B6D4)] shadow-soft">
       <svg
         viewBox="0 0 24 24"
         className="h-6 w-6"

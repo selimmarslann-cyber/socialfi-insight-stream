@@ -41,31 +41,35 @@ export const Header = () => {
   const resolvedMode = mode === "system" ? getSystem() : mode;
 
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-200/70 bg-white/85 backdrop-blur dark:border-white/10 dark:bg-slate-900/80">
+    <header className="sticky top-0 z-40 border-b border-border-subtle bg-[rgba(245,248,255,0.92)] shadow-[0_6px_20px_rgba(15,23,42,0.08)] backdrop-blur-md">
       <Container>
-        <div className="flex h-14 items-center justify-between gap-4">
+        <div className="flex h-16 items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-              <img src="/logo.svg" alt="NOP Intelligence Layer" className="h-10 w-10" loading="eager" />
-            <div className="hidden flex-col leading-tight md:flex">
-                <span className="text-sm font-semibold text-slate-900">NOP Intelligence</span>
-                <span className="text-xs text-slate-500">SocialFi research dashboard</span>
+            <div className="flex items-center gap-2 rounded-pill border border-border-subtle/70 bg-white/80 px-2 py-1 shadow-subtle/40">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-surface ring-2 ring-ring-subtle/60">
+                <img src="/logo.svg" alt="NOP Intelligence Layer" className="h-6 w-6" loading="eager" />
+              </div>
+              <div className="hidden flex-col leading-tight text-left md:flex">
+                <span className="text-sm-2 font-semibold text-text-primary">NOP Intelligence</span>
+                <span className="text-xs-2 text-text-secondary">SocialFi research dashboard</span>
+              </div>
             </div>
           </div>
 
-          <div className="relative hidden h-10 flex-1 max-w-md md:block">
-            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <div className="relative hidden h-10 max-w-md flex-1 md:block">
+            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
             <Input
               placeholder="Search market intel…"
-              className="h-full rounded-full border border-slate-200 bg-slate-50 pl-11 pr-4 text-sm text-slate-900 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-100"
+              className="h-full border border-border-subtle/60 bg-surface pl-11 pr-4 text-sm-2 shadow-subtle/10 placeholder:text-text-muted"
             />
           </div>
 
           <div className="flex items-center gap-2">
             <NopHeaderCounter />
             <Button
-              variant="outline"
+              variant="ghost"
               size="icon"
-              className="hidden h-9 w-9 rounded-full border-slate-200/70 bg-white text-slate-600 shadow-sm transition hover:border-slate-300 hover:text-slate-900 dark:border-white/20 dark:bg-white/10 md:flex"
+              className="hidden h-10 w-10 rounded-full border border-border-subtle/70 bg-surface text-text-secondary shadow-subtle/30 hover:text-text-primary md:flex"
               onClick={handleToggle}
               aria-label="Toggle theme"
               aria-pressed={resolvedMode === "dark"}
@@ -77,10 +81,10 @@ export const Header = () => {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="icon"
                   aria-label="User menu"
-                  className="h-9 w-9 rounded-full border-slate-200/70 bg-white/90 text-slate-600 shadow-sm transition hover:border-slate-300 hover:text-slate-900 dark:border-white/20 dark:bg-white/10"
+                  className="h-10 w-10 rounded-full border border-border-subtle/70 bg-surface text-text-secondary shadow-subtle/30 hover:text-text-primary"
                 >
                   <User className="h-4 w-4" />
                 </Button>

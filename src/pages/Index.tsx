@@ -82,34 +82,42 @@ const Index = () => {
   );
 
   return (
-    <div className="space-y-5">
-      <DashboardCard className="space-y-4">
-        <DashboardSectionTitle label="Overview" title="NOP Intelligence Layer" />
-        <p className="text-sm text-slate-600">
-          Track social positions, AI signals, and community performance inside a single calm SocialFi command center.
-        </p>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {heroSnapshot.map((item) => (
-            <div key={item.label} className="rounded-2xl border border-slate-100 bg-slate-50/60 px-3 py-3 text-left">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">{item.label}</p>
-              <p className="text-xl font-semibold text-slate-900 tabular-nums">{item.value}</p>
-            </div>
-          ))}
-        </div>
-      </DashboardCard>
+      <div className="space-y-5">
+        <DashboardCard className="space-y-4">
+          <DashboardSectionTitle label="Overview" title="NOP Intelligence Layer" />
+          <p className="text-sm-2 leading-relaxed text-text-secondary">
+            Track social positions, AI signals, and community performance inside a single calm SocialFi command center.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {heroSnapshot.map((item) => (
+              <div
+                key={item.label}
+                className="rounded-[16px] border border-border-subtle bg-surface px-4 py-3 text-left shadow-subtle/30"
+              >
+                <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-text-muted">
+                  {item.label}
+                </p>
+                <p className="text-2xl-2 font-semibold text-text-primary tabular-nums">{item.value}</p>
+              </div>
+            ))}
+          </div>
+        </DashboardCard>
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.8fr)_minmax(0,1.2fr)]">
         <div className="space-y-4">
           <DashboardCard className="space-y-4">
             <DashboardSectionTitle label="Market" title="Market context" />
             <AIMarketBar />
-            <div className="grid gap-3 md:grid-cols-2">
+              <div className="grid gap-3 md:grid-cols-2">
               {microCharts.length > 0 && !loadingSignals
                 ? microCharts.map((chart) => (
                     <MarketMicroChart key={chart.symbol} symbol={chart.symbol} changePct={chart.change} data={chart.data} />
                   ))
                 : Array.from({ length: 2 }).map((_, index) => (
-                    <div key={`sparkline-skeleton-${index}`} className="h-28 rounded-2xl border border-slate-100 bg-slate-50/60" />
+                      <div
+                        key={`sparkline-skeleton-${index}`}
+                        className="h-28 rounded-card border border-border-subtle bg-surface-muted"
+                      />
                   ))}
             </div>
           </DashboardCard>

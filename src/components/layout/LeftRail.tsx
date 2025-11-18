@@ -35,18 +35,18 @@ export const LeftRail = () => {
 
   return (
     <div className="space-y-4">
-      <DashboardCard>
+        <DashboardCard>
         <DashboardSectionTitle label="Navigation" title="Intelligence views" />
         <SidebarNav items={navItems} />
       </DashboardCard>
 
-      <DashboardCard>
+        <DashboardCard>
         <DashboardSectionTitle label="Overview" title="Protocol snapshot" />
         <div className="space-y-2">
           {snapshotStats.map((stat) => (
-            <div key={stat.label} className="flex items-center justify-between text-xs">
-              <span className="text-slate-500">{stat.label}</span>
-              <span className="font-semibold tabular-nums text-slate-900">{stat.value}</span>
+              <div key={stat.label} className="flex items-center justify-between text-xs-2">
+                <span className="text-text-secondary">{stat.label}</span>
+                <span className="font-semibold tabular-nums text-text-primary">{stat.value}</span>
             </div>
           ))}
         </div>

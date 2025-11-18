@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import type { Contribute } from "@/lib/types";
 import { DashboardCard } from "@/components/layout/visuals/DashboardCard";
 import { RegisterPositionDialog } from "@/components/protocol/RegisterPositionDialog";
+import { StatusPill } from "@/components/ui/status-pill";
 
 type ContributeCardProps = {
   item: Contribute;
@@ -11,12 +12,12 @@ type ContributeCardProps = {
 
 const getStatusLabel = (poolEnabled?: boolean, contractPostId?: number | null) => {
   if (poolEnabled && contractPostId) {
-    return { label: "Pool Open", tone: "text-emerald-600 bg-emerald-50 border-emerald-100" };
+    return { label: "Pool Open", tone: "success" as const };
   }
   if (poolEnabled) {
-    return { label: "Coming Soon", tone: "text-amber-600 bg-amber-50 border-amber-100" };
+    return { label: "Coming Soon", tone: "warning" as const };
   }
-  return { label: "Closed", tone: "text-slate-500 bg-slate-100 border-slate-200" };
+  return { label: "Closed", tone: "muted" as const };
 };
 
 export const ContributeCard = ({ item }: ContributeCardProps) => {
@@ -26,31 +27,31 @@ export const ContributeCard = ({ item }: ContributeCardProps) => {
 
   return (
     <>
-      <DashboardCard className="space-y-4">
+        <DashboardCard className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h3 className="text-lg font-semibold text-slate-900">{item.title}</h3>
-          <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${status.tone}`}>{status.label}</span>
+            <h3 className="text-lg-2 font-semibold text-text-primary">{item.title}</h3>
+            <StatusPill tone={status.tone}>{status.label}</StatusPill>
         </div>
-        <p className="text-sm text-slate-500">
+          <p className="text-sm-2 leading-relaxed text-text-secondary">
           NOP research pools coordinate contributions, pool rewards, and AI verifications. Each contribute aggregates
           signal strength, liquidity, and burn commitments before opening fully on-chain.
         </p>
-        <div className="flex flex-wrap gap-2 text-xs text-slate-500">
-          <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1">Investors · 128</span>
-          <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1">TVL · $2.8M</span>
-          <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1">Risk · Moderate</span>
+          <div className="flex flex-wrap gap-2 text-xs-2 text-text-secondary">
+            <StatusPill className="bg-surface-muted text-text-primary ring-0">Investors · 128</StatusPill>
+            <StatusPill className="bg-surface-muted text-text-primary ring-0">TVL · $2.8M</StatusPill>
+            <StatusPill className="bg-surface-muted text-text-primary ring-0">Risk · Moderate</StatusPill>
         </div>
         {poolActive ? (
           <div className="flex flex-wrap gap-3">
-            <Button asChild variant="outline" className="rounded-full">
+              <Button asChild variant="outline">
               <Link to={`/pool/${item.contractPostId}/chart`}>Chart</Link>
             </Button>
-            <Button className="rounded-full" onClick={() => setDialogOpen(true)}>
+              <Button variant="accent" onClick={() => setDialogOpen(true)}>
               Buy & Register
             </Button>
           </div>
         ) : (
-          <p className="text-xs text-slate-400">Pool access will unlock once governance verifies collateral.</p>
+            <p className="text-xs-2 text-text-muted">Pool access will unlock once governance verifies collateral.</p>
         )}
       </DashboardCard>
 
