@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap");
 
 @import "../styles/theme.css";
 
@@ -18,78 +18,20 @@
     min-height: 100vh;
     font-family: var(--font-sans);
     color: var(--color-text-primary);
-    background: radial-gradient(circle at top left, #e5ecff 0%, #f5f8ff 45%, #f9fbff 100%);
+    background: radial-gradient(circle at top left, #E5ECFF 0, #F5F8FF 45%, #F9FBFF 100%);
     background-color: var(--color-background);
     @apply font-sans antialiased;
   }
 
-  :root[data-theme='dark'] body {
-    background: #0f0f12;
+  .dark body,
+  body.dark {
+    background: radial-gradient(circle at top left, #020617 0, #020617 40%, #020617 100%);
     color: var(--color-text-primary);
-  }
-
-  :root[data-theme='dark'] .bg-white,
-  :root[data-theme='dark'] .bg-slate-50,
-  :root[data-theme='dark'] .bg-slate-50\/70,
-  :root[data-theme='dark'] .bg-slate-100,
-  :root[data-theme='dark'] .bg-indigo-50,
-  :root[data-theme='dark'] .bg-white\/80,
-  :root[data-theme='dark'] .bg-white\/70,
-  :root[data-theme='dark'] .bg-white\/60 {
-    background-color: #1a1c20 !important;
-    color: #f1f1f1;
-  }
-
-  :root[data-theme='dark'] .text-slate-900,
-  :root[data-theme='dark'] .text-slate-800,
-  :root[data-theme='dark'] .text-slate-700 {
-    color: #f1f1f1 !important;
-  }
-
-  :root[data-theme='dark'] .text-slate-600,
-  :root[data-theme='dark'] .text-slate-500,
-  :root[data-theme='dark'] .text-slate-400 {
-    color: #aaaaaa !important;
-  }
-
-  :root[data-theme='dark'] .border-slate-200,
-  :root[data-theme='dark'] .border-slate-100,
-  :root[data-theme='dark'] .border-indigo-500\/10,
-  :root[data-theme='dark'] .border-indigo-500\/20,
-  :root[data-theme='dark'] .border-indigo-500\/30 {
-    border-color: rgba(255, 255, 255, 0.08) !important;
-  }
-
-  :root[data-theme='dark'] .ring-indigo-500\/10,
-  :root[data-theme='dark'] .ring-indigo-500\/20,
-  :root[data-theme='dark'] .ring-indigo-500\/30 {
-    --tw-ring-color: rgba(255, 255, 255, 0.12) !important;
-  }
-
-  :root[data-theme='dark'] input,
-  :root[data-theme='dark'] textarea,
-  :root[data-theme='dark'] select,
-  :root[data-theme='dark'] .shadcn-input {
-    background-color: #16181c;
-    color: #f1f1f1;
-    border-color: rgba(255, 255, 255, 0.12);
-  }
-
-  :root[data-theme='dark'] input::placeholder,
-  :root[data-theme='dark'] textarea::placeholder {
-    color: #6b7280;
-  }
-
-  :root[data-theme='dark'] .shadow-lg,
-  :root[data-theme='dark'] .shadow-xl,
-  :root[data-theme='dark'] .shadow-sm,
-  :root[data-theme='dark'] .shadow {
-    box-shadow: 0 25px 45px -20px rgba(0, 0, 0, 0.7) !important;
   }
 
   code,
   pre {
-    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-family: "JetBrains Mono", "Courier New", monospace;
   }
 }
 

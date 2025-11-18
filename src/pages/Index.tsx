@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { AIMarketBar } from "@/components/ai/AIMarketBar";
 import { PostComposer } from "@/components/post/PostComposer";
 import { FeedList } from "@/components/feed/FeedList";
@@ -11,6 +12,7 @@ import { TrendingUsers } from "@/components/widgets/TrendingUsers";
 import CryptoNews from "@/components/CryptoNews";
 import BoostedTasks from "@/components/BoostedTasks";
 import TokenBurn from "@/components/TokenBurn";
+import { Button } from "@/components/ui/button";
 
 type PriceSignal = {
   symbol: string;
@@ -81,8 +83,8 @@ const Index = () => {
     [loadingSignals, signals.length],
   );
 
-  return (
-      <div className="space-y-5">
+    return (
+      <div className="space-y-4">
         <DashboardCard className="space-y-4">
           <DashboardSectionTitle label="Overview" title="NOP Intelligence Layer" />
           <p className="text-sm-2 leading-relaxed text-text-secondary">
@@ -94,55 +96,72 @@ const Index = () => {
                 key={item.label}
                 className="rounded-[16px] border border-border-subtle bg-surface px-4 py-3 text-left shadow-subtle/30"
               >
-                <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-text-muted">
-                  {item.label}
-                </p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-text-muted">{item.label}</p>
                 <p className="text-2xl-2 font-semibold text-text-primary tabular-nums">{item.value}</p>
               </div>
             ))}
           </div>
         </DashboardCard>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.8fr)_minmax(0,1.2fr)]">
-        <div className="space-y-4">
-          <DashboardCard className="space-y-4">
-            <DashboardSectionTitle label="Market" title="Market context" />
-            <AIMarketBar />
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.8fr)_minmax(0,1.2fr)]">
+          <div className="space-y-4">
+            <DashboardCard className="space-y-4">
+              <DashboardSectionTitle label="Market" title="Market context" />
+              <AIMarketBar />
               <div className="grid gap-3 md:grid-cols-2">
-              {microCharts.length > 0 && !loadingSignals
-                ? microCharts.map((chart) => (
-                    <MarketMicroChart key={chart.symbol} symbol={chart.symbol} changePct={chart.change} data={chart.data} />
-                  ))
-                : Array.from({ length: 2 }).map((_, index) => (
+                {microCharts.length > 0 && !loadingSignals
+                  ? microCharts.map((chart) => (
+                      <MarketMicroChart
+                        key={chart.symbol}
+                        symbol={chart.symbol}
+                        changePct={chart.change}
+                        data={chart.data}
+                      />
+                    ))
+                  : Array.from({ length: 2 }).map((_, index) => (
                       <div
                         key={`sparkline-skeleton-${index}`}
                         className="h-28 rounded-card border border-border-subtle bg-surface-muted"
                       />
-                  ))}
-            </div>
-          </DashboardCard>
+                    ))}
+              </div>
+            </DashboardCard>
 
-          <DashboardCard className="space-y-3">
-            <DashboardSectionTitle label="Community" title="Share intelligence" />
-            <PostComposer />
-          </DashboardCard>
+            <DashboardCard className="space-y-3">
+              <DashboardSectionTitle label="Community" title="Share intelligence" />
+              <PostComposer />
+            </DashboardCard>
 
-          <DashboardCard className="space-y-3">
-            <DashboardSectionTitle label="Feed" title="Live SocialFi stream" />
-            <FeedList />
-          </DashboardCard>
+            <DashboardCard className="space-y-3">
+              <DashboardSectionTitle label="Feed" title="Live SocialFi stream" />
+              <FeedList />
+            </DashboardCard>
+
+            <DashboardCard className="space-y-3 lg:hidden">
+              <DashboardSectionTitle
+                label="Contribute"
+                title="Discover NOP social pools"
+                description="Browse curated contributes and open on-chain social positions."
+              />
+              <p className="text-sm-2 text-text-secondary">
+                Start from the Contributes tab to see which ideas the community is backing.
+              </p>
+              <Button asChild variant="accent" size="sm" className="w-full sm:w-auto">
+                <Link to="/contributes">Go to Contributes</Link>
+              </Button>
+            </DashboardCard>
+          </div>
+
+          <aside className="hidden space-y-4 lg:block">
+            <IntelligenceFeed />
+            <TrendingUsers limit={5} />
+            <CryptoNews />
+            <BoostedTasks />
+            <TokenBurn />
+          </aside>
         </div>
-
-        <aside className="space-y-4">
-          <IntelligenceFeed />
-          <TrendingUsers limit={5} />
-          <CryptoNews />
-          <BoostedTasks />
-          <TokenBurn />
-        </aside>
       </div>
-    </div>
-  );
+    );
 };
 
 export default Index;

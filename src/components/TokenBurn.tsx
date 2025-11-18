@@ -69,12 +69,12 @@ export default function TokenBurn() {
       >
         <div className="flex flex-wrap justify-center gap-1">
           {digits.map((digit, index) => (
-            <span
-              key={`${digit}-${index}`}
-                className={`flex h-9 w-7 items-center justify-center rounded-md border border-border-subtle bg-white font-mono text-sm font-semibold text-text-primary shadow-subtle/40 ${
+              <span
+                key={`${digit}-${index}`}
+                className={`flex h-9 w-7 items-center justify-center rounded-md border border-border-subtle bg-surface font-mono text-sm font-semibold text-text-primary shadow-subtle/40 ${
                   loading ? "animate-pulse opacity-80" : ""
                 }`}
-            >
+              >
               {digit}
             </span>
           ))}

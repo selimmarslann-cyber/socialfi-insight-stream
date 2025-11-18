@@ -52,8 +52,8 @@ const Docs = () => {
     description: "Browse the whitepaper, litepaper, tokenomics, roadmap, and onboarding guides inside the app.",
   });
 
-  return (
-      <div className="space-y-5">
+    return (
+        <div className="space-y-4">
         <DashboardCard className="space-y-3">
           <DashboardSectionTitle label="Docs • Phase 5" title="NOP Intelligence Layer Library" />
           <p className="text-sm-2 leading-relaxed text-text-secondary">

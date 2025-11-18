@@ -130,8 +130,8 @@ const Explore = () => {
     return `${sign}${value.toFixed(2)}%`;
   };
 
-  return (
-    <div className="space-y-5">
+    return (
+      <div className="space-y-4">
         <DashboardCard className="space-y-4">
         <div className="space-y-2">
           <DashboardSectionTitle label="Discovery" title="Explore SocialFi Alpha" />

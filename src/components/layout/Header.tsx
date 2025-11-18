@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Moon, Sun, Search, User } from "lucide-react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -13,6 +12,8 @@ import {
 import { WalletConnectButton } from "@/components/wallet/WalletConnectButton";
 import { NopHeaderCounter } from "@/components/wallet/NopHeaderCounter";
 import { Container } from "@/components/layout/Container";
+import { MobileNav } from "@/components/layout/MobileNav";
+import Logo from "@/assets/nop-logo-circle.svg";
 import {
   getThemePreference,
   getSystem,
@@ -41,17 +42,20 @@ export const Header = () => {
   const resolvedMode = mode === "system" ? getSystem() : mode;
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border-subtle bg-[rgba(245,248,255,0.92)] shadow-[0_6px_20px_rgba(15,23,42,0.08)] backdrop-blur-md">
+    <header className="sticky top-0 z-40 border-b border-border-subtle bg-[color:rgba(245,248,255,0.9)] backdrop-blur-xl dark:bg-[color:rgba(15,23,42,0.92)]">
       <Container>
-        <div className="flex h-16 items-center justify-between gap-4">
+        <div className="flex h-16 items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 rounded-pill border border-border-subtle/70 bg-white/80 px-2 py-1 shadow-subtle/40">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-surface ring-2 ring-ring-subtle/60">
-                <img src="/logo.svg" alt="NOP Intelligence Layer" className="h-6 w-6" loading="eager" />
+            <div className="md:hidden">
+              <MobileNav />
+            </div>
+            <div className="hidden items-center gap-2 rounded-pill border border-border-subtle/80 bg-surface/80 px-2 py-1 shadow-subtle/40 backdrop-blur-sm md:flex">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent-soft ring-1 ring-ring-subtle">
+                <img src={Logo} alt="NOP Intelligence" className="h-6 w-6 object-contain" loading="eager" />
               </div>
-              <div className="hidden flex-col leading-tight text-left md:flex">
+              <div className="flex flex-col leading-tight text-left">
                 <span className="text-sm-2 font-semibold text-text-primary">NOP Intelligence</span>
-                <span className="text-xs-2 text-text-secondary">SocialFi research dashboard</span>
+                <span className="text-[10px] uppercase tracking-[0.16em] text-text-muted">SocialFi research dashboard</span>
               </div>
             </div>
           </div>
@@ -90,14 +94,14 @@ export const Header = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onSelect={() => toast.info("Profile customization is coming soon.")}>
-                  Profile
+                <DropdownMenuItem disabled className="flex flex-col gap-0.5 text-text-muted">
+                  <span>Profile</span>
+                  <span className="text-[10px] uppercase tracking-[0.2em] text-text-muted">Coming soon</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => navigate("/settings")}>Settings</DropdownMenuItem>
-                <DropdownMenuItem
-                  onSelect={() => toast.info("Sign out flow will be enabled with SafeAuth.")}
-                >
-                  Sign Out
+                <DropdownMenuItem disabled className="flex flex-col gap-0.5 text-text-muted">
+                  <span>Sign Out</span>
+                  <span className="text-[10px] uppercase tracking-[0.2em] text-text-muted">SafeAuth launch</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

@@ -10,8 +10,8 @@ const Burn = () => {
       "Track the manually curated NOP burn feed. Admins push 8-digit totals via the control panel so the community can verify deflation cadence.",
   });
 
-  return (
-      <div className="space-y-5">
+    return (
+        <div className="space-y-4">
         <DashboardCard className="space-y-3">
           <DashboardSectionTitle label="Tokenomics" title="NOP burn overview" />
           <p className="text-sm-2 leading-relaxed text-text-secondary">

@@ -123,11 +123,14 @@ export const WalletConnectButton = () => {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" className="gap-2">
+          <Button
+            variant="outline"
+            className="gap-2 border-border-subtle bg-surface text-text-primary hover:bg-surface-muted"
+          >
             <CheckCircle className="h-4 w-4 text-positive" />
             <span className="hidden sm:inline">{maskAddress(address)}</span>
             {providerLabel && (
-              <span className="hidden text-xs text-muted-foreground sm:inline">
+              <span className="hidden text-xs text-text-secondary sm:inline">
                 {providerLabel}
               </span>
             )}
@@ -160,12 +163,19 @@ export const WalletConnectButton = () => {
     );
   }
 
-  return (
-    <>
-      <Button onClick={() => setModalOpen(true)} className="gap-2">
-        <Wallet className="h-4 w-4" />
-        <span className="hidden sm:inline">Connect Wallet</span>
-      </Button>
+    return (
+      <>
+        <Button
+          type="button"
+          variant="accent"
+          size="md"
+          className="gap-1 px-4 font-semibold"
+          onClick={() => setModalOpen(true)}
+        >
+          <Wallet className="h-4 w-4" />
+          <span className="hidden sm:inline">Connect Wallet</span>
+          <span className="sm:hidden">Connect</span>
+        </Button>
 
       <Dialog open={isModalOpen} onOpenChange={handleModalChange}>
         <DialogContent className="sm:max-w-md">
@@ -173,27 +183,27 @@ export const WalletConnectButton = () => {
             <DialogTitle>Connect Wallet</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <Button
-              variant="outline"
-              className="h-12 w-full justify-start gap-3"
-              onClick={() => handleConnect('metamask')}
-            >
+              <Button
+                variant="outline"
+                className="h-12 w-full justify-start gap-3 border-border-subtle bg-surface text-text-primary hover:bg-surface-muted"
+                onClick={() => handleConnect('metamask')}
+              >
               <Wallet className="h-5 w-5" />
               <span>MetaMask</span>
             </Button>
-            <Button
-              variant="outline"
-              className="h-12 w-full justify-start gap-3"
-              onClick={() => handleConnect('trust')}
-            >
+              <Button
+                variant="outline"
+                className="h-12 w-full justify-start gap-3 border-border-subtle bg-surface text-text-primary hover:bg-surface-muted"
+                onClick={() => handleConnect('trust')}
+              >
               <Smartphone className="h-5 w-5" />
               <span>Trust Wallet</span>
             </Button>
-            <Button
-              variant="outline"
-              className="h-12 w-full justify-start gap-3"
-              onClick={() => handleConnect('email')}
-            >
+              <Button
+                variant="outline"
+                className="h-12 w-full justify-start gap-3 border-border-subtle bg-surface text-text-primary hover:bg-surface-muted"
+                onClick={() => handleConnect('email')}
+              >
               <Mail className="h-5 w-5" />
               <span>Mail ile giriş</span>
             </Button>
