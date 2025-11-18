@@ -1,0 +1,3 @@
+-- Moved: boosted task definitions now live inside
+-- supabase/00_full_schema_and_policies.sql
+-- (see the "Boosted tasks & rewards" section).

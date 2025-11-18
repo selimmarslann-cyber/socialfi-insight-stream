@@ -1,0 +1,4 @@
+-- Deprecated entry point.
+-- Use supabase/00_full_schema_and_policies.sql for the complete schema,
+-- RLS policies, triggers, and helper functions.
+-- This file remains only to document the new location.

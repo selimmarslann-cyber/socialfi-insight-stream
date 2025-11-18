@@ -1,0 +1,153 @@
+import { useMemo } from 'react';
+import {
+  BadgeCheck,
+  Clock,
+  Heart,
+  MessageCircle,
+  Share2,
+  Coins,
+} from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Post } from '@/types/feed';
+import { ImageGrid } from '@/components/post/ImageGrid';
+import { AIInsightStrip } from '@/components/ai/AIInsightStrip';
+import { toast } from 'sonner';
+
+interface PostCardProps {
+  post: Post;
+}
+
+const timeAgo = (value: string) => {
+  const diff = Date.now() - new Date(value).getTime();
+  const seconds = Math.floor(diff / 1000);
+  if (seconds < 60) return `${seconds}s ago`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+};
+
+export const PostCard = ({ post }: PostCardProps) => {
+  const hashtags = useMemo(() => post.tags ?? [], [post.tags]);
+  const media = useMemo(
+    () => (post.attachments?.length ? post.attachments : post.images ?? []),
+    [post.attachments, post.images],
+  );
+  const handleAction = (action: "upvote" | "comment" | "share" | "tip") => {
+    const labels: Record<typeof action, string> = {
+      upvote: "Upvotes",
+      comment: "Comments",
+      share: "Shares",
+      tip: "Tips",
+    };
+    toast.info(`${labels[action]} will sync to on-chain interactions soon.`);
+  };
+  const funded = (post.contributedAmount ?? 0) > 0;
+
+    return (
+      <article className="rounded-2xl bg-[color:var(--bg-card)] p-6 text-[color:var(--text-primary)] shadow-lg ring-1 ring-[color:var(--ring)] transition will-change-transform hover:translate-y-[1px] hover:ring-indigo-500/30">
+      <header className="flex items-start justify-between gap-4">
+        <div className="flex flex-1 items-start gap-3">
+          <Avatar className="h-12 w-12 border border-indigo-500/10">
+            {post.author.avatar ? (
+              <AvatarImage src={post.author.avatar} alt={post.author.displayName} />
+            ) : null}
+            <AvatarFallback className="bg-indigo-500/10 text-sm font-semibold text-indigo-600">
+              {post.author.displayName.slice(0, 2).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-1 text-sm">
+                <span className="font-semibold text-[color:var(--text-primary)]">{post.author.displayName}</span>
+              {post.author.verified && <BadgeCheck className="h-4 w-4 text-cyan-500" />}
+                <span className="text-[color:var(--text-secondary)]">@{post.author.username}</span>
+                <span className="text-[color:var(--text-secondary)]">·</span>
+                <span className="flex items-center gap-1 text-xs text-[color:var(--text-secondary)]">
+                <Clock className="h-3 w-3" />
+                {timeAgo(post.createdAt)}
+              </span>
+            </div>
+              <p className="mt-1 text-[11px] uppercase tracking-wide text-[color:var(--text-secondary)]/80">
+              {post.author.refCode}
+            </p>
+          </div>
+        </div>
+        {funded && (
+          <Badge className="rounded-full bg-[#F5C76A] text-xs font-semibold uppercase tracking-wide text-slate-800 shadow-sm">
+            Funded
+          </Badge>
+        )}
+      </header>
+
+        <div className="mt-4 space-y-4">
+          <p className="whitespace-pre-wrap text-sm text-[color:var(--text-primary)]">{post.content}</p>
+
+          {media.length > 0 && <ImageGrid images={media} />}
+
+        {hashtags.length > 0 && (
+            <div className="flex flex-wrap gap-2 text-xs text-indigo-400">
+            {hashtags.map((tag) => (
+              <span key={tag} className="rounded-full bg-indigo-50 px-3 py-1 font-semibold">
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+
+        <footer className="mt-5 space-y-4 text-xs text-[color:var(--text-secondary)]">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap gap-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-9 gap-2 rounded-full text-[color:var(--text-secondary)] hover:bg-indigo-500/10"
+                onClick={() => handleAction("upvote")}
+              >
+              <Heart className="h-4 w-4" />
+              {post.engagement.upvotes}
+            </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-9 gap-2 rounded-full text-[color:var(--text-secondary)] hover:bg-indigo-500/10"
+                onClick={() => handleAction("comment")}
+              >
+              <MessageCircle className="h-4 w-4" />
+              {post.engagement.comments}
+            </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-9 gap-2 rounded-full text-[color:var(--text-secondary)] hover:bg-indigo-500/10"
+                onClick={() => handleAction("share")}
+              >
+              <Share2 className="h-4 w-4" />
+              {post.engagement.shares}
+            </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-9 gap-2 rounded-full text-[color:var(--text-secondary)] hover:bg-indigo-500/10"
+                onClick={() => handleAction("tip")}
+              >
+              <Coins className="h-4 w-4 text-[#F5C76A]" />
+              {post.engagement.tips}
+            </Button>
+          </div>
+            <div className="text-xs font-semibold text-indigo-400">+{post.score} pts</div>
+        </div>
+        <AIInsightStrip
+          signal={post.aiSignal}
+          volatility={post.aiVolatility}
+          mmActivity={post.aiMmActivity}
+          score={post.aiScore}
+        />
+      </footer>
+    </article>
+  );
+};
