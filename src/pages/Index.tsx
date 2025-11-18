@@ -73,18 +73,18 @@ const Index = () => {
     }));
   }, [signals]);
 
-  const heroSnapshot = useMemo(
-    () => [
-      { label: "Assets tracked", value: loadingSignals ? "—" : `${Math.max(signals.length, 12)}+` },
-      { label: "Active positions", value: "312" },
-      { label: "Reputation leaders", value: "28" },
-      { label: "7d burn", value: "38.2K NOP" },
-    ],
-    [loadingSignals, signals.length],
-  );
+    const heroSnapshot = useMemo(
+      () => [
+        { label: "Assets tracked", value: loadingSignals ? "—" : `${Math.max(signals.length, 12)}+` },
+        { label: "Active positions", value: "312" },
+        { label: "Reputation leaders", value: "28" },
+        { label: "7d burn", value: "38.2K NOP" },
+      ],
+      [loadingSignals, signals.length],
+    );
 
     return (
-      <div className="space-y-4">
+      <div className="space-y-4 lg:space-y-6">
         <DashboardCard className="space-y-4">
           <DashboardSectionTitle label="Overview" title="NOP Intelligence Layer" />
           <p className="text-sm-2 leading-relaxed text-text-secondary">
@@ -103,8 +103,8 @@ const Index = () => {
           </div>
         </DashboardCard>
 
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.8fr)_minmax(0,1.2fr)]">
-          <div className="space-y-4">
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,2.1fr)_minmax(0,1.1fr)] lg:gap-6">
+          <div className="space-y-4 lg:space-y-6">
             <DashboardCard className="space-y-4">
               <DashboardSectionTitle label="Market" title="Market context" />
               <AIMarketBar />
@@ -150,15 +150,18 @@ const Index = () => {
                 <Link to="/contributes">Go to Contributes</Link>
               </Button>
             </DashboardCard>
-          </div>
-
-          <aside className="hidden space-y-4 lg:block">
-            <IntelligenceFeed />
-            <TrendingUsers limit={5} />
-            <CryptoNews />
-            <BoostedTasks />
-            <TokenBurn />
-          </aside>
+        </div>
+            <aside className="hidden space-y-4 lg:block">
+              <IntelligenceFeed />
+              <TrendingUsers limit={5} />
+              <CryptoNews />
+              <div className="hidden xl:block">
+                <BoostedTasks />
+              </div>
+              <div className="hidden xl:block">
+                <TokenBurn />
+              </div>
+            </aside>
         </div>
       </div>
     );

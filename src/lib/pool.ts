@@ -1,54 +1,137 @@
-import { BrowserProvider, JsonRpcProvider, Contract, parseUnits } from "ethers";
-import poolAbi from "@/abi/NOPSocialPool.json";
-import { SELL_FEE_BPS_UI, CREATOR_BPS_UI } from "@/lib/config";
-import { applyBps } from "@/lib/math";
+import type { ContractRunner, InterfaceAbi } from "ethers";
+import { BrowserProvider, Contract, JsonRpcProvider, formatUnits, parseUnits } from "ethers";
+import poolArtifact from "@/abi/NOPSocialPool.json";
+import erc20Abi from "@/abi/erc20.json";
 import { apiClient } from "@/lib/axios";
 
+const poolAbi = ((poolArtifact as { abi?: InterfaceAbi }).abi ?? (poolArtifact as InterfaceAbi)) as InterfaceAbi;
+const tokenAbi = erc20Abi as InterfaceAbi;
 const RPC_URL = import.meta.env.VITE_RPC_URL;
-const POOL_ADDRESS =
-  import.meta.env.VITE_NOP_POOL_ADDRESS ||
-  import.meta.env.VITE_POOL_ADDRESS;
-const TOKEN_ADDRESS = import.meta.env.VITE_NOP_TOKEN_ADDRESS;
+const rpcProvider = RPC_URL ? new JsonRpcProvider(RPC_URL) : null;
 
-const provider = new JsonRpcProvider(RPC_URL);
+let browserProvider: BrowserProvider | null = null;
 
-let wallet: BrowserProvider | null = null;
-
-async function getWallet() {
-  if (!wallet) {
-    if (!window.ethereum) throw new Error("MetaMask not available");
-    wallet = new BrowserProvider(window.ethereum);
-  }
-  return wallet;
+function getPoolAddress(): string {
+  const addr =
+    import.meta.env.VITE_NOP_POOL_ADDRESS ||
+    import.meta.env.VITE_POOL_ADDRESS ||
+    import.meta.env.VITE_NEXT_PUBLIC_POOL_ADDRESS;
+  if (!addr) throw new Error("Pool address is not configured");
+  return addr;
 }
 
-async function getPoolContract(signer = false) {
-  if (!POOL_ADDRESS) throw new Error("Pool address missing in ENV");
-  if (signer) {
-    const w = await getWallet();
-    const signerInstance = await w.getSigner();
-    return new Contract(POOL_ADDRESS, poolAbi.abi, signerInstance);
+function getTokenAddress(): string {
+  const addr = import.meta.env.VITE_NOP_TOKEN_ADDRESS || import.meta.env.VITE_TOKEN_ADDRESS;
+  if (!addr) throw new Error("NOP token address is not configured");
+  return addr;
+}
+
+function getDefaultRunner(runner?: ContractRunner): ContractRunner {
+  if (runner) return runner;
+  if (rpcProvider) return rpcProvider;
+  if (browserProvider) return browserProvider;
+  if (typeof window !== "undefined" && window.ethereum) {
+    browserProvider = new BrowserProvider(window.ethereum);
+    return browserProvider;
   }
-  return new Contract(POOL_ADDRESS, poolAbi.abi, provider);
+  throw new Error("No RPC provider configured");
+}
+
+async function getSigner() {
+  if (typeof window === "undefined" || !window.ethereum) {
+    throw new Error("No Ethereum provider");
+  }
+  if (!browserProvider) {
+    browserProvider = new BrowserProvider(window.ethereum);
+  }
+  return browserProvider.getSigner();
+}
+
+function getPoolContractInstance(signerOrProvider?: ContractRunner) {
+  return new Contract(getPoolAddress(), poolAbi, getDefaultRunner(signerOrProvider));
+}
+
+function getTokenContractInstance(signerOrProvider?: ContractRunner) {
+  return new Contract(getTokenAddress(), tokenAbi, getDefaultRunner(signerOrProvider));
+}
+
+function toBigInt(value: unknown): bigint {
+  if (typeof value === "bigint") return value;
+  if (typeof value === "number") return BigInt(Math.trunc(value));
+  if (typeof value === "string" && value.length > 0) return BigInt(value);
+  if (value && typeof value === "object" && "toString" in value) {
+    return BigInt((value as { toString(): string }).toString());
+  }
+  return 0n;
+}
+
+export async function getAllowance(owner: string): Promise<bigint> {
+  if (!owner) return 0n;
+  const signer = await getSigner();
+  const token = getTokenContractInstance(signer);
+  const result = await token.allowance(owner, getPoolAddress());
+  return toBigInt(result);
+}
+
+export async function approveToken(maxAmount?: string | bigint) {
+  const signer = await getSigner();
+  const token = getTokenContractInstance(signer);
+  const amount =
+    typeof maxAmount === "bigint" ? maxAmount : parseUnits(maxAmount ?? "1000000", 18);
+  const tx = await token.approve(getPoolAddress(), amount);
+  return tx.wait();
+}
+
+export async function buyShares(postId: number, amountNop: number) {
+  const signer = await getSigner();
+  const pool = getPoolContractInstance(signer);
+  const amount = parseUnits(String(amountNop), 18);
+  const tx = await pool.depositNOP(postId, amount);
+  return tx.wait();
+}
+
+export async function sellShares(postId: number, amountNop: number) {
+  const signer = await getSigner();
+  const pool = getPoolContractInstance(signer);
+  const amount = parseUnits(String(amountNop), 18);
+  const tx = await pool.withdrawNOP(postId, amount);
+  return tx.wait();
 }
 
 export async function depositToContribute(postId: number, amount: number) {
-  const contract = await getPoolContract(true);
-  const normalized = parseUnits(String(amount), 18);
-  const tx = await contract.depositNOP(postId, normalized);
-  return await tx.wait();
+  return buyShares(postId, amount);
 }
 
 export async function withdrawFromContribute(postId: number, amount: number) {
-  const contract = await getPoolContract(true);
-  const normalized = parseUnits(String(amount), 18);
-  const tx = await contract.withdrawNOP(postId, normalized);
-  return await tx.wait();
+  return sellShares(postId, amount);
 }
 
-export async function getUserPosition(userAddress: string, postId: number) {
-  const contract = await getPoolContract();
-  return await contract.getPosition(userAddress, postId);
+export async function getUserPosition(postId: number, ownerAddress?: string) {
+  try {
+    let signer: Awaited<ReturnType<typeof getSigner>> | undefined;
+    let address = ownerAddress;
+    if (!address) {
+      signer = await getSigner();
+      address = await signer.getAddress();
+    }
+    if (!address) {
+      throw new Error("Wallet address unavailable");
+    }
+    const pool = getPoolContractInstance(signer);
+    const raw = await pool.getPosition(address, postId);
+    const shares = toBigInt(raw);
+    return {
+      shares,
+      sharesFormatted: formatUnits(shares, 18),
+      address,
+    };
+  } catch (error) {
+    console.warn("[pool] Failed to fetch user position", error);
+    return {
+      shares: 0n,
+      sharesFormatted: "0.0",
+    };
+  }
 }
 
 export type PostState = {
@@ -82,7 +165,7 @@ async function getPostStateInternal(postId: string): Promise<PostState> {
       };
     } catch (apiError) {
       // Fallback to contract
-      const contract = await getPoolContract();
+        const contract = getPoolContractInstance();
       const active = await contract.postEnabled(postIdNum);
       
       // For reserve, we might need to sum all positions or use a different method

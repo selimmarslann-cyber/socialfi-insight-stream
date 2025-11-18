@@ -34,11 +34,14 @@ const timeAgo = (value: string) => {
 
 export const PostCard = ({ post }: PostCardProps) => {
   const hashtags = useMemo(() => post.tags ?? [], [post.tags]);
-  const media = useMemo(
-    () => (post.attachments?.length ? post.attachments : post.images ?? []),
-    [post.attachments, post.images],
-  );
-  const canTrade = post.poolEnabled === true && typeof post.contractPostId === "number";
+    const media = useMemo(
+      () => (post.attachments?.length ? post.attachments : post.images ?? []),
+      [post.attachments, post.images],
+    );
+    const contractPostId =
+      post.poolEnabled === true && typeof post.contractPostId === "number"
+        ? post.contractPostId
+        : null;
   const handleAction = (action: "upvote" | "comment" | "share" | "tip") => {
     const labels: Record<typeof action, string> = {
       upvote: "Upvotes",
@@ -149,9 +152,9 @@ export const PostCard = ({ post }: PostCardProps) => {
           mmActivity={post.aiMmActivity}
           score={post.aiScore}
         />
-          {canTrade ? (
-            <TradeActions contractPostId={post.contractPostId} className="bg-white/80" />
-          ) : null}
+            {contractPostId !== null ? (
+              <TradeActions contractPostId={contractPostId} className="bg-white/80" />
+            ) : null}
       </footer>
     </article>
   );

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Moon, Sun, Search, User } from "lucide-react";
+import { Moon, Sun, Search, User, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -9,10 +9,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { SidebarNav } from "@/components/navigation/SidebarNav";
 import { WalletConnectButton } from "@/components/wallet/WalletConnectButton";
 import { NopHeaderCounter } from "@/components/wallet/NopHeaderCounter";
 import { Container } from "@/components/layout/Container";
-import { MobileNav } from "@/components/layout/MobileNav";
+import { useSidebarNavItems } from "@/hooks/useSidebarNavItems";
 import Logo from "@/assets/nop-logo-circle.svg";
 import {
   getThemePreference,
@@ -25,6 +27,8 @@ import {
 export const Header = () => {
   const navigate = useNavigate();
   const [mode, setMode] = useState<ThemePreference>(() => getThemePreference());
+  const [isNavOpen, setIsNavOpen] = useState(false);
+  const navItems = useSidebarNavItems();
 
   useEffect(() => {
     setMode(getThemePreference());
@@ -46,9 +50,35 @@ export const Header = () => {
       <Container>
         <div className="flex h-16 items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="md:hidden">
-              <MobileNav />
-            </div>
+              <Sheet open={isNavOpen} onOpenChange={setIsNavOpen}>
+                <SheetTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-10 w-10 rounded-full border border-border-subtle/80 bg-surface text-text-primary shadow-subtle/40 md:hidden"
+                    aria-label="Open navigation"
+                  >
+                    <Menu className="h-4 w-4" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent
+                  side="left"
+                  className="w-72 border-r border-border-subtle/60 bg-background/95 p-0 text-left shadow-subtle/60"
+                >
+                  <div className="flex items-center gap-3 border-b border-border-subtle/60 px-4 py-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent-soft ring-1 ring-ring-subtle">
+                      <img src={Logo} alt="NOP Intelligence" className="h-6 w-6 object-contain" loading="eager" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-text-primary">NOP Intelligence</p>
+                      <p className="text-[11px] uppercase tracking-[0.2em] text-text-muted">SocialFi dashboard</p>
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <SidebarNav items={navItems} />
+                  </div>
+                </SheetContent>
+              </Sheet>
             <div className="hidden items-center gap-2 rounded-pill border border-border-subtle/80 bg-surface/80 px-2 py-1 shadow-subtle/40 backdrop-blur-sm md:flex">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent-soft ring-1 ring-ring-subtle">
                 <img src={Logo} alt="NOP Intelligence" className="h-6 w-6 object-contain" loading="eager" />
