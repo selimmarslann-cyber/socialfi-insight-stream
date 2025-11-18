@@ -1,6 +1,7 @@
-import StaticPageLayout from "@/components/layout/StaticPageLayout";
 import TokenBurn from "@/components/TokenBurn";
 import { usePageMetadata } from "@/hooks/usePageMetadata";
+import { DashboardCard } from "@/components/layout/visuals/DashboardCard";
+import { DashboardSectionTitle } from "@/components/layout/visuals/DashboardSectionTitle";
 
 const Burn = () => {
   usePageMetadata({
@@ -10,30 +11,28 @@ const Burn = () => {
   });
 
   return (
-    <StaticPageLayout>
-      <section className="space-y-8">
-        <header className="space-y-3">
-          <h1 className="text-2xl font-semibold text-[#0F172A]">Token Burn</h1>
-          <p className="leading-relaxed text-[#475569]">
-            This dashboard surfaces the latest NOP burn totals straight from the admin control panel.
-            There is no automated on-chain sync yet — operations team members enter an 8 haneli (digit) total after every burn event and the board below mirrors it immediately for the community.
-          </p>
-        </header>
+    <div className="space-y-5">
+      <DashboardCard className="space-y-3">
+        <DashboardSectionTitle label="Tokenomics" title="NOP burn overview" />
+        <p className="text-sm text-slate-600">
+          Track the latest manual burn updates from the operations desk. Each entry reflects the deflation cadence shared with
+          partners before the on-chain feed is automated.
+        </p>
+      </DashboardCard>
 
-        <div className="rounded-2xl bg-white/90 p-6 shadow-sm">
-          <TokenBurn />
-        </div>
+      <TokenBurn />
 
-        <div className="space-y-3 rounded-2xl bg-white p-6 shadow-sm leading-relaxed text-[#475569]">
-          <p>
-            Future work will wire the widget to an indexed on-chain feed plus history charts, but until then the manual workflow keeps messaging consistent across Discord, Render, and Vercel previews.
-          </p>
-          <p className="text-sm text-slate-500">
-            Şeffaflık için yakım verisi periyodik olarak admin panelinden güncellenir. Bu sayfa sadece görüntüleme amaçlıdır.
-          </p>
-        </div>
-      </section>
-    </StaticPageLayout>
+      <DashboardCard className="space-y-3 text-sm text-slate-600">
+        <DashboardSectionTitle label="Transparency" title="How data is captured" />
+        <p>
+          Future iterations will connect directly to the indexed burn registry. Until then, admins submit 8-digit totals that sync
+          instantly to this card so Discord, dashboard, and partner previews remain aligned.
+        </p>
+        <p className="text-xs text-slate-500">
+          Şeffaflık için yakım verisi periyodik olarak admin panelinden güncellenir. Bu sayfa sadece görüntüleme amaçlıdır.
+        </p>
+      </DashboardCard>
+    </div>
   );
 };
 

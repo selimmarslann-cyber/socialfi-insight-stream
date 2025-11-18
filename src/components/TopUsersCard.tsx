@@ -1,4 +1,5 @@
 'use client';
+// NOTE: This card is currently parked outside the main 2025 dashboard layout; TrendingUsers powers the homepage list.
 import { useEffect, useState, type ReactNode } from 'react';
 import { fetchTopUsers, shortId, type ReputationLeaderboardRow } from '@/lib/leaderboard';
 import { cn } from '@/lib/utils';

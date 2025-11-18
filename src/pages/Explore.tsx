@@ -169,25 +169,24 @@ const Explore = () => {
         </div>
       </DashboardCard>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-        <DashboardCard className="space-y-4">
-          <DashboardSectionTitle label="Signals" title="Community Posts" />
-          {posts.length === 0 ? (
-            <div className="rounded-3xl border border-dashed border-indigo-200 bg-indigo-50/40 p-10 text-center text-sm text-slate-500">
-              Nothing surfaced with that filter yet. Try a broader query.
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {posts.map((post) => (
-                <PostCard key={post.id} post={post} />
-              ))}
-            </div>
-          )}
-        </DashboardCard>
-
         <div className="space-y-4">
+          <DashboardCard className="space-y-4">
+            <DashboardSectionTitle label="Signals" title="Community posts" />
+            {posts.length === 0 ? (
+              <div className="rounded-3xl border border-dashed border-indigo-200 bg-indigo-50/40 p-10 text-center text-sm text-slate-500">
+                Nothing surfaced with that filter yet. Try a broader query.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {posts.map((post) => (
+                  <PostCard key={post.id} post={post} />
+                ))}
+              </div>
+            )}
+          </DashboardCard>
+
           <DashboardCard>
-            <DashboardSectionTitle label="Market" title="Top Gainers" />
+            <DashboardSectionTitle label="Market" title="Top gainers" />
             <div className="space-y-3">
               {marketLoading
                 ? Array.from({ length: 4 }).map((_, index) => (
@@ -231,7 +230,7 @@ const Explore = () => {
           </DashboardCard>
 
           <DashboardCard>
-            <DashboardSectionTitle label="Signals" title="Trending Tags" />
+            <DashboardSectionTitle label="Signals" title="Trending tags" />
             <div className="flex flex-wrap gap-2">
               {combinedPosts
                 .flatMap((post) => post.tags ?? [])
@@ -244,7 +243,6 @@ const Explore = () => {
             </div>
           </DashboardCard>
         </div>
-      </div>
     </div>
   );
 };

@@ -41,22 +41,22 @@ export const Header = () => {
   const resolvedMode = mode === "system" ? getSystem() : mode;
 
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-200/60 bg-white/85 backdrop-blur dark:border-white/10 dark:bg-slate-900/80">
+    <header className="sticky top-0 z-40 border-b border-slate-200/70 bg-white/85 backdrop-blur dark:border-white/10 dark:bg-slate-900/80">
       <Container>
-        <div className="flex h-16 items-center justify-between gap-4">
+        <div className="flex h-14 items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <img src="/logo.svg" alt="NOP Intelligence Layer" className="h-10 w-10" loading="eager" />
+              <img src="/logo.svg" alt="NOP Intelligence Layer" className="h-10 w-10" loading="eager" />
             <div className="hidden flex-col leading-tight md:flex">
-              <span className="text-sm font-semibold text-slate-900">NOP Intelligence Layer</span>
-              <span className="text-xs text-slate-500">SocialFi · AI · Proof-of-Burn</span>
+                <span className="text-sm font-semibold text-slate-900">NOP Intelligence</span>
+                <span className="text-xs text-slate-500">SocialFi research dashboard</span>
             </div>
           </div>
 
-          <div className="relative hidden h-11 flex-1 max-w-md md:block">
+          <div className="relative hidden h-10 flex-1 max-w-md md:block">
             <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input
               placeholder="Search market intel…"
-              className="h-full rounded-full border border-slate-200/60 bg-slate-50 pl-11 pr-4 text-sm text-slate-900 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-100 focus-visible:ring-offset-2"
+              className="h-full rounded-full border border-slate-200 bg-slate-50 pl-11 pr-4 text-sm text-slate-900 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-100"
             />
           </div>
 
@@ -65,7 +65,7 @@ export const Header = () => {
             <Button
               variant="outline"
               size="icon"
-              className="hidden h-9 w-9 rounded-full border-slate-200/70 bg-white text-slate-600 shadow-sm transition hover:text-slate-900 dark:border-white/20 dark:bg-white/10 md:flex"
+              className="hidden h-9 w-9 rounded-full border-slate-200/70 bg-white text-slate-600 shadow-sm transition hover:border-slate-300 hover:text-slate-900 dark:border-white/20 dark:bg-white/10 md:flex"
               onClick={handleToggle}
               aria-label="Toggle theme"
               aria-pressed={resolvedMode === "dark"}
@@ -80,7 +80,7 @@ export const Header = () => {
                   variant="outline"
                   size="icon"
                   aria-label="User menu"
-                  className="h-9 w-9 rounded-full border-slate-200/70 bg-white/90 text-slate-600 shadow-sm transition hover:text-slate-900 dark:border-white/20 dark:bg-white/10"
+                  className="h-9 w-9 rounded-full border-slate-200/70 bg-white/90 text-slate-600 shadow-sm transition hover:border-slate-300 hover:text-slate-900 dark:border-white/20 dark:bg-white/10"
                 >
                   <User className="h-4 w-4" />
                 </Button>

@@ -15,10 +15,11 @@ const baseNavItems = [
   { label: "Settings", href: "/settings", icon: Settings },
 ];
 
-const networkStats = [
-  { label: "Network TVL", value: "$128.4M", delta: "+2.1%" },
-  { label: "NOP Burned (7d)", value: "38,240", delta: "+12%" },
-  { label: "Signal Accuracy", value: "87%", delta: "+1.4%" },
+const snapshotStats = [
+  { label: "NOP price", value: "$0.12" },
+  { label: "Open positions", value: "312" },
+  { label: "Reputation leaders", value: "28" },
+  { label: "7d burn", value: "38.2K NOP" },
 ];
 
 export const LeftRail = () => {
@@ -33,27 +34,19 @@ export const LeftRail = () => {
   );
 
   return (
-    <div className="space-y-4 lg:space-y-5">
+    <div className="space-y-4">
       <DashboardCard>
-        <DashboardSectionTitle label="Navigate" title="Intelligence Views" />
+        <DashboardSectionTitle label="Navigation" title="Intelligence views" />
         <SidebarNav items={navItems} />
       </DashboardCard>
 
       <DashboardCard>
-        <DashboardSectionTitle label="Network Pulse" title="NOP Snapshot" />
-        <div className="space-y-3">
-          {networkStats.map((stat) => (
-            <div
-              key={stat.label}
-              className="flex items-center justify-between rounded-2xl border border-slate-100/80 bg-slate-50/60 px-3 py-2"
-            >
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
-                  {stat.label}
-                </p>
-                <p className="text-sm font-semibold text-slate-900 tabular-nums">{stat.value}</p>
-              </div>
-              <span className="text-xs font-semibold text-emerald-600">{stat.delta}</span>
+        <DashboardSectionTitle label="Overview" title="Protocol snapshot" />
+        <div className="space-y-2">
+          {snapshotStats.map((stat) => (
+            <div key={stat.label} className="flex items-center justify-between text-xs">
+              <span className="text-slate-500">{stat.label}</span>
+              <span className="font-semibold tabular-nums text-slate-900">{stat.value}</span>
             </div>
           ))}
         </div>
