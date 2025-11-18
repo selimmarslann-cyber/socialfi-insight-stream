@@ -37,30 +37,30 @@ const Whitepaper = () => {
 
       <DashboardCard className="space-y-4">
         <DashboardSectionTitle label="Architecture" title="Intelligence Layer Overview" />
-        <div className="grid gap-4 lg:grid-cols-2">
-          {architecture.map((layer) => (
-            <article key={layer.title} className="rounded-2xl border border-slate-100 bg-white/70 p-5">
-              <div className="space-y-3">
-                <h3 className="text-base font-semibold text-slate-900">{layer.title}</h3>
-                {layer.paragraphs.map((paragraph) => (
-                  <p key={paragraph} className="text-sm leading-relaxed text-slate-600">
-                    {paragraph}
-                  </p>
-                ))}
-                {layer.bullets.length > 0 ? (
-                  <ul className="space-y-2 text-sm text-slate-600">
-                    {layer.bullets.map((bullet) => (
-                      <li key={bullet} className="flex gap-2">
-                        <span className="mt-1 h-1.5 w-1.5 rounded-full bg-indigo-500" />
-                        <span>{bullet}</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-              </div>
-            </article>
-          ))}
-        </div>
+          <div className="grid gap-4 lg:grid-cols-2">
+            {architecture.map((layer) => (
+              <article key={layer.title} className="rounded-2xl border border-border bg-card p-5 shadow-card-soft">
+                <div className="space-y-3">
+                  <h3 className="text-base font-semibold text-text-primary">{layer.title}</h3>
+                  {layer.paragraphs.map((paragraph) => (
+                    <p key={paragraph} className="text-sm leading-relaxed text-text-secondary">
+                      {paragraph}
+                    </p>
+                  ))}
+                  {layer.bullets.length > 0 ? (
+                    <ul className="space-y-2 text-sm text-text-secondary">
+                      {layer.bullets.map((bullet) => (
+                        <li key={bullet} className="flex gap-2">
+                          <span className="mt-1 h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                          <span>{bullet}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </div>
+              </article>
+            ))}
+          </div>
       </DashboardCard>
 
       <DashboardCard className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">

@@ -9,11 +9,11 @@ const endpoints = [
     status: "Private beta",
     description: "Submit signed insight payloads with encrypted attachments.",
   },
-  {
-    name: "GET /v1/feed",
-    status: "Coming soon",
-    description: "Filter the public signal feed by tags, wallets, and burn weight.",
-  },
+    {
+      name: "GET /v1/feed",
+      status: "Queued",
+      description: "Filter the public signal feed by tags, wallets, and burn weight.",
+    },
   {
     name: "POST /v1/burn",
     status: "Gated",
@@ -29,10 +29,10 @@ const DocsApi = () => {
 
   return (
     <StaticPageLayout>
-      <section className="space-y-8">
-        <div className="space-y-4 rounded-3xl border border-[color:var(--ring)] bg-[color:var(--bg-card)] p-8 shadow-sm">
-          <Badge variant="outline" className="rounded-full border border-emerald-400/40 text-xs text-emerald-300">
-            Coming soon
+        <section className="space-y-8">
+          <div className="space-y-4 rounded-3xl border border-[color:var(--ring)] bg-[color:var(--bg-card)] p-8 shadow-sm">
+            <Badge variant="outline" className="rounded-full border border-emerald-400/40 text-xs text-emerald-300">
+              Preview spec
           </Badge>
           <div className="space-y-3">
             <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">

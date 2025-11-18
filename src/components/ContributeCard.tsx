@@ -57,34 +57,34 @@ function ContributeCard({ item }: ContributeCardProps) {
   const formattedWeeklyVolume =
     weeklyVolume === null ? null : volumeFormatter.format(weeklyVolume);
 
-  return (
-    <Card className="space-y-5 rounded-3xl border border-slate-200/70 bg-white/95 p-5 shadow-sm">
+    return (
+      <Card className="space-y-5 rounded-3xl border border-border bg-card p-5 shadow-card-soft">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="space-y-1">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Weekly popular pool
           </p>
-          <h3 className="text-xl font-semibold text-slate-900">{item.title}</h3>
+            <h3 className="text-xl font-semibold text-foreground">{item.title}</h3>
           {item.subtitle ? (
-            <p className="text-sm text-slate-500">{item.subtitle}</p>
+              <p className="text-sm text-muted-foreground">{item.subtitle}</p>
           ) : null}
           {item.author ? (
-            <p className="text-xs font-semibold text-slate-500">by {item.author}</p>
+              <p className="text-xs font-semibold text-muted-foreground">by {item.author}</p>
           ) : null}
         </div>
           <div className="flex items-center gap-4">
             {formattedWeeklyVolume ? (
-              <div className="text-right">
-                <p className="text-xs text-slate-500">7d volume</p>
-                <p className="text-2xl font-semibold text-slate-900">
+                <div className="text-right">
+                  <p className="text-xs text-muted-foreground">7d volume</p>
+                  <p className="text-2xl font-semibold text-foreground">
                   {formattedWeeklyVolume}
-                  <span className="ml-1 text-sm font-medium text-slate-500">NOP</span>
+                    <span className="ml-1 text-sm font-medium text-muted-foreground">NOP</span>
                 </p>
               </div>
             ) : typeof item.weeklyScore === "number" ? (
               <div className="text-right">
-                <p className="text-xs text-slate-500">Weekly score</p>
-                <p className="text-2xl font-semibold text-slate-900">
+                  <p className="text-xs text-muted-foreground">Weekly score</p>
+                  <p className="text-2xl font-semibold text-foreground">
                   {item.weeklyScore}
                 </p>
               </div>
@@ -98,12 +98,12 @@ function ContributeCard({ item }: ContributeCardProps) {
         </div>
       </div>
 
-      {item.tags?.length ? (
-        <div className="flex flex-wrap gap-2 text-xs text-slate-600">
+        {item.tags?.length ? (
+          <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
           {item.tags.map((tag) => (
             <span
               key={tag}
-              className="rounded-full bg-slate-100 px-3 py-1 font-semibold"
+                className="rounded-full bg-muted px-3 py-1 font-semibold text-foreground"
             >
               {tag.startsWith("#") ? tag : `#${tag}`}
             </span>
@@ -112,7 +112,7 @@ function ContributeCard({ item }: ContributeCardProps) {
       ) : null}
 
       {item.description ? (
-        <p className="text-sm leading-relaxed text-slate-600">
+          <p className="text-sm leading-relaxed text-muted-foreground">
           {item.description}
         </p>
       ) : null}
@@ -121,17 +121,17 @@ function ContributeCard({ item }: ContributeCardProps) {
           <TradeActions
             contractPostId={contractPostId}
             onSettled={refreshPosition}
-            className="bg-slate-50/80"
+              className="bg-muted/50"
           />
       ) : (
-        <div className="rounded-2xl border border-dashed border-slate-200 p-4 text-sm text-slate-500">
+          <div className="rounded-2xl border border-dashed border-border p-4 text-sm text-muted-foreground">
           Pool will open soon. Follow this contribution for launch updates.
         </div>
       )}
 
-      <p className="text-xs text-slate-500">
+        <p className="text-xs text-muted-foreground">
         Your on-chain position:{" "}
-        <span className="font-semibold text-slate-900">{formattedPosition} NOP</span>
+          <span className="font-semibold text-foreground">{formattedPosition} NOP</span>
         {isSyncingPosition ? " · Syncing…" : null}
       </p>
     </Card>

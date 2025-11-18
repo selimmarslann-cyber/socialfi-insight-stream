@@ -39,6 +39,7 @@ import LegalTerms from "./pages/legal/LegalTerms";
 import LegalCookies from "./pages/legal/LegalCookies";
 import Litepaper from "./pages/Litepaper";
 import Onboarding from "./pages/Onboarding";
+import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -64,6 +65,7 @@ const App = () => (
                 <Route path="/contributes" element={<Contributes />} />
                 <Route path="/wallet" element={<WalletPage />} />
                   <Route path="/settings" element={<Settings />} />
+                <Route path="/u/:address" element={<Profile />} />
               <Route path="/about" element={<About />} />
               <Route path="/whitepaper" element={<Whitepaper />} />
               <Route path="/tokenomics" element={<Tokenomics />} />

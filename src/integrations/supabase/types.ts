@@ -331,7 +331,7 @@ export type Database = {
             created_at?: string
           }
         }
-      posts: {
+        posts: {
         Row: {
           id: number
           author_id: string
@@ -362,8 +362,8 @@ export type Database = {
           invest_open?: boolean
           created_at?: string | null
         }
-      }
-        profiles: {
+        }
+          profiles: {
           Row: {
             id: string
             username: string | null
@@ -398,6 +398,119 @@ export type Database = {
             updated_at?: string | null
           }
         }
+          social_comments: {
+            Row: {
+              id: number
+              post_id: number
+              wallet_address: string
+              content: string
+              created_at: string | null
+            }
+            Insert: {
+              id?: number
+              post_id: number
+              wallet_address: string
+              content: string
+              created_at?: string | null
+            }
+            Update: {
+              id?: number
+              post_id?: number
+              wallet_address?: string
+              content?: string
+              created_at?: string | null
+            }
+          }
+          social_likes: {
+            Row: {
+              post_id: number
+              wallet_address: string
+              created_at: string | null
+            }
+            Insert: {
+              post_id: number
+              wallet_address: string
+              created_at?: string | null
+            }
+            Update: {
+              post_id?: number
+              wallet_address?: string
+              created_at?: string | null
+            }
+          }
+          social_posts: {
+            Row: {
+              id: number
+              wallet_address: string
+              author_name: string | null
+              author_avatar_url: string | null
+              content: string
+              media_urls: string[] | null
+              tags: string[] | null
+              pool_enabled: boolean
+              contract_post_id: number | null
+              created_at: string | null
+              updated_at: string | null
+            }
+            Insert: {
+              id?: number
+              wallet_address: string
+              author_name?: string | null
+              author_avatar_url?: string | null
+              content: string
+              media_urls?: string[] | null
+              tags?: string[] | null
+              pool_enabled?: boolean
+              contract_post_id?: number | null
+              created_at?: string | null
+              updated_at?: string | null
+            }
+            Update: {
+              id?: number
+              wallet_address?: string
+              author_name?: string | null
+              author_avatar_url?: string | null
+              content?: string
+              media_urls?: string[] | null
+              tags?: string[] | null
+              pool_enabled?: boolean
+              contract_post_id?: number | null
+              created_at?: string | null
+              updated_at?: string | null
+            }
+          }
+          social_profiles: {
+            Row: {
+              id: string
+              wallet_address: string
+              display_name: string | null
+              avatar_url: string | null
+              bio: string | null
+              total_posts: number
+              created_at: string | null
+              updated_at: string | null
+            }
+            Insert: {
+              id?: string
+              wallet_address: string
+              display_name?: string | null
+              avatar_url?: string | null
+              bio?: string | null
+              total_posts?: number
+              created_at?: string | null
+              updated_at?: string | null
+            }
+            Update: {
+              id?: string
+              wallet_address?: string
+              display_name?: string | null
+              avatar_url?: string | null
+              bio?: string | null
+              total_posts?: number
+              created_at?: string | null
+              updated_at?: string | null
+            }
+          }
         ratings: {
           Row: {
             id: number

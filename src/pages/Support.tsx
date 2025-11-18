@@ -1,5 +1,6 @@
 import StaticPageLayout from "@/components/layout/StaticPageLayout";
 import { usePageMetadata } from "@/hooks/usePageMetadata";
+import ComingSoonCard from "@/components/ComingSoonCard";
 
 const Support = () => {
   usePageMetadata({
@@ -22,15 +23,12 @@ const Support = () => {
         </header>
 
         <div className="grid gap-6 md:grid-cols-2">
-          <article className="rounded-2xl bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-[#0F172A]">FAQ</h2>
-            <p className="mt-3 leading-relaxed text-[#475569]">
-              A structured knowledge base covering wallet setup, contribution scoring, and reward
-              distribution is coming soon. Stay tuned for the public launch.
-            </p>
-          </article>
+          <ComingSoonCard
+            title="FAQ knowledge base"
+            description="We are porting the internal runbooks into a searchable FAQ that covers wallets, alpha scoring, and distribution. Expect it to appear directly inside this module."
+          />
 
-          <article className="rounded-2xl bg-white p-6 shadow-sm">
+          <article className="rounded-2xl border border-border bg-card p-6 shadow-card-soft">
             <h2 className="text-lg font-semibold text-[#0F172A]">Report an Issue</h2>
             <p className="mt-3 leading-relaxed text-[#475569]">
               Encountered a bug or suspected exploit? Send details via email or GitHub Issues.
@@ -54,7 +52,7 @@ const Support = () => {
           </article>
         </div>
 
-        <article className="rounded-2xl bg-white p-6 shadow-sm">
+        <article className="rounded-2xl border border-border bg-card p-6 shadow-card-soft">
           <h2 className="text-lg font-semibold text-[#0F172A]">System Status</h2>
           <p className="mt-3 leading-relaxed text-[#475569]">
             Real-time uptime dashboards are in progress. For now, follow our social channels or

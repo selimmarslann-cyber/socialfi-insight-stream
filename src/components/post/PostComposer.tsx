@@ -23,6 +23,7 @@ import { supabaseAdminHint } from "@/lib/supabaseClient";
 import { useFeedStore, useWalletStore } from "@/lib/store";
 import type { Post } from "@/types/feed";
 import { ImageGrid } from "./ImageGrid";
+import { createSocialPost } from "@/lib/social";
 
 const hashtagSuggestions = [
   "#Bitcoin",
@@ -202,18 +203,23 @@ export const PostComposer = () => {
     }
   };
 
-  const handleSubmit = async () => {
+    const handleSubmit = async () => {
     if (!canSubmit) {
       setError("Add at least 3 characters or an image");
       return;
     }
+
+      if (!address) {
+        toast.error("Connect your wallet to post on-chain.");
+        return;
+      }
 
     try {
       setIsSubmitting(true);
       setError(null);
 
         const sanitized = sanitizeContent(content.trim());
-        const userId = address ?? "guest";
+          const userId = address;
         const uploadedUrls =
           files.length > 0
             ? await Promise.all(
@@ -223,37 +229,21 @@ export const PostComposer = () => {
               )
             : [];
 
-        const authorLabel = address
-          ? `${address.slice(0, 6)}…${address.slice(-4)}`
-          : "Guest Analyst";
-        const authorUsername = address ? address.slice(-8).toLowerCase() : "guest";
         const tags = extractHashtags(sanitized);
+          const newPost = await createSocialPost({
+            content: sanitized,
+            walletAddress: address,
+            mediaUrls: uploadedUrls,
+            tags,
+          });
 
-        const contractPostId = Date.now();
+          const optimisticPost: Post = {
+            ...newPost,
+            score: estimatedReward,
+          };
 
-        const newPost: Post = {
-          id: `local-${Date.now()}`,
-          author: {
-            username: authorUsername,
-            displayName: authorLabel,
-            score: 0,
-            refCode: refCode || "nop00000",
-            verified: false,
-          },
-          content: sanitized,
-          images: uploadedUrls,
-          attachments: uploadedUrls,
-          score: estimatedReward,
-          createdAt: new Date().toISOString(),
-          contributedAmount: 0,
-          tags,
-          poolEnabled: true,
-          contractPostId,
-          engagement: { upvotes: 0, comments: 0, tips: 0, shares: 0 },
-        };
-
-        prependPost(newPost);
-        await queryClient.invalidateQueries({ queryKey: ["feed"] });
+          prependPost(optimisticPost);
+          await queryClient.invalidateQueries({ queryKey: ["social-feed"] });
 
         toast.success("Contribution shared with the network");
         resetComposer();
@@ -265,30 +255,30 @@ export const PostComposer = () => {
     }
   };
 
-    return (
-      <Card className="rounded-2xl border border-slate-100 bg-white shadow-sm">
+      return (
+        <Card className="rounded-2xl border border-border bg-card shadow-card-soft">
         <div className="flex flex-col gap-5 p-5">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm font-semibold text-slate-900">Share your alpha</p>
-              <p className="text-[11px] text-slate-500">Market outlooks, trading ideas, on-chain insights.</p>
+              <div>
+                <p className="text-sm font-semibold text-foreground">Share your alpha</p>
+                <p className="text-[11px] text-muted-foreground">Market outlooks, trading ideas, on-chain insights.</p>
             </div>
             <div className="inline-flex flex-col items-end">
-              <span className="text-[11px] text-slate-500">Est. NOP reward</span>
-              <span className="text-lg font-semibold text-amber-500">
-                {estimatedReward} <span className="text-sm font-medium text-slate-500">NOP</span>
+                <span className="text-[11px] text-muted-foreground">Est. NOP reward</span>
+                <span className="text-lg font-semibold text-amber-500">
+                  {estimatedReward} <span className="text-sm font-medium text-muted-foreground">NOP</span>
               </span>
             </div>
           </div>
 
-          <ul className="space-y-1 text-[11px] text-slate-500">
+          <ul className="space-y-1 text-[11px] text-muted-foreground">
             <li>• Tag relevant assets using #hashtags</li>
             <li>• Attach up to 4 charts or on-chain screenshots</li>
             <li>• Keep it concise and signal-rich</li>
           </ul>
 
           <div
-            className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 p-4 transition hover:border-indigo-200"
+              className="rounded-2xl border border-dashed border-border bg-muted/40 p-4 transition hover:border-indigo-200"
             onDrop={handleDrop}
             onDragOver={handleDragOver}
           >
@@ -297,7 +287,7 @@ export const PostComposer = () => {
               placeholder="Break down the trade, tag protocols, drop the charts…"
               value={content}
               onChange={handleContentChange}
-              className="min-h-[150px] w-full resize-none border-none bg-transparent p-0 text-sm text-slate-900 placeholder:text-slate-400 focus-visible:ring-0"
+                className="min-h-[150px] w-full resize-none border-none bg-transparent p-0 text-sm text-foreground placeholder:text-muted-foreground focus-visible:ring-0"
             />
           </div>
 
@@ -326,7 +316,7 @@ export const PostComposer = () => {
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-indigo-200"
+                    className="flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 text-sm font-semibold text-foreground shadow-sm transition hover:border-indigo-200"
                   >
                     <Paperclip className="h-4 w-4" />
                     Attach media
@@ -351,7 +341,7 @@ export const PostComposer = () => {
 
             <button
               type="button"
-              className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm transition hover:border-indigo-200"
+              className="flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 text-sm font-semibold text-muted-foreground shadow-sm transition hover:border-indigo-200"
               onClick={() => setShowEmojiPanel((prev) => !prev)}
             >
               <Smile className="h-4 w-4" />
@@ -359,7 +349,7 @@ export const PostComposer = () => {
             </button>
 
             {showEmojiPanel && (
-              <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-2 text-lg shadow-sm">
+              <div className="flex items-center gap-1 rounded-full border border-border bg-surface px-3 py-2 text-lg shadow-sm">
                 {emojiOptions.map((emoji) => (
                   <button
                     key={emoji}
@@ -373,17 +363,17 @@ export const PostComposer = () => {
               </div>
             )}
 
-            <span className="ml-auto text-xs text-slate-400">{content.length}/500</span>
+            <span className="ml-auto text-xs text-muted-foreground">{content.length}/500</span>
           </div>
 
           {previews.length > 0 && (
             <div className="space-y-3">
               <ImageGrid images={previews} onRemove={handleRemoveImage} editable />
-              <div className="flex flex-wrap gap-2 text-xs text-slate-500">
+                <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
                 {files.map((file) => (
                   <span
                     key={file.name + file.size}
-                    className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-1"
+                      className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-3 py-1"
                   >
                     <Upload className="h-3.5 w-3.5 text-indigo-500" />
                     {file.name}
@@ -395,10 +385,10 @@ export const PostComposer = () => {
 
           {error ? <p className="text-sm font-medium text-rose-500">{error}</p> : null}
 
-          <div className="flex flex-col gap-2 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-2 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
             <Button
               variant="ghost"
-              className="h-10 w-full text-sm text-slate-500 hover:text-slate-700 sm:w-auto"
+              className="h-10 w-full text-sm text-muted-foreground hover:text-foreground sm:w-auto"
               onClick={resetComposer}
             >
               <Trash2 className="mr-2 h-4 w-4" />

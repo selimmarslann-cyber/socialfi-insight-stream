@@ -23,12 +23,14 @@ import {
   subscribeTheme,
   type ThemePreference,
 } from "@/lib/theme";
+import { useWalletStore } from "@/lib/store";
 
 export const Header = () => {
   const navigate = useNavigate();
   const [mode, setMode] = useState<ThemePreference>(() => getThemePreference());
   const [isNavOpen, setIsNavOpen] = useState(false);
   const navItems = useSidebarNavItems();
+  const connectedAddress = useWalletStore((state) => state.address);
 
   useEffect(() => {
     setMode(getThemePreference());
@@ -124,10 +126,13 @@ export const Header = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem disabled className="flex flex-col gap-0.5 text-text-muted">
-                  <span>Profile</span>
-                  <span className="text-[10px] uppercase tracking-[0.2em] text-text-muted">Coming soon</span>
-                </DropdownMenuItem>
+                {connectedAddress ? (
+                  <DropdownMenuItem onSelect={() => navigate(`/u/${connectedAddress}`)}>Profile</DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem disabled className="text-text-muted">
+                    Connect wallet to view profile
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onSelect={() => navigate("/settings")}>Settings</DropdownMenuItem>
                 <DropdownMenuItem disabled className="flex flex-col gap-0.5 text-text-muted">
                   <span>Sign Out</span>

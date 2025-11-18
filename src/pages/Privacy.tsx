@@ -50,25 +50,25 @@ const Privacy = () => {
           </p>
         </header>
 
-        <div className="space-y-4">
-          {privacyItems.map((item) => (
-            <article
-              key={item.title}
-              className="rounded-2xl bg-white p-6 leading-relaxed text-[#475569] shadow-sm"
-            >
-              <h2 className="text-lg font-semibold text-[#0F172A]">{item.title}</h2>
-              <p className="mt-3">{item.body}</p>
-            </article>
-          ))}
-        </div>
+          <div className="space-y-4">
+            {privacyItems.map((item) => (
+              <article
+                key={item.title}
+                className="rounded-2xl border border-border bg-card p-6 leading-relaxed text-text-secondary shadow-card-soft"
+              >
+                <h2 className="text-lg font-semibold text-text-primary">{item.title}</h2>
+                <p className="mt-3">{item.body}</p>
+              </article>
+            ))}
+          </div>
 
-          <article className="rounded-2xl bg-white p-6 leading-relaxed text-[#475569] shadow-sm">
-          <h2 className="text-lg font-semibold text-[#0F172A]">Contact</h2>
+            <article className="rounded-2xl border border-border bg-card p-6 leading-relaxed text-text-secondary shadow-card-soft">
+            <h2 className="text-lg font-semibold text-text-primary">Contact</h2>
           <p className="mt-3">
               For privacy enquiries or to exercise your rights, contact us via{" "}
               <Link
                 to="/contact"
-                className="font-semibold text-[#0F172A] transition hover:underline"
+                  className="font-semibold text-text-primary transition hover:underline"
               >
                 /contact
               </Link>

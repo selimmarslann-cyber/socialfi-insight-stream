@@ -125,10 +125,10 @@ const Tokenomics = () => {
 
       <DashboardCard className="space-y-5">
         <DashboardSectionTitle label="Rewards" title="Emissions & Sustainability" />
-        <div className="grid gap-4 lg:grid-cols-2">
-          <section className="rounded-2xl border border-slate-100 bg-white/80 p-5">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Emission Controls</h3>
-            <ul className="mt-3 space-y-3 text-sm text-slate-600">
+          <div className="grid gap-4 lg:grid-cols-2">
+            <section className="rounded-2xl border border-border bg-card p-5 shadow-card-soft">
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-text-muted">Emission Controls</h3>
+              <ul className="mt-3 space-y-3 text-sm text-text-secondary">
               {emissionBullets.map((item) => (
                 <li key={item.text}>
                   <div className="flex gap-3">
@@ -136,7 +136,7 @@ const Tokenomics = () => {
                     <span>{item.text}</span>
                   </div>
                   {item.subpoints.length > 0 ? (
-                    <ul className="mt-2 space-y-1 pl-6 text-[13px] text-slate-500">
+                      <ul className="mt-2 space-y-1 pl-6 text-[13px] text-muted-foreground">
                       {item.subpoints.map((subpoint) => (
                         <li key={subpoint} className="list-disc">
                           {subpoint}
@@ -148,9 +148,9 @@ const Tokenomics = () => {
               ))}
             </ul>
           </section>
-          <section className="rounded-2xl border border-slate-100 bg-white/80 p-5">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Sustainability</h3>
-            <ul className="mt-3 space-y-3 text-sm text-slate-600">
+            <section className="rounded-2xl border border-border bg-card p-5 shadow-card-soft">
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-text-muted">Sustainability</h3>
+              <ul className="mt-3 space-y-3 text-sm text-text-secondary">
               {sustainabilityBullets.map((bullet) => (
                 <li key={bullet} className="flex gap-3">
                   <span className="mt-1 h-1.5 w-1.5 rounded-full bg-purple-500" />

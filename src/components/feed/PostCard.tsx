@@ -1,20 +1,17 @@
-import { useMemo } from 'react';
-import {
-  BadgeCheck,
-  Clock,
-  Heart,
-  MessageCircle,
-  Share2,
-  Coins,
-} from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Post } from '@/types/feed';
-import { ImageGrid } from '@/components/post/ImageGrid';
-import { AIInsightStrip } from '@/components/ai/AIInsightStrip';
-import { toast } from 'sonner';
-import { TradeActions } from '@/components/pool/TradeActions';
+import { useMemo, useRef, useState } from "react";
+import { BadgeCheck, Clock, Heart, MessageCircle, Share2, Coins } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Post } from "@/types/feed";
+import { ImageGrid } from "@/components/post/ImageGrid";
+import { AIInsightStrip } from "@/components/ai/AIInsightStrip";
+import { toast } from "sonner";
+import { TradeActions } from "@/components/pool/TradeActions";
+import { togglePostLike, createPostComment } from "@/lib/social";
+import { useWalletStore } from "@/lib/store";
+import { cn } from "@/lib/utils";
 
 interface PostCardProps {
   post: Post;
@@ -42,16 +39,97 @@ export const PostCard = ({ post }: PostCardProps) => {
       post.poolEnabled === true && typeof post.contractPostId === "number"
         ? post.contractPostId
         : null;
-  const handleAction = (action: "upvote" | "comment" | "share" | "tip") => {
+  const funded = (post.contributedAmount ?? 0) > 0;
+  const walletAddress = post.walletAddress;
+  const viewerAddress = useWalletStore((state) => state.address);
+  const [liked, setLiked] = useState(post.likedByViewer ?? false);
+  const [isLiking, setIsLiking] = useState(false);
+  const [commentValue, setCommentValue] = useState("");
+  const [isCommenting, setIsCommenting] = useState(false);
+  const [engagement, setEngagement] = useState(post.engagement);
+  const [comments, setComments] = useState(post.comments ?? []);
+  const commentInputRef = useRef<HTMLTextAreaElement>(null);
+  const numericPostId = Number(post.id);
+  const canMutatePost = Number.isFinite(numericPostId) && !Number.isNaN(numericPostId);
+
+  const focusCommentBox = () => {
+    commentInputRef.current?.focus();
+  };
+
+  const shortenWallet = (addressValue?: string) => {
+    if (!addressValue) return "Anon";
+    return `${addressValue.slice(0, 6)}…${addressValue.slice(-4)}`;
+  };
+
+  const handleLike = async () => {
+    if (!viewerAddress) {
+      toast.error("Connect your wallet to like posts.");
+      return;
+    }
+    if (!canMutatePost) {
+      toast.info("Demo posts cannot record likes.");
+      return;
+    }
+    try {
+      setIsLiking(true);
+      const { liked: next } = await togglePostLike(numericPostId, viewerAddress);
+      setLiked(next);
+      setEngagement((prev) => ({
+        ...prev,
+        upvotes: Math.max(0, prev.upvotes + (next ? 1 : -1)),
+      }));
+    } catch (error) {
+      toast.error("Unable to update like at the moment.");
+      console.error(error);
+    } finally {
+      setIsLiking(false);
+    }
+  };
+
+  const handleCommentSubmit = async () => {
+    const value = commentValue.trim();
+    if (!value) {
+      toast.error("Write a quick note before sending.");
+      return;
+    }
+    if (!viewerAddress) {
+      toast.error("Connect your wallet to comment.");
+      return;
+    }
+    if (!canMutatePost) {
+      toast.info("Demo posts cannot record comments.");
+      return;
+    }
+    try {
+      setIsCommenting(true);
+      const created = await createPostComment({
+        postId: numericPostId,
+        walletAddress: viewerAddress,
+        content: value,
+      });
+      if (created) {
+        setComments((prev) => [...prev, created]);
+        setEngagement((prev) => ({
+          ...prev,
+          comments: prev.comments + 1,
+        }));
+        setCommentValue("");
+      }
+    } catch (error) {
+      toast.error("Unable to add comment right now.");
+      console.error(error);
+    } finally {
+      setIsCommenting(false);
+    }
+  };
+
+  const handleSecondaryAction = (action: "share" | "tip") => {
     const labels: Record<typeof action, string> = {
-      upvote: "Upvotes",
-      comment: "Comments",
       share: "Shares",
       tip: "Tips",
     };
     toast.info(`${labels[action]} will sync to on-chain interactions soon.`);
   };
-  const funded = (post.contributedAmount ?? 0) > 0;
 
     return (
       <article className="rounded-2xl bg-[color:var(--bg-card)] p-6 text-[color:var(--text-primary)] shadow-lg ring-1 ring-[color:var(--ring)] transition will-change-transform hover:translate-y-[1px] hover:ring-indigo-500/30">
@@ -81,11 +159,11 @@ export const PostCard = ({ post }: PostCardProps) => {
             </p>
           </div>
         </div>
-        {funded && (
-          <Badge className="rounded-full bg-[#F5C76A] text-xs font-semibold uppercase tracking-wide text-slate-800 shadow-sm">
-            Funded
-          </Badge>
-        )}
+          {funded ? (
+            <Badge className="rounded-full bg-[color:rgba(245,199,106,0.18)] text-xs font-semibold uppercase tracking-wide text-[color:var(--color-chip-gold)] shadow-sm">
+              Funded
+            </Badge>
+          ) : null}
       </header>
 
         <div className="mt-4 space-y-4">
@@ -93,10 +171,10 @@ export const PostCard = ({ post }: PostCardProps) => {
 
           {media.length > 0 && <ImageGrid images={media} />}
 
-        {hashtags.length > 0 && (
-            <div className="flex flex-wrap gap-2 text-xs text-indigo-400">
+          {hashtags.length > 0 && (
+              <div className="flex flex-wrap gap-2 text-xs text-accent">
             {hashtags.map((tag) => (
-              <span key={tag} className="rounded-full bg-indigo-50 px-3 py-1 font-semibold">
+                <span key={tag} className="rounded-full bg-accent/10 px-3 py-1 font-semibold">
                 {tag}
               </span>
             ))}
@@ -106,45 +184,49 @@ export const PostCard = ({ post }: PostCardProps) => {
 
         <footer className="mt-5 space-y-4 text-xs text-[color:var(--text-secondary)]">
         <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex flex-wrap gap-3">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-9 gap-2 rounded-full text-[color:var(--text-secondary)] hover:bg-indigo-500/10"
-                onClick={() => handleAction("upvote")}
-              >
-              <Heart className="h-4 w-4" />
-              {post.engagement.upvotes}
-            </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-9 gap-2 rounded-full text-[color:var(--text-secondary)] hover:bg-indigo-500/10"
-                onClick={() => handleAction("comment")}
-              >
-              <MessageCircle className="h-4 w-4" />
-              {post.engagement.comments}
-            </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-9 gap-2 rounded-full text-[color:var(--text-secondary)] hover:bg-indigo-500/10"
-                onClick={() => handleAction("share")}
-              >
-              <Share2 className="h-4 w-4" />
-              {post.engagement.shares}
-            </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-9 gap-2 rounded-full text-[color:var(--text-secondary)] hover:bg-indigo-500/10"
-                onClick={() => handleAction("tip")}
-              >
-              <Coins className="h-4 w-4 text-[#F5C76A]" />
-              {post.engagement.tips}
-            </Button>
+              <div className="flex flex-wrap gap-3">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    "h-9 gap-2 rounded-full text-[color:var(--text-secondary)] hover:bg-accent/10",
+                    liked && "bg-accent/10 text-accent",
+                  )}
+                  onClick={handleLike}
+                  disabled={isLiking}
+                >
+                  <Heart className={cn("h-4 w-4", liked && "fill-current")} />
+                  {engagement.upvotes}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-9 gap-2 rounded-full text-[color:var(--text-secondary)] hover:bg-accent/10"
+                  onClick={focusCommentBox}
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  {engagement.comments}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-9 gap-2 rounded-full text-[color:var(--text-secondary)] hover:bg-accent/10"
+                  onClick={() => handleSecondaryAction("share")}
+                >
+                  <Share2 className="h-4 w-4" />
+                  {post.engagement.shares}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-9 gap-2 rounded-full text-[color:var(--text-secondary)] hover:bg-accent/10"
+                  onClick={() => handleSecondaryAction("tip")}
+                >
+                  <Coins className="h-4 w-4 text-[color:var(--color-chip-gold)]" />
+                  {post.engagement.tips}
+                </Button>
           </div>
-            <div className="text-xs font-semibold text-indigo-400">+{post.score} pts</div>
+              <div className="text-xs font-semibold text-indigo-400">+{post.score} pts</div>
         </div>
         <AIInsightStrip
           signal={post.aiSignal}
@@ -152,8 +234,45 @@ export const PostCard = ({ post }: PostCardProps) => {
           mmActivity={post.aiMmActivity}
           score={post.aiScore}
         />
+          <div className="space-y-3 rounded-2xl border border-border/60 bg-muted/20 p-3">
+            {comments.length > 0 ? (
+              <div className="space-y-2">
+                {comments.slice(-3).map((comment) => (
+                  <div key={comment.id} className="rounded-xl bg-card/60 px-3 py-2 text-xs text-muted-foreground">
+                    <span className="font-semibold text-foreground">{shortenWallet(comment.walletAddress)}</span>
+                    <span className="mx-2 text-muted-foreground/60">•</span>
+                    <span>{comment.content}</span>
+                  </div>
+                ))}
+                {engagement.comments > comments.length ? (
+                  <p className="text-[11px] text-muted-foreground">
+                    +{engagement.comments - comments.length} more comments
+                  </p>
+                ) : null}
+              </div>
+            ) : (
+              <p className="text-[11px] text-muted-foreground">Be the first to comment on this alpha.</p>
+            )}
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Textarea
+                ref={commentInputRef}
+                placeholder="Add your market note…"
+                value={commentValue}
+                onChange={(event) => setCommentValue(event.target.value)}
+                className="min-h-[70px] flex-1 bg-transparent text-sm"
+              />
+              <Button
+                size="sm"
+                className="rounded-full px-6"
+                onClick={handleCommentSubmit}
+                disabled={isCommenting || commentValue.trim().length === 0}
+              >
+                {isCommenting ? "Posting…" : "Comment"}
+              </Button>
+            </div>
+          </div>
             {contractPostId !== null ? (
-              <TradeActions contractPostId={contractPostId} className="bg-white/80" />
+                <TradeActions contractPostId={contractPostId} className="bg-card/90" />
             ) : null}
       </footer>
     </article>

@@ -21,10 +21,10 @@ function Rank({ index }: { index: number }) {
     'bg-gradient-to-br from-slate-300 to-slate-500 text-white',
     'bg-gradient-to-br from-amber-600 to-amber-700 text-white',
   ];
-  const baseClass =
-    index < 3
-      ? medalStyles[index]
-      : 'border border-slate-200 bg-white text-slate-500';
+    const baseClass =
+      index < 3
+        ? medalStyles[index]
+        : 'border border-border bg-card text-muted-foreground';
 
   return (
     <div className={cn('grid h-8 w-8 place-items-center rounded-full text-xs font-semibold shadow-sm', baseClass)}>
@@ -35,8 +35,8 @@ function Rank({ index }: { index: number }) {
 
 function Avatar({ address }: { address: string }) {
   const init = address.slice(2, 4).toUpperCase();
-  return (
-    <div className="grid h-9 w-9 place-items-center rounded-full border border-slate-100 bg-slate-100 font-semibold text-slate-700">
+    return (
+      <div className="grid h-9 w-9 place-items-center rounded-full border border-border bg-muted font-semibold text-foreground">
       {init}
     </div>
   );
@@ -92,16 +92,16 @@ export default function TopUsersCard({
     <DashboardCard className={cn("flex h-full flex-col gap-4", className)}>
       <div className="flex flex-col gap-1.5">
         <DashboardSectionTitle label="Protocol" title={title} />
-        <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-slate-400">
+          <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
           Ranked by Alpha Score (7d volume)
         </p>
       </div>
 
-      <div className="flex flex-1 flex-col divide-y divide-slate-100">
+        <div className="flex flex-1 flex-col divide-y divide-border-subtle/50">
         {isLoading
           ? Array.from({ length: limit }).map((_, index) => (
-              <div key={`alpha-skeleton-${index}`} className="px-1 py-2.5">
-                <div className="h-12 rounded-2xl bg-slate-50" />
+                <div key={`alpha-skeleton-${index}`} className="px-1 py-2.5">
+                  <div className="h-12 rounded-2xl bg-muted/40" />
               </div>
             ))
           : null}
@@ -116,10 +116,10 @@ export default function TopUsersCard({
                   <Rank index={index} />
                   <Avatar address={user.walletAddress} />
                   <div className="flex flex-col">
-                    <span className="text-xs font-semibold text-slate-900">
+                      <span className="text-xs font-semibold text-foreground">
                       {shortId(user.walletAddress)}
                     </span>
-                    <span className="text-[11px] text-slate-500">
+                      <span className="text-[11px] text-muted-foreground">
                       {user.trades} trades • {volumeFormatter.format(user.volumeNop)} NOP
                     </span>
                   </div>
@@ -131,8 +131,8 @@ export default function TopUsersCard({
             ))
           : null}
 
-        {Array.isArray(users) && users.length === 0 && !isLoading ? (
-          <div className="px-1 py-4 text-sm text-slate-500">
+          {Array.isArray(users) && users.length === 0 && !isLoading ? (
+            <div className="px-1 py-4 text-sm text-muted-foreground">
             No on-chain activity yet. Trade a pool to appear here.
           </div>
         ) : null}

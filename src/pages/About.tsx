@@ -25,28 +25,28 @@ const About = () => {
           </p>
         </header>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          <article className="rounded-2xl bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-[#0F172A]">Our Ambition</h2>
-            <p className="mt-3 leading-relaxed text-[#475569]">
+          <div className="grid gap-6 md:grid-cols-2">
+            <article className="rounded-2xl border border-border bg-card p-6 shadow-card-soft">
+              <h2 className="text-lg font-semibold text-text-primary">Our Ambition</h2>
+              <p className="mt-3 leading-relaxed text-text-secondary">
               Build an AI-directed social fabric that values meaningful research,
               insights, and participation. Every action is scored by intelligent systems
               and anchored on-chain so value creation remains transparent, measurable,
               and composable across Web3.
             </p>
           </article>
-          <article className="rounded-2xl bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-[#0F172A]">Core Capabilities</h2>
-            <ul className="mt-3 space-y-2 leading-relaxed text-[#475569]">
+            <article className="rounded-2xl border border-border bg-card p-6 shadow-card-soft">
+              <h2 className="text-lg font-semibold text-text-primary">Core Capabilities</h2>
+              <ul className="mt-3 space-y-2 leading-relaxed text-text-secondary">
               <li>• AI Contribution Scoring for real-time context and quality.</li>
               <li>• Reward Engine powered by the NOP token.</li>
               <li>• On-chain burn pressure to reinforce long-term value.</li>
               <li>• Integrated wallet and boosted task rails.</li>
             </ul>
           </article>
-          <article className="rounded-2xl bg-white p-6 shadow-sm md:col-span-2">
-            <h2 className="text-lg font-semibold text-[#0F172A]">Design Principles</h2>
-            <p className="mt-3 leading-relaxed text-[#475569]">
+            <article className="rounded-2xl border border-border bg-card p-6 shadow-card-soft md:col-span-2">
+              <h2 className="text-lg font-semibold text-text-primary">Design Principles</h2>
+              <p className="mt-3 leading-relaxed text-text-secondary">
               We obsess over speed for signal discovery, security for treasury flows,
               and radical transparency for governance and analytics. By merging AI with
               crypto-economic tooling, we give contributors a premium environment that
@@ -55,10 +55,10 @@ const About = () => {
           </article>
         </div>
 
-        <p className="leading-relaxed text-[#475569]">
+          <p className="leading-relaxed text-text-secondary">
           <Link
             to="/whitepaper"
-            className="font-semibold text-[#0F172A] transition hover:underline"
+              className="font-semibold text-text-primary transition hover:underline"
           >
             Read the Whitepaper →
           </Link>
