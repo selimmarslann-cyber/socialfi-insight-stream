@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -23,6 +24,20 @@ export const FeedList = () => {
     initialPageParam: undefined as string | undefined,
   });
 
+  const posts = useMemo(() => {
+    const remote = data?.pages.flatMap((page) => page.items) ?? [];
+    const combined = [...userPosts, ...remote];
+    const getTimestamp = (post: (typeof combined)[number]) => {
+      const created =
+        (post as { createdAt?: string }).createdAt ??
+        (post as { timestamp?: string }).timestamp;
+      if (!created) return 0;
+      const ms = new Date(created).getTime();
+      return Number.isFinite(ms) ? ms : 0;
+    };
+    return combined.sort((a, b) => getTimestamp(b) - getTimestamp(a));
+  }, [userPosts, data]);
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -40,9 +55,6 @@ export const FeedList = () => {
       </div>
     );
   }
-
-  const remotePosts = data?.pages.flatMap((page) => page.items) ?? [];
-  const posts = [...userPosts, ...remotePosts];
 
   return (
     <div className="space-y-5">

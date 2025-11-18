@@ -15,6 +15,8 @@ function ContributeCard({ item }: ContributeCardProps) {
   const [isSyncingPosition, setIsSyncingPosition] = useState(false);
   const contractPostId = typeof item.contractPostId === "number" ? item.contractPostId : null;
   const isPoolActive = item.poolEnabled === true && contractPostId !== null;
+  const weeklyVolume =
+    typeof item.weeklyVolumeNop === "number" ? item.weeklyVolumeNop : null;
 
   const refreshPosition = useCallback(async () => {
     if (!isPoolActive || contractPostId === null) return;
@@ -44,6 +46,16 @@ function ContributeCard({ item }: ContributeCardProps) {
     () => formatUnits(positionWei ?? 0n, 18),
     [positionWei],
   );
+  const volumeFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat(undefined, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
+      }),
+    [],
+  );
+  const formattedWeeklyVolume =
+    weeklyVolume === null ? null : volumeFormatter.format(weeklyVolume);
 
   return (
     <Card className="space-y-5 rounded-3xl border border-slate-200/70 bg-white/95 p-5 shadow-sm">
@@ -60,15 +72,23 @@ function ContributeCard({ item }: ContributeCardProps) {
             <p className="text-xs font-semibold text-slate-500">by {item.author}</p>
           ) : null}
         </div>
-        <div className="flex items-center gap-4">
-          {typeof item.weeklyScore === "number" ? (
-            <div className="text-right">
-              <p className="text-xs text-slate-500">Weekly score</p>
-              <p className="text-2xl font-semibold text-slate-900">
-                {item.weeklyScore}
-              </p>
-            </div>
-          ) : null}
+          <div className="flex items-center gap-4">
+            {formattedWeeklyVolume ? (
+              <div className="text-right">
+                <p className="text-xs text-slate-500">7d volume</p>
+                <p className="text-2xl font-semibold text-slate-900">
+                  {formattedWeeklyVolume}
+                  <span className="ml-1 text-sm font-medium text-slate-500">NOP</span>
+                </p>
+              </div>
+            ) : typeof item.weeklyScore === "number" ? (
+              <div className="text-right">
+                <p className="text-xs text-slate-500">Weekly score</p>
+                <p className="text-2xl font-semibold text-slate-900">
+                  {item.weeklyScore}
+                </p>
+              </div>
+            ) : null}
           <Badge
             variant={isPoolActive ? "secondary" : "outline"}
             className={isPoolActive ? "bg-emerald-50 text-emerald-600" : ""}

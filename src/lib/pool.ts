@@ -3,6 +3,7 @@ import { BrowserProvider, Contract, JsonRpcProvider, formatUnits, parseUnits } f
 import poolArtifact from "@/abi/NOPSocialPool.json";
 import erc20Abi from "@/abi/erc20.json";
 import { apiClient } from "@/lib/axios";
+import { logTrade } from "@/lib/reputation";
 
 const poolAbi = ((poolArtifact as { abi?: InterfaceAbi }).abi ?? (poolArtifact as InterfaceAbi)) as InterfaceAbi;
 const tokenAbi = erc20Abi as InterfaceAbi;
@@ -84,18 +85,48 @@ export async function approveToken(maxAmount?: string | bigint) {
 
 export async function buyShares(postId: number, amountNop: number) {
   const signer = await getSigner();
+  const user = await signer.getAddress();
   const pool = getPoolContractInstance(signer);
   const amount = parseUnits(String(amountNop), 18);
   const tx = await pool.depositNOP(postId, amount);
-  return tx.wait();
+  const receipt = await tx.wait();
+
+  try {
+    await logTrade({
+      walletAddress: user,
+      postId,
+      side: "buy",
+      amountNop: amount,
+      txHash: tx.hash,
+    });
+  } catch (error) {
+    console.warn("[pool] Failed to log BUY trade", error);
+  }
+
+  return receipt;
 }
 
 export async function sellShares(postId: number, amountNop: number) {
   const signer = await getSigner();
+  const user = await signer.getAddress();
   const pool = getPoolContractInstance(signer);
   const amount = parseUnits(String(amountNop), 18);
   const tx = await pool.withdrawNOP(postId, amount);
-  return tx.wait();
+  const receipt = await tx.wait();
+
+  try {
+    await logTrade({
+      walletAddress: user,
+      postId,
+      side: "sell",
+      amountNop: amount,
+      txHash: tx.hash,
+    });
+  } catch (error) {
+    console.warn("[pool] Failed to log SELL trade", error);
+  }
+
+  return receipt;
 }
 
 export async function depositToContribute(postId: number, amount: number) {
