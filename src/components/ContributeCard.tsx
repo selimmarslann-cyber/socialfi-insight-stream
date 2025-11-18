@@ -9,7 +9,7 @@ type ContributeCardProps = {
   item: Contribute;
 };
 
-export function ContributeCard({ item }: ContributeCardProps) {
+function ContributeCard({ item }: ContributeCardProps) {
   const [amount, setAmount] = useState(100);
   const [txState, setTxState] = useState<null | "buy" | "sell">(null);
   const [positionWei, setPositionWei] = useState("0");
