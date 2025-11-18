@@ -13,35 +13,28 @@ type ContributeCardProps = {
 function ContributeCard({ item }: ContributeCardProps) {
   const [positionWei, setPositionWei] = useState<bigint>(0n);
   const [isSyncingPosition, setIsSyncingPosition] = useState(false);
-
-  const isPoolActive =
-    item.poolEnabled === true && typeof item.contractPostId === "number";
+  const contractPostId = typeof item.contractPostId === "number" ? item.contractPostId : null;
+  const isPoolActive = item.poolEnabled === true && contractPostId !== null;
 
   const refreshPosition = useCallback(async () => {
-    if (!isPoolActive) return;
+    if (!isPoolActive || contractPostId === null) return;
     if (typeof window === "undefined" || !window.ethereum) return;
 
     try {
       setIsSyncingPosition(true);
       const accounts = (await window.ethereum.request({
-        method: "eth_requestAccounts",
+        method: "eth_accounts",
       })) as string[];
       const address = accounts?.[0];
       if (!address) return;
-      const result = await getUserPosition(address, item.contractPostId);
-      const rawValue =
-        typeof result === "bigint"
-          ? result
-          : typeof result === "object" && result !== null && "toString" in result
-          ? BigInt((result as { toString: () => string }).toString())
-          : BigInt(result ?? 0);
-      setPositionWei(rawValue);
+      const result = await getUserPosition(contractPostId, address);
+      setPositionWei(result?.shares ?? 0n);
     } catch (error) {
       console.error("[ContributeCard] Failed to fetch position", error);
     } finally {
       setIsSyncingPosition(false);
     }
-  }, [isPoolActive, item.contractPostId]);
+  }, [contractPostId, isPoolActive]);
 
   useEffect(() => {
     void refreshPosition();
@@ -105,11 +98,11 @@ function ContributeCard({ item }: ContributeCardProps) {
       ) : null}
 
       {isPoolActive ? (
-        <TradeActions
-          contractPostId={item.contractPostId}
-          onSettled={refreshPosition}
-          className="bg-slate-50/80"
-        />
+          <TradeActions
+            contractPostId={contractPostId}
+            onSettled={refreshPosition}
+            className="bg-slate-50/80"
+          />
       ) : (
         <div className="rounded-2xl border border-dashed border-slate-200 p-4 text-sm text-slate-500">
           Pool will open soon. Follow this contribution for launch updates.

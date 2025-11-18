@@ -8,9 +8,9 @@ export const AppShell = () => {
       <Header />
       <div className="px-4 pb-12 pt-6 sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-6xl gap-4 lg:gap-6">
-          <div className="hidden w-[240px] shrink-0 md:block">
+          <aside className="hidden w-[240px] shrink-0 md:flex md:flex-col lg:w-64">
             <LeftRail />
-          </div>
+          </aside>
           <main className="flex-1">
             <Outlet />
           </main>

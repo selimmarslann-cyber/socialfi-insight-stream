@@ -5,6 +5,8 @@ import { fetchContributes } from "@/lib/contributes";
 import type { Contribute } from "@/lib/types";
 import { DashboardCard } from "@/components/layout/visuals/DashboardCard";
 import { DashboardSectionTitle } from "@/components/layout/visuals/DashboardSectionTitle";
+import BoostedTasks from "@/components/BoostedTasks";
+import TokenBurn from "@/components/TokenBurn";
 
 const sortByWeeklyScore = (items: Contribute[]) =>
   [...items].sort((a, b) => (b.weeklyScore ?? 0) - (a.weeklyScore ?? 0));
@@ -45,45 +47,55 @@ const Contributes = () => {
   const showEmptyState = !isLoading && !isError && contributes.length === 0;
   const showCards = !isLoading && contributes.length > 0;
 
-  return (
-    <div className="space-y-4">
-      <DashboardCard className="space-y-3">
-        <DashboardSectionTitle label="Pools" title="Contributes" />
-        <p className="text-sm-2 leading-relaxed text-text-secondary">
-          Follow the latest community pools, view on-chain BUY / SELL flows, and explore weekly
-          popular positions.
-        </p>
-      </DashboardCard>
-
-      {isLoading ? (
-        <DashboardCard>
-          <p className="text-sm-2 text-text-muted">Loading pools…</p>
-        </DashboardCard>
-      ) : null}
-
-      {isError ? (
-        <DashboardCard>
-          <p className="text-sm-2 text-destructive">
-            Could not load pools from the API. Showing the demo trading pool instead.
+    return (
+      <div className="space-y-4 lg:space-y-6">
+        <DashboardCard className="space-y-3">
+          <DashboardSectionTitle label="Pools" title="Contributes" />
+          <p className="text-sm-2 leading-relaxed text-text-secondary">
+            Follow the latest community pools, view on-chain BUY / SELL flows, and explore weekly popular positions.
           </p>
         </DashboardCard>
-      ) : null}
 
-      {showEmptyState ? (
-        <DashboardCard>
-          <p className="text-sm-2 text-text-muted">Henüz aktif katkı bulunmuyor.</p>
-        </DashboardCard>
-      ) : null}
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,2.1fr)_minmax(0,1.1fr)] lg:gap-6">
+          <div className="space-y-4">
+            {isLoading ? (
+              <DashboardCard>
+                <p className="text-sm-2 text-text-muted">Loading pools…</p>
+              </DashboardCard>
+            ) : null}
 
-      {showCards ? (
-        <div className="grid gap-4">
-          {contributes.map((item) => (
-            <ContributeCard key={item.id} item={item} />
-          ))}
+            {isError ? (
+              <DashboardCard>
+                <p className="text-sm-2 text-destructive">
+                  Could not load pools from the API. Showing the demo trading pool instead.
+                </p>
+              </DashboardCard>
+            ) : null}
+
+            {showEmptyState ? (
+              <DashboardCard>
+                <p className="text-sm-2 text-text-muted">Henüz aktif katkı bulunmuyor.</p>
+              </DashboardCard>
+            ) : null}
+
+            {showCards ? (
+              <div className="grid gap-4">
+                {contributes.map((item) => (
+                  <ContributeCard key={item.id} item={item} />
+                ))}
+              </div>
+            ) : null}
+          </div>
+
+          <aside className="hidden space-y-4 lg:block">
+            <BoostedTasks />
+            <div className="hidden xl:block">
+              <TokenBurn />
+            </div>
+          </aside>
         </div>
-      ) : null}
-    </div>
-  );
+      </div>
+    );
 };
 
 export default Contributes;
