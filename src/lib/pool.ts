@@ -1,7 +1,11 @@
-import { BrowserProvider, Contract, JsonRpcProvider } from "ethers";
+import { BrowserProvider, Contract, JsonRpcProvider, parseUnits } from "ethers";
+import poolAbi from "@/abi/NOPSocialPool.json";
+import erc20Abi from "@/abi/erc20.json";
 import { FACTORY_ADDRESS, CHAIN_ID } from "./config";
 
-const PUBLIC_ZKSYNC_RPC = "https://mainnet.era.zksync.io";
+const PUBLIC_ZKSYNC_RPC = import.meta.env.VITE_RPC_URL || "https://mainnet.era.zksync.io";
+const POOL_ADDRESS = import.meta.env.VITE_NOP_POOL_ADDRESS as string | undefined;
+const NOP_ADDRESS = import.meta.env.VITE_NOP_TOKEN_ADDRESS as string | undefined;
 
 const FACTORY_ABI = [
   "function previewBuyCost(uint256,uint256) view returns (uint256)",
@@ -12,17 +16,18 @@ const FACTORY_ABI = [
 const SHARES_ABI = ["function balanceOf(address,uint256) view returns (uint256)"] as const;
 
 type BrowserProviderSource = ConstructorParameters<typeof BrowserProvider>[0];
-
 type ReadProvider = BrowserProvider | JsonRpcProvider;
 
 let providerPromise: Promise<ReadProvider> | null = null;
 
+const getInjectedSource = (): BrowserProviderSource | null => {
+  if (typeof window === "undefined") return null;
+  return ((window as Window & { ethereum?: unknown }).ethereum as BrowserProviderSource | undefined) ?? null;
+};
+
 const resolveProvider = (): Promise<ReadProvider> => {
   if (!providerPromise) {
-    const injected =
-      typeof window === "undefined"
-        ? null
-        : ((window as Window & { ethereum?: unknown }).ethereum as BrowserProviderSource | undefined) ?? null;
+    const injected = getInjectedSource();
 
     // Prefer wallet provider when available, otherwise fall back to public RPC.
     if (injected) {
@@ -40,6 +45,40 @@ const getFactoryContract = async () => {
 };
 
 const toBigInt = (value: number | string | bigint): bigint => BigInt(value);
+
+if (!POOL_ADDRESS) {
+  console.warn("VITE_NOP_POOL_ADDRESS is not set");
+}
+if (!NOP_ADDRESS) {
+  console.warn("VITE_NOP_TOKEN_ADDRESS is not set");
+}
+
+const requireConfiguredAddress = (value: string | undefined, label: string) => {
+  if (!value) {
+    throw new Error(`${label} is not configured`);
+  }
+  return value;
+};
+
+const getPoolContract = (signerOrProvider: any) => {
+  const address = requireConfiguredAddress(POOL_ADDRESS, "Pool address");
+  return new Contract(address, poolAbi as any, signerOrProvider);
+};
+
+const getNopTokenContract = (signerOrProvider: any) => {
+  const address = requireConfiguredAddress(NOP_ADDRESS, "NOP token address");
+  return new Contract(address, erc20Abi as any, signerOrProvider);
+};
+
+const getProviderAndSigner = async () => {
+  const injected = getInjectedSource();
+  if (!injected) {
+    throw new Error("No injected wallet found");
+  }
+  const provider = new BrowserProvider(injected, CHAIN_ID);
+  const signer = await provider.getSigner();
+  return { provider, signer };
+};
 
 export const getPostState = async (postId: number | string | bigint) => {
   const factory = await getFactoryContract();
@@ -75,4 +114,33 @@ export const getUserShares = async (user: string, postId: number | string | bigi
   const provider = await resolveProvider();
   const sharesContract = new Contract(token, SHARES_ABI, provider);
   return (await sharesContract.balanceOf(user, toBigInt(postId))) as bigint;
+};
+
+export const depositToContribute = async (postId: number | string | bigint, amount: string | number) => {
+  const { signer } = await getProviderAndSigner();
+  const parsedAmount = parseUnits(String(amount), 18);
+  const poolAddress = requireConfiguredAddress(POOL_ADDRESS, "Pool address");
+
+  const token = getNopTokenContract(signer);
+  const approveTx = await token.approve(poolAddress, parsedAmount);
+  await approveTx.wait();
+
+  const pool = getPoolContract(signer);
+  const tx = await pool.depositNOP(toBigInt(postId), parsedAmount);
+  return tx.wait();
+};
+
+export const withdrawFromContribute = async (postId: number | string | bigint, amount: string | number) => {
+  const { signer } = await getProviderAndSigner();
+  const parsedAmount = parseUnits(String(amount), 18);
+  const pool = getPoolContract(signer);
+  const tx = await pool.withdrawNOP(toBigInt(postId), parsedAmount);
+  return tx.wait();
+};
+
+export const getUserPosition = async (userAddress: string, postId: number | string | bigint): Promise<bigint> => {
+  if (!userAddress) return 0n;
+  const provider = await resolveProvider();
+  const pool = getPoolContract(provider);
+  return (await pool.getPosition(userAddress, toBigInt(postId))) as bigint;
 };

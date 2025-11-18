@@ -1,10 +1,15 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { formatUnits } from "ethers";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import type { Contribute } from "@/lib/types";
 import { DashboardCard } from "@/components/layout/visuals/DashboardCard";
 import { RegisterPositionDialog } from "@/components/protocol/RegisterPositionDialog";
 import { StatusPill } from "@/components/ui/status-pill";
+import { depositToContribute, withdrawFromContribute, getUserPosition } from "@/lib/pool";
+import { useWalletStore } from "@/lib/store";
 
 type ContributeCardProps = {
   item: Contribute;
@@ -22,8 +27,70 @@ const getStatusLabel = (poolEnabled?: boolean, contractPostId?: number | null) =
 
 export const ContributeCard = ({ item }: ContributeCardProps) => {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [amount, setAmount] = useState("100");
+  const [txState, setTxState] = useState<null | "buy" | "sell">(null);
+  const [positionWei, setPositionWei] = useState<bigint | null>(null);
+  const [positionLoading, setPositionLoading] = useState(false);
+  const { address, connected } = useWalletStore();
+  const contractPostId = item.contractPostId ?? undefined;
   const poolActive = item.poolEnabled === true && item.contractPostId !== null;
   const status = getStatusLabel(item.poolEnabled, item.contractPostId);
+
+  const refreshPosition = useCallback(async () => {
+    if (!connected || !address || !contractPostId) {
+      setPositionWei(null);
+      setPositionLoading(false);
+      return;
+    }
+    setPositionLoading(true);
+    try {
+      const value = await getUserPosition(address, contractPostId);
+      setPositionWei(value);
+    } catch (error) {
+      console.error("Failed to load on-chain position", error);
+    } finally {
+      setPositionLoading(false);
+    }
+  }, [address, connected, contractPostId]);
+
+  useEffect(() => {
+    refreshPosition();
+  }, [refreshPosition]);
+
+  const handleTransaction = async (mode: "buy" | "sell") => {
+    const normalized = amount.trim();
+    const numeric = Number(normalized);
+
+    if (!normalized || !Number.isFinite(numeric) || numeric <= 0) {
+      toast.error("Enter a valid positive NOP amount.");
+      return;
+    }
+
+    if (!contractPostId) {
+      toast.error("Pool is not configured for this contribute yet.");
+      return;
+    }
+
+    setTxState(mode);
+    try {
+      if (mode === "buy") {
+        await depositToContribute(contractPostId, normalized);
+        toast.success("Your position was updated on-chain.");
+      } else {
+        await withdrawFromContribute(contractPostId, normalized);
+        toast.success("Withdrawal submitted. Position updated.");
+      }
+
+      // Refresh the displayed position after the transaction settles.
+      await refreshPosition();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Transaction failed.";
+      toast.error(message);
+      console.error(error);
+    } finally {
+      setTxState(null);
+    }
+  };
 
   return (
     <>
@@ -42,13 +109,61 @@ export const ContributeCard = ({ item }: ContributeCardProps) => {
             <StatusPill className="bg-surface-muted text-text-primary ring-0">Risk · Moderate</StatusPill>
         </div>
         {poolActive ? (
-          <div className="flex flex-wrap gap-3">
-              <Button asChild variant="outline">
-              <Link to={`/pool/${item.contractPostId}/chart`}>Chart</Link>
-            </Button>
-              <Button variant="accent" onClick={() => setDialogOpen(true)}>
-              Buy & Register
-            </Button>
+          <div className="space-y-4">
+            <div className="flex flex-wrap gap-2">
+              <Button asChild variant="outline" size="sm">
+                <Link to={`/pool/${item.contractPostId}/chart`}>Chart</Link>
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => setDialogOpen(true)}>
+                Register manual trade
+              </Button>
+            </div>
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-text-secondary">NOP amount</p>
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                value={amount}
+                onChange={(event) => setAmount(event.target.value)}
+                placeholder="Enter amount"
+                className="max-w-xs"
+              />
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Button
+                variant="accent"
+                size="sm"
+                onClick={() => handleTransaction("buy")}
+                disabled={txState !== null}
+              >
+                {txState === "buy" ? "Processing…" : "Buy / Deposit"}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleTransaction("sell")}
+                disabled={txState !== null}
+              >
+                {txState === "sell" ? "Processing…" : "Sell / Withdraw"}
+              </Button>
+            </div>
+            <div className="text-xs-2 text-text-secondary">
+              {connected && address ? (
+                positionLoading ? (
+                  "Fetching your on-chain position…"
+                ) : positionWei !== null ? (
+                  <>
+                    Your on-chain position:{" "}
+                    <span className="font-semibold text-text-primary">{formatUnits(positionWei, 18)} NOP</span>
+                  </>
+                ) : (
+                  "On-chain position unavailable."
+                )
+              ) : (
+                "Connect your wallet to trade and view on-chain positions."
+              )}
+            </div>
           </div>
         ) : (
             <p className="text-xs-2 text-text-muted">Pool access will unlock once governance verifies collateral.</p>
