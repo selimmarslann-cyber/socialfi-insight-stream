@@ -1,23 +1,36 @@
 import * as React from "react";
 
+import { cn } from "@/lib/utils";
+
 type DashboardSectionTitleProps = {
   label?: string;
   title: string;
+  description?: string;
   action?: React.ReactNode;
+  className?: string;
 };
 
-export function DashboardSectionTitle({ label, title, action }: DashboardSectionTitleProps) {
+export function DashboardSectionTitle({
+  label,
+  title,
+  description,
+  action,
+  className,
+}: DashboardSectionTitleProps) {
   return (
-    <div className="mb-3 flex items-center justify-between gap-2">
-      <div>
+    <div className={cn("mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between", className)}>
+      <div className="flex flex-col gap-1">
         {label && (
-          <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-text-muted">
             {label}
           </div>
         )}
-        <h2 className="text-sm font-semibold text-slate-900 dark:text-white md:text-base">{title}</h2>
+        <div className="text-lg-2 font-semibold text-text-primary">{title}</div>
+        {description && (
+          <p className="text-sm-2 leading-snug text-text-secondary">{description}</p>
+        )}
       </div>
-      {action && <div className="flex items-center gap-2">{action}</div>}
+      {action && <div className="flex shrink-0 items-center gap-2">{action}</div>}
     </div>
   );
 }

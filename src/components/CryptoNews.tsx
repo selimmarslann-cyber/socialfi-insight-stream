@@ -175,14 +175,14 @@ export default function CryptoNews({ className }: CryptoNewsProps) {
       return null;
     }
       return items.map((item) => (
-        <a
-          key={item.id}
-          href={item.link}
-          target="_blank"
-          rel="noreferrer"
-          className="group flex items-center gap-3 rounded-2xl border border-slate-100/80 bg-white/80 px-3 py-2 transition hover:border-indigo-200 hover:bg-slate-50"
-        >
-          <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-xl border border-slate-100 bg-slate-100">
+          <a
+            key={item.id}
+            href={item.link}
+            target="_blank"
+            rel="noreferrer"
+            className="group flex items-center gap-3 rounded-[16px] border border-border-subtle bg-surface px-3 py-2 transition hover:border-ring-subtle hover:bg-surface-muted"
+          >
+            <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-xl border border-border-subtle bg-surface-muted">
           <img
             src={item.imageUrl || FALLBACK_IMAGE}
             alt={item.source}
@@ -194,13 +194,13 @@ export default function CryptoNews({ className }: CryptoNewsProps) {
             }}
           />
         </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-slate-900 line-clamp-2 group-hover:text-indigo-600">
-            {item.title}
-          </p>
-            <div className="text-xs text-slate-500">
-            {item.source} • {toRelativeTime(item.publishedAt)}
-          </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm-2 font-semibold text-text-primary transition group-hover:text-[var(--color-accent-start)] line-clamp-2">
+                {item.title}
+              </p>
+              <div className="text-xs-2 text-text-secondary">
+                {item.source} • {toRelativeTime(item.publishedAt)}
+              </div>
         </div>
       </a>
     ));
@@ -210,42 +210,39 @@ export default function CryptoNews({ className }: CryptoNewsProps) {
     <DashboardCard className={cn("p-4 md:p-5", className)}>
       <DashboardSectionTitle label="Market Pulse" title="Crypto News" />
 
-      {loading && !hasItems ? (
-        <div className="space-y-3">
-          {Array.from({ length: MAX_NEWS_ITEMS }).map((_, index) => (
-            <div key={index} className="flex items-center gap-3 rounded-2xl border border-slate-100/80 bg-slate-50/60 px-3 py-2">
-              <div className="h-10 w-10 rounded-xl bg-white/80" />
-              <div className="flex-1 space-y-2">
-                <div className="h-3 w-3/4 rounded-full bg-slate-100" />
-                <div className="h-3 w-1/3 rounded-full bg-slate-100" />
+        {loading && !hasItems ? (
+          <div className="space-y-3">
+            {Array.from({ length: MAX_NEWS_ITEMS }).map((_, index) => (
+              <div
+                key={index}
+                className="flex items-center gap-3 rounded-[16px] border border-border-subtle bg-surface-muted px-3 py-2"
+              >
+                <div className="h-10 w-10 rounded-xl bg-white/80" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-3 w-3/4 rounded-full bg-surface" />
+                  <div className="h-3 w-1/3 rounded-full bg-surface" />
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      ) : null}
+            ))}
+          </div>
+        ) : null}
 
       {!loading && hasItems ? (
         <div className="space-y-3">{headlineList}</div>
       ) : null}
 
-      {!loading && !hasItems && !error ? (
-        <p className="text-xs text-slate-500">No AI-curated signals yet. Check back shortly.</p>
-      ) : null}
+        {!loading && !hasItems && !error ? (
+          <p className="text-xs-2 text-text-muted">No AI-curated signals yet. Check back shortly.</p>
+        ) : null}
 
-      {error ? (
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50/80 px-3 py-2 text-xs text-amber-700">
-          <span className="font-semibold">{error}</span>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-8 rounded-full px-3 text-amber-700 hover:bg-amber-100 hover:text-amber-900"
-            onClick={() => void load()}
-          >
-            Retry
-          </Button>
-        </div>
-      ) : null}
+        {error ? (
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-card border border-error/20 bg-error/5 px-3 py-2 text-xs-2 text-error">
+            <span className="font-semibold">{error}</span>
+            <Button type="button" variant="subtle" size="sm" onClick={() => void load()}>
+              Retry
+            </Button>
+          </div>
+        ) : null}
     </DashboardCard>
   );
 }

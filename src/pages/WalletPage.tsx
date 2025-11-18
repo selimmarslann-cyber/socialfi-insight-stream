@@ -11,7 +11,6 @@ import { BalanceHeader } from '@/components/wallet/BalanceHeader';
 import { ActionBar, WalletAction } from '@/components/wallet/ActionBar';
 import { TokenCard } from '@/components/wallet/TokenCard';
 import { TxTable } from '@/components/wallet/TxTable';
-import { Badge } from '@/components/ui/badge';
 import { useWalletStore } from '@/lib/store';
 import type { WalletTx } from '@/types/wallet';
 import { DashboardCard } from '@/components/layout/visuals/DashboardCard';
@@ -19,6 +18,7 @@ import { DashboardSectionTitle } from '@/components/layout/visuals/DashboardSect
 import { computeProtocolFee } from '@/lib/protocol/fees';
 import { fetchUserSocialPositions } from '@/lib/protocol/positions';
 import { fetchReputationScore } from '@/lib/protocol/reputation';
+import { StatusPill } from '@/components/ui/status-pill';
 
 const tokenMeta = {
   USDT: {
@@ -201,17 +201,17 @@ export default function WalletPage() {
 
   if (!connected) {
     return (
-      <div className="mx-auto max-w-3xl space-y-5">
-        <DashboardCard className="space-y-4 text-center">
-          <DashboardSectionTitle label="Wallet" title="Connect your wallet" />
-          <p className="text-sm text-slate-600">
-            Preview balances, yield analytics, and transaction history by connecting your wallet securely.
-          </p>
-          <div className="flex justify-center">
-            <WalletConnectButton />
-          </div>
-        </DashboardCard>
-      </div>
+        <div className="mx-auto max-w-3xl space-y-5">
+          <DashboardCard className="space-y-4 text-center">
+            <DashboardSectionTitle label="Wallet" title="Connect your wallet" />
+            <p className="text-sm-2 text-text-secondary">
+              Preview balances, yield analytics, and transaction history by connecting your wallet securely.
+            </p>
+            <div className="flex justify-center">
+              <WalletConnectButton />
+            </div>
+          </DashboardCard>
+        </div>
     );
   }
 
@@ -245,101 +245,99 @@ export default function WalletPage() {
         </div>
       </DashboardCard>
 
-      <DashboardCard className="space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <DashboardSectionTitle label="Protocol" title="Your social positions" />
-          <span className="text-xs font-semibold text-slate-500">Projected fees {usd.format(projectedFees)}</span>
-        </div>
-
-        {positionsQuery.isLoading ? (
-          <div className="space-y-2">
-            {Array.from({ length: 3 }).map((_, index) => (
-              <div key={index} className="h-16 rounded-xl bg-slate-50" />
-            ))}
+        <DashboardCard className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <DashboardSectionTitle label="Protocol" title="Your social positions" />
+            <span className="text-xs-2 font-semibold text-text-secondary">Projected fees {usd.format(projectedFees)}</span>
           </div>
-        ) : openPositions.length === 0 ? (
-          <p className="text-sm text-slate-500">No open positions yet. Register your next NOP trade to build on-chain reputation.</p>
-        ) : (
-          <div className="space-y-3">
-            {openPositions.map((position) => {
-              const entryPrice = typeof position.entry_price_usd === "number" ? position.entry_price_usd : null;
-              const sizeNop =
-                typeof position.size_nop === "number" ? position.size_nop : Number(position.size_nop ?? 0);
-              const fees = computeProtocolFee((entryPrice ?? 0) * sizeNop);
-              const txHash = position.tx_hash_open ?? "";
-              return (
-                <div key={position.id} className="rounded-xl border border-slate-100 p-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                          position.direction === "long" ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
-                        }`}
-                      >
-                        {position.direction.toUpperCase()}
-                      </span>
-                      <span className="text-sm font-semibold text-slate-900">
-                        {sizeNop.toLocaleString(undefined, { maximumFractionDigits: 2 })} NOP
-                      </span>
-                    </div>
-                    <span className="text-[11px] capitalize text-slate-500">{position.status}</span>
-                  </div>
-                  <div className="mt-2 grid grid-cols-3 gap-3 text-[11px] text-slate-500">
-                    <div>
-                      <p className="uppercase tracking-widest">Entry</p>
-                      <p className="text-slate-900">{entryPrice ? usd.format(entryPrice) : "—"}</p>
-                    </div>
-                    <div>
-                      <p className="uppercase tracking-widest">Tx</p>
-                      <p className="text-slate-900">{txHash ? `${txHash.slice(0, 6)}…${txHash.slice(-4)}` : "—"}</p>
-                    </div>
-                    <div>
-                      <p className="uppercase tracking-widest">Protocol fee</p>
-                      <p className="text-slate-900">{usd.format(fees.protocolFeeUsd)}</p>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
 
-        <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-3">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Reputation summary</p>
-          {reputationQuery.isLoading ? (
-            <div className="mt-2 h-16 rounded-lg bg-white" />
-          ) : reputationQuery.data ? (
-            <div className="mt-3 grid grid-cols-3 gap-3 text-sm text-slate-600">
-              <div>
-                <p className="text-[11px] uppercase tracking-widest">Win rate</p>
-                <p className="text-base font-semibold text-slate-900">
-                  {(reputationQuery.data.win_rate ?? 0).toFixed(1)}%
-                </p>
-              </div>
-              <div>
-                <p className="text-[11px] uppercase tracking-widest">Realized PnL</p>
-                <p className="text-base font-semibold text-slate-900">{usd.format(reputationQuery.data.realized_pnl_usd ?? 0)}</p>
-              </div>
-              <div>
-                <p className="text-[11px] uppercase tracking-widest">Open trades</p>
-                <p className="text-base font-semibold text-slate-900">{reputationQuery.data.open_positions ?? 0}</p>
-              </div>
+          {positionsQuery.isLoading ? (
+            <div className="space-y-2">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <div key={index} className="h-16 rounded-card border border-border-subtle bg-surface-muted" />
+              ))}
             </div>
+          ) : openPositions.length === 0 ? (
+            <p className="text-sm-2 text-text-muted">No open positions yet. Register your next NOP trade to build on-chain reputation.</p>
           ) : (
-            <p className="mt-2 text-sm text-slate-500">No reputation data yet.</p>
+            <div className="space-y-3">
+              {openPositions.map((position) => {
+                const entryPrice = typeof position.entry_price_usd === "number" ? position.entry_price_usd : null;
+                const sizeNop =
+                  typeof position.size_nop === "number" ? position.size_nop : Number(position.size_nop ?? 0);
+                const fees = computeProtocolFee((entryPrice ?? 0) * sizeNop);
+                const txHash = position.tx_hash_open ?? "";
+                return (
+                  <div key={position.id} className="rounded-[16px] border border-border-subtle bg-surface p-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <StatusPill tone={position.direction === "long" ? "success" : "danger"}>
+                          {position.direction.toUpperCase()}
+                        </StatusPill>
+                        <span className="text-sm-2 font-semibold text-text-primary">
+                          {sizeNop.toLocaleString(undefined, { maximumFractionDigits: 2 })} NOP
+                        </span>
+                      </div>
+                      <span className="text-[11px] capitalize text-text-secondary">{position.status}</span>
+                    </div>
+                    <div className="mt-2 grid grid-cols-3 gap-3 text-[11px] text-text-secondary">
+                      <div>
+                        <p className="uppercase tracking-[0.2em] text-text-muted">Entry</p>
+                        <p className="text-text-primary">{entryPrice ? usd.format(entryPrice) : "—"}</p>
+                      </div>
+                      <div>
+                        <p className="uppercase tracking-[0.2em] text-text-muted">Tx</p>
+                        <p className="text-text-primary">{txHash ? `${txHash.slice(0, 6)}…${txHash.slice(-4)}` : "—"}</p>
+                      </div>
+                      <div>
+                        <p className="uppercase tracking-[0.2em] text-text-muted">Protocol fee</p>
+                        <p className="text-text-primary">{usd.format(fees.protocolFeeUsd)}</p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           )}
-        </div>
-      </DashboardCard>
 
-      <DashboardCard className="space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <DashboardSectionTitle label="History" title="Transactions" />
-          <Badge variant="secondary" className="rounded-full bg-slate-100 text-xs text-slate-600">
-            Updated {format(new Date(), "HH:mm")}
-          </Badge>
-        </div>
-        <TxTable transactions={transactions} />
-      </DashboardCard>
+          <div className="rounded-card border border-border-subtle bg-surface-muted p-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-text-muted">Reputation summary</p>
+            {reputationQuery.isLoading ? (
+              <div className="mt-2 h-16 rounded-lg bg-white/60" />
+            ) : reputationQuery.data ? (
+              <div className="mt-3 grid grid-cols-3 gap-3 text-sm-2 text-text-secondary">
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.18em] text-text-muted">Win rate</p>
+                  <p className="text-base font-semibold text-text-primary">
+                    {(reputationQuery.data.win_rate ?? 0).toFixed(1)}%
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.18em] text-text-muted">Realized PnL</p>
+                  <p className="text-base font-semibold text-text-primary">
+                    {usd.format(reputationQuery.data.realized_pnl_usd ?? 0)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.18em] text-text-muted">Open trades</p>
+                  <p className="text-base font-semibold text-text-primary">{reputationQuery.data.open_positions ?? 0}</p>
+                </div>
+              </div>
+            ) : (
+              <p className="mt-2 text-sm-2 text-text-muted">No reputation data yet.</p>
+            )}
+          </div>
+        </DashboardCard>
+
+        <DashboardCard className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <DashboardSectionTitle label="History" title="Transactions" />
+            <StatusPill tone="muted" className="text-[11px]">
+              Updated {format(new Date(), "HH:mm")}
+            </StatusPill>
+          </div>
+          <TxTable transactions={transactions} />
+        </DashboardCard>
 
       <Dialog open={Boolean(activeAction)} onOpenChange={(open) => (!open ? onCloseDialog() : null)}>
         {activeAction && (

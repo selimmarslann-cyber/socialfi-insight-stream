@@ -12,22 +12,22 @@ const Contributes = () => {
 
   return (
     <div className="space-y-5">
-      <DashboardCard>
+        <DashboardCard className="space-y-3">
         <DashboardSectionTitle label="Pools" title="Contributes" />
-        <p className="text-sm text-slate-500">
+          <p className="text-sm-2 leading-relaxed text-text-secondary">
           Follow the latest community pools, view pool charts, and access onboarding steps before each listing opens.
         </p>
       </DashboardCard>
 
       {isLoading ? (
-        <DashboardCard>
-          <p className="text-sm text-slate-500">Loading pools…</p>
+          <DashboardCard>
+            <p className="text-sm-2 text-text-muted">Loading pools…</p>
         </DashboardCard>
       ) : null}
 
       {!isLoading && (data?.length ?? 0) === 0 ? (
         <DashboardCard>
-          <p className="text-sm text-slate-500">Henüz aktif katkı bulunmuyor.</p>
+            <p className="text-sm-2 text-text-muted">Henüz aktif katkı bulunmuyor.</p>
         </DashboardCard>
       ) : null}
 

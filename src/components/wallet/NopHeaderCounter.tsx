@@ -11,16 +11,16 @@ export function NopHeaderCounter() {
       type="button"
       onClick={() => navigate("/wallet")}
       className={cn(
-        "inline-flex items-center gap-2 rounded-full border border-amber-200/60 bg-amber-50/80 px-3 py-1.5",
-        "shadow-sm transition hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200",
+        "inline-flex items-center gap-2 rounded-pill border border-border-subtle/60 bg-white/80 px-3.5 py-1.5",
+        "shadow-subtle transition hover:shadow-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-start)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-background)]",
       )}
     >
-      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-tr from-amber-400 to-yellow-300 text-[11px] font-bold text-slate-900">
+      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--color-gold-chip)] text-[11px] font-bold text-slate-900 ring-2 ring-white/60">
         N
       </div>
       <div className="flex flex-col items-start leading-tight">
-        <span className="text-[10px] font-medium uppercase tracking-[0.16em] text-amber-700/80">NOP Balance</span>
-        <span className="text-xs font-semibold text-slate-900 tabular-nums">{nopBalance.toLocaleString()}</span>
+        <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">NOP Balance</span>
+        <span className="text-sm-2 font-semibold text-text-primary tabular-nums">{nopBalance.toLocaleString()}</span>
       </div>
     </button>
   );

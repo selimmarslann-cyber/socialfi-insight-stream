@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Search, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { PostCard } from "@/components/feed/PostCard";
 import { mockPosts } from "@/lib/mock-api";
 import { useFeedStore } from "@/lib/store";
@@ -10,6 +9,7 @@ import { PUBLIC_ENV } from "@/config/env";
 import { DashboardCard } from "@/components/layout/visuals/DashboardCard";
 import { DashboardSectionTitle } from "@/components/layout/visuals/DashboardSectionTitle";
 import { cn } from "@/lib/utils";
+import { StatusPill } from "@/components/ui/status-pill";
 
 type ExploreTab = 'all' | 'funded' | 'trending';
 
@@ -132,35 +132,35 @@ const Explore = () => {
 
   return (
     <div className="space-y-5">
-      <DashboardCard className="space-y-4">
+        <DashboardCard className="space-y-4">
         <div className="space-y-2">
           <DashboardSectionTitle label="Discovery" title="Explore SocialFi Alpha" />
-          <p className="text-sm text-slate-500">
+            <p className="text-sm-2 leading-relaxed text-text-secondary">
             Curated intelligence from the community. Funded posts surface first, trending by real-time momentum.
           </p>
         </div>
         <div className="relative">
-          <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
           <Input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Search protocols, creators, hashtags…"
-            className="h-12 rounded-full border border-slate-200/70 bg-slate-50 pl-11 text-sm placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-100"
+              className="h-12 border border-border-subtle bg-surface pl-11 pr-4 text-sm-2 shadow-subtle placeholder:text-text-muted"
           />
         </div>
-        <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-          <Sparkles className="h-3.5 w-3.5 text-indigo-500" />
+          <div className="flex flex-wrap items-center gap-2 text-xs-2 text-text-secondary">
+            <Sparkles className="h-3.5 w-3.5 text-[var(--color-accent-start)]" />
           {mockPosts.length} signals · ${fundedVolume.toLocaleString()} NOP funded in 24h
         </div>
-        <div className="inline-flex rounded-full border border-slate-200/70 bg-slate-50 p-1 text-sm font-semibold text-slate-500">
+          <div className="inline-flex rounded-pill border border-border-subtle bg-surface-muted p-1 text-sm font-semibold text-text-secondary">
           {["all", "funded", "trending"].map((option) => (
             <button
               key={option}
               type="button"
               onClick={() => setTab(option as ExploreTab)}
               className={cn(
-                "min-w-[90px] rounded-full px-4 py-1 capitalize transition",
-                tab === option ? "bg-white text-slate-900 shadow-sm" : "",
+                  "min-w-[90px] rounded-pill px-4 py-1 capitalize transition",
+                  tab === option ? "bg-surface text-text-primary shadow-subtle" : "text-text-muted",
               )}
             >
               {option}
@@ -170,36 +170,39 @@ const Explore = () => {
       </DashboardCard>
 
         <div className="space-y-4">
-          <DashboardCard className="space-y-4">
-            <DashboardSectionTitle label="Signals" title="Community posts" />
-            {posts.length === 0 ? (
-              <div className="rounded-3xl border border-dashed border-indigo-200 bg-indigo-50/40 p-10 text-center text-sm text-slate-500">
-                Nothing surfaced with that filter yet. Try a broader query.
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {posts.map((post) => (
-                  <PostCard key={post.id} post={post} />
-                ))}
-              </div>
-            )}
-          </DashboardCard>
+            <DashboardCard className="space-y-4">
+              <DashboardSectionTitle label="Signals" title="Community posts" />
+              {posts.length === 0 ? (
+                <div className="rounded-card border border-dashed border-ring-subtle/60 bg-accent-soft/40 p-8 text-center text-sm-2 text-text-secondary">
+                  Nothing surfaced with that filter yet. Try a broader query.
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {posts.map((post) => (
+                    <PostCard key={post.id} post={post} />
+                  ))}
+                </div>
+              )}
+            </DashboardCard>
 
           <DashboardCard>
             <DashboardSectionTitle label="Market" title="Top gainers" />
             <div className="space-y-3">
               {marketLoading
                 ? Array.from({ length: 4 }).map((_, index) => (
-                    <div key={`gainer-skeleton-${index}`} className="h-14 rounded-2xl border border-dashed border-slate-200 bg-slate-50" />
+                    <div
+                      key={`gainer-skeleton-${index}`}
+                      className="h-14 rounded-card border border-dashed border-border-subtle bg-surface-muted"
+                    />
                   ))
                 : null}
 
               {!marketLoading && marketError ? (
-                <p className="text-xs font-semibold text-amber-600">{marketError}</p>
+                <p className="text-xs-2 font-semibold text-error">{marketError}</p>
               ) : null}
 
               {!marketLoading && !marketError && topGainers.length === 0 ? (
-                <p className="text-xs text-slate-500">No live market data right now.</p>
+                <p className="text-xs-2 text-text-muted">No live market data right now.</p>
               ) : null}
 
               {!marketLoading && !marketError
@@ -208,20 +211,13 @@ const Explore = () => {
                     return (
                       <div
                         key={asset.symbol}
-                        className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 px-3 py-2 text-sm"
+                        className="flex items-center justify-between rounded-[16px] border border-border-subtle bg-surface px-3 py-2 text-sm-2 text-text-secondary"
                       >
                         <div>
-                          <p className="font-semibold text-slate-800">{asset.symbol}</p>
-                          <p className="text-xs text-slate-500">{formatPrice(asset.price)}</p>
+                          <p className="font-semibold text-text-primary">{asset.symbol}</p>
+                          <p className="text-xs-2 text-text-secondary">{formatPrice(asset.price)}</p>
                         </div>
-                        <Badge
-                          className={cn(
-                            "rounded-full text-xs font-semibold",
-                            isUp ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600",
-                          )}
-                        >
-                          {formatChange(asset.change24h)}
-                        </Badge>
+                        <StatusPill tone={isUp ? "success" : "danger"}>{formatChange(asset.change24h)}</StatusPill>
                       </div>
                     );
                   })
@@ -229,19 +225,19 @@ const Explore = () => {
             </div>
           </DashboardCard>
 
-          <DashboardCard>
-            <DashboardSectionTitle label="Signals" title="Trending tags" />
-            <div className="flex flex-wrap gap-2">
-              {combinedPosts
-                .flatMap((post) => post.tags ?? [])
-                .slice(0, 12)
-                .map((tag) => (
-                  <span key={tag} className="rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-600">
-                    {tag}
-                  </span>
-                ))}
-            </div>
-          </DashboardCard>
+        <DashboardCard>
+          <DashboardSectionTitle label="Signals" title="Trending tags" />
+          <div className="flex flex-wrap gap-2">
+            {combinedPosts
+              .flatMap((post) => post.tags ?? [])
+              .slice(0, 12)
+              .map((tag) => (
+                <StatusPill key={tag} className="bg-accent-soft text-text-primary ring-0">
+                  #{tag.replace(/^#/, "")}
+                </StatusPill>
+              ))}
+          </div>
+        </DashboardCard>
         </div>
     </div>
   );

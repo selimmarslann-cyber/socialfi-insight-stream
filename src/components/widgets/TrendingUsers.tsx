@@ -5,20 +5,21 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { fetchTrendingUsers } from "@/lib/mock-api";
 import { DashboardCard } from "@/components/layout/visuals/DashboardCard";
 import { DashboardSectionTitle } from "@/components/layout/visuals/DashboardSectionTitle";
+import { StatusPill } from "@/components/ui/status-pill";
 
 interface TrendingUsersProps {
   limit?: number;
 }
 
-const trendIcon = (trend?: string) => {
-  if (trend === "up") {
-    return <TrendingUp className="h-3.5 w-3.5 text-emerald-500" />;
-  }
-  if (trend === "down") {
-    return <TrendingDown className="h-3.5 w-3.5 text-rose-500" />;
-  }
-  return <Minus className="h-3.5 w-3.5 text-slate-400" />;
-};
+  const trendIcon = (trend?: string) => {
+    if (trend === "up") {
+      return <TrendingUp className="h-3.5 w-3.5 text-emerald-500" />;
+    }
+    if (trend === "down") {
+      return <TrendingDown className="h-3.5 w-3.5 text-rose-500" />;
+    }
+    return <Minus className="h-3.5 w-3.5 text-slate-400" />;
+  };
 
 export const TrendingUsers = ({ limit = 5 }: TrendingUsersProps) => {
   const { data, isLoading } = useQuery({
@@ -44,34 +45,36 @@ export const TrendingUsers = ({ limit = 5 }: TrendingUsersProps) => {
               </div>
             ))
           : displayUsers.map((user) => (
-              <div
-                key={user.username}
-                className="flex items-center justify-between gap-3 rounded-2xl border border-slate-100/70 bg-slate-50/60 px-3 py-2"
-              >
+                <div
+                  key={user.username}
+                  className="flex items-center justify-between gap-3 rounded-[16px] border border-border-subtle bg-surface px-3 py-2"
+                >
                 <div className="flex min-w-0 items-center gap-3">
-                  <Avatar className="h-10 w-10 border border-slate-100 bg-white text-slate-600">
-                    <AvatarFallback className="text-xs font-semibold">
+                    <Avatar className="h-10 w-10 border border-border-subtle bg-surface text-text-primary">
+                      <AvatarFallback className="text-xs font-semibold">
                       {user.username.slice(0, 2).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-slate-900">@{user.username}</p>
-                    <p className="text-xs text-slate-500">Ref {user.refCode}</p>
+                      <p className="truncate text-sm-2 font-semibold text-text-primary">@{user.username}</p>
+                      <p className="text-xs-2 text-text-secondary">Ref {user.refCode}</p>
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-1">
-                  <span className="text-xs font-semibold text-slate-500">#{user.rank}</span>
-                  <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-0.5 text-[11px] font-semibold text-slate-700">
-                    {trendIcon(user.trend)}
-                    {user.score.toLocaleString()} pts
-                  </span>
+                    <StatusPill tone="muted" className="text-[11px]">
+                      #{user.rank}
+                    </StatusPill>
+                    <StatusPill className="bg-surface text-text-primary ring-1 ring-border-subtle/50">
+                      {trendIcon(user.trend)}
+                      {user.score.toLocaleString()} pts
+                    </StatusPill>
                 </div>
               </div>
             ))}
 
-        {!isLoading && displayUsers.length === 0 ? (
-          <p className="text-xs text-slate-500">No trending accounts yet.</p>
-        ) : null}
+          {!isLoading && displayUsers.length === 0 ? (
+            <p className="text-xs-2 text-text-muted">No trending accounts yet.</p>
+          ) : null}
       </div>
     </DashboardCard>
   );

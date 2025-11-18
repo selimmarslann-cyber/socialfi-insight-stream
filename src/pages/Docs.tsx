@@ -53,31 +53,31 @@ const Docs = () => {
   });
 
   return (
-    <div className="space-y-5">
-      <DashboardCard className="space-y-3">
-        <DashboardSectionTitle label="Docs • Phase 5" title="NOP Intelligence Layer Library" />
-        <p className="text-sm text-slate-600">
-          Every listing-ready narrative is now available in-app. Select a document to dive into protocol mechanics, economics,
-          and the onboarding flow without leaving the dashboard.
-        </p>
-      </DashboardCard>
+      <div className="space-y-5">
+        <DashboardCard className="space-y-3">
+          <DashboardSectionTitle label="Docs • Phase 5" title="NOP Intelligence Layer Library" />
+          <p className="text-sm-2 leading-relaxed text-text-secondary">
+            Every listing-ready narrative is now available in-app. Select a document to dive into protocol mechanics, economics,
+            and the onboarding flow without leaving the dashboard.
+          </p>
+        </DashboardCard>
 
       <div className="grid gap-4 md:grid-cols-2">
         {docsEntries.map((doc) => (
-          <DashboardCard key={doc.title} className="flex flex-col justify-between space-y-4">
+            <DashboardCard key={doc.title} className="flex flex-col justify-between space-y-4">
             <div className="space-y-2">
               <DashboardSectionTitle label={doc.label} title={doc.title} />
-              <p className="text-sm text-slate-600">{doc.summary}</p>
+                <p className="text-sm-2 leading-relaxed text-text-secondary">{doc.summary}</p>
             </div>
             <div>
               {doc.external ? (
-                <Button asChild className="w-full md:w-auto" variant="outline">
+                  <Button asChild className="w-full md:w-auto" variant="outline">
                   <a href={doc.href} target="_blank" rel="noreferrer">
                     Download
                   </a>
                 </Button>
               ) : (
-                <Button asChild className="w-full md:w-auto">
+                  <Button asChild className="w-full md:w-auto" variant="accent">
                   <Link to={doc.href}>Open</Link>
                 </Button>
               )}
