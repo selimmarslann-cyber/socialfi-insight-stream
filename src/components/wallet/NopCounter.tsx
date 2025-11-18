@@ -23,14 +23,14 @@ export const NopCounter = () => {
         type="button"
         variant="ghost"
         onClick={() => navigate("/wallet")}
-        className="group h-10 gap-2 rounded-full border border-slate-200 bg-white/90 px-4 text-xs font-semibold text-slate-600 shadow-sm transition hover:bg-white focus-visible:ring-2 focus-visible:ring-indigo-100"
+        className="group h-10 gap-2 rounded-full border border-border-subtle bg-card px-4 text-xs font-semibold text-muted-foreground shadow-subtle transition hover:bg-surface focus-visible:ring-2 focus-visible:ring-indigo-200"
         aria-label="NOP balance"
       >
         <Coins className="h-4 w-4 text-amber-500" />
-        <span className="font-mono text-sm text-slate-900 transition group-hover:text-slate-900">
+        <span className="font-mono text-sm text-foreground transition group-hover:text-foreground">
           {(data?.nop || nop).toLocaleString()}
         </span>
-        <span className="hidden text-[11px] uppercase tracking-wide text-slate-500 md:inline">
+        <span className="hidden text-[11px] uppercase tracking-wide text-muted-foreground md:inline">
           NOP
         </span>
       </Button>

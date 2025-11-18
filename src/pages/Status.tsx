@@ -17,10 +17,10 @@ const Status = () => {
 
   return (
     <StaticPageLayout>
-      <section className="space-y-8">
-        <div className="space-y-4 rounded-3xl border border-[color:var(--ring)] bg-[color:var(--bg-card)] p-8 shadow-sm">
-          <Badge variant="outline" className="rounded-full border border-lime-400/40 text-xs text-lime-300">
-            Coming soon
+        <section className="space-y-8">
+          <div className="space-y-4 rounded-3xl border border-[color:var(--ring)] bg-[color:var(--bg-card)] p-8 shadow-sm">
+            <Badge variant="outline" className="rounded-full border border-lime-400/40 text-xs text-lime-300">
+              Preview feed
           </Badge>
           <div className="space-y-3">
             <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">

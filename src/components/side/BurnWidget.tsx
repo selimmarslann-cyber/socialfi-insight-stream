@@ -229,7 +229,7 @@ export const BurnWidget = () => {
 
   return (
     <section className={SIDE_CARD_CLASS} style={SIDE_CARD_STYLE}>
-      <header className="flex items-start justify-between">
+        <header className="flex items-start justify-between">
         <div>
           <h3 className={SIDE_CARD_TITLE_CLASS}>
             <Flame className="h-4 w-4 text-indigo-500" />
@@ -239,13 +239,13 @@ export const BurnWidget = () => {
             <p className="mt-1 text-xs text-slate-400">Updated {relativeUpdated}</p>
           )}
         </div>
-        <Link
-          to="/settings"
-          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition hover:border-indigo-300 hover:text-indigo-600"
-          aria-label="Manage burn stats"
-        >
-          <Wrench className="h-4 w-4" />
-        </Link>
+          <Link
+            to="/settings"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border-subtle bg-card text-muted-foreground transition hover:border-indigo-300 hover:text-indigo-600"
+            aria-label="Manage burn stats"
+          >
+            <Wrench className="h-4 w-4" />
+          </Link>
       </header>
 
       <div className="mt-4 space-y-4">

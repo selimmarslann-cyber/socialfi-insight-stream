@@ -1,12 +1,22 @@
-import { create } from 'zustand';
-import { generateRefCode } from '@/lib/utils';
-import type { WalletTx } from '@/types/wallet';
-import type { Post } from '@/types/feed';
+import { create } from "zustand";
+import { generateRefCode } from "@/lib/utils";
+import type { WalletTx } from "@/types/wallet";
+import type { Post } from "@/types/feed";
+import { ensureSocialProfile } from "@/lib/social";
 
-const ADMIN_DISABLED_NOTICE = "Admin access is disabled in this preview build.";
+const ADMIN_SESSION_KEY = "nop_admin_session";
+const ADMIN_USERNAME = "selimarslan";
+const ADMIN_PASSWORD = "selimarslan";
+
+const isBrowser = () => typeof window !== "undefined";
+const readAdminSession = () => {
+  if (!isBrowser()) return false;
+  return window.localStorage.getItem(ADMIN_SESSION_KEY) === ADMIN_USERNAME;
+};
 
 interface AuthState {
   isAdmin: boolean;
+  adminUser: string | null;
   login: (username: string, password: string) => boolean;
   logout: () => void;
 }
@@ -41,17 +51,24 @@ interface WalletState {
   addTx: (tx: WalletTx) => void;
 }
 
-export const useAuthStore = create<AuthState>(() => ({
-  isAdmin: false,
-  login: (_username, _password) => {
-    if (typeof window !== "undefined") {
-      window.localStorage.removeItem("nop_admin_session");
+export const useAuthStore = create<AuthState>((set) => ({
+  isAdmin: readAdminSession(),
+  adminUser: readAdminSession() ? ADMIN_USERNAME : null,
+  login: (username, password) => {
+    const isValid = username === ADMIN_USERNAME && password === ADMIN_PASSWORD;
+    if (isValid && isBrowser()) {
+      window.localStorage.setItem(ADMIN_SESSION_KEY, ADMIN_USERNAME);
     }
-    console.info(ADMIN_DISABLED_NOTICE);
-    return false;
+    if (isValid) {
+      set({ isAdmin: true, adminUser: ADMIN_USERNAME });
+    }
+    return isValid;
   },
   logout: () => {
-    console.info(ADMIN_DISABLED_NOTICE);
+    if (isBrowser()) {
+      window.localStorage.removeItem(ADMIN_SESSION_KEY);
+    }
+    set({ isAdmin: false, adminUser: null });
   },
 }));
 
@@ -100,7 +117,7 @@ export const useWalletStore = create<WalletState>((set) => ({
       counterparty: '0x6DFb...ee12',
     },
   ],
-  connect: (address, options) =>
+  connect: (address, options) => {
     set((state) => {
       const isNumberOption = typeof options === 'number';
 
@@ -125,17 +142,19 @@ export const useWalletStore = create<WalletState>((set) => ({
         ? options.chainId
         : state.chainId;
 
-      return {
-        ...state,
-        connected: true,
-        address,
-        provider,
-        inviterCode,
-        refCode: state.refCode || generateRefCode(),
-        nop,
-        chainId,
-      };
-    }),
+        return {
+          ...state,
+          connected: true,
+          address,
+          provider,
+          inviterCode,
+          refCode: state.refCode || generateRefCode(),
+          nop,
+          chainId,
+        };
+      });
+    void ensureSocialProfile({ walletAddress: address });
+  },
   disconnect: () =>
     set((state) => ({
       ...state,

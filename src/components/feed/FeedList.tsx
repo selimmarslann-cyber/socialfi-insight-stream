@@ -1,31 +1,22 @@
 import { useMemo } from "react";
-import { useInfiniteQuery } from '@tanstack/react-query';
-import { Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { PostCard } from './PostCard';
-import { fetchFeed } from '@/lib/mock-api';
-import { useFeedStore } from '@/lib/store';
+import { useQuery } from "@tanstack/react-query";
+import { Skeleton } from "@/components/ui/skeleton";
+import { PostCard } from "./PostCard";
+import { useFeedStore, useWalletStore } from "@/lib/store";
+import { fetchSocialFeed } from "@/lib/social";
 
 export const FeedList = () => {
   const userPosts = useFeedStore((state) => state.userPosts);
+  const address = useWalletStore((state) => state.address);
 
-  const {
-    data,
-    isLoading,
-    isError,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useInfiniteQuery({
-    queryKey: ['feed'],
-    queryFn: ({ pageParam }) => fetchFeed(pageParam),
-    getNextPageParam: (lastPage) => lastPage.nextCursor,
-    initialPageParam: undefined as string | undefined,
+  const { data, isLoading, isError, isFetching } = useQuery({
+    queryKey: ["social-feed", address?.toLowerCase() ?? "anon"],
+    queryFn: () => fetchSocialFeed({ viewerWallet: address }),
+    refetchOnWindowFocus: true,
   });
 
   const posts = useMemo(() => {
-    const remote = data?.pages.flatMap((page) => page.items) ?? [];
+    const remote = data ?? [];
     const combined = [...userPosts, ...remote];
     const getTimestamp = (post: (typeof combined)[number]) => {
       const created =
@@ -35,7 +26,10 @@ export const FeedList = () => {
       const ms = new Date(created).getTime();
       return Number.isFinite(ms) ? ms : 0;
     };
-    return combined.sort((a, b) => getTimestamp(b) - getTimestamp(a));
+    const sorted = combined
+      .filter((post, index, arr) => arr.findIndex((item) => item.id === post.id) === index)
+      .sort((a, b) => getTimestamp(b) - getTimestamp(a));
+    return sorted;
   }, [userPosts, data]);
 
   if (isLoading) {
@@ -50,7 +44,7 @@ export const FeedList = () => {
 
   if (isError) {
     return (
-      <div className="text-center py-12">
+      <div className="py-12 text-center">
         <p className="text-muted-foreground">Failed to load feed</p>
       </div>
     );
@@ -59,32 +53,19 @@ export const FeedList = () => {
   return (
     <div className="space-y-5">
       {posts.length === 0 ? (
-        <div className="rounded-3xl border border-indigo-500/10 bg-white p-12 text-center shadow-sm">
-          <p className="text-sm text-slate-500">No contributions yet. Be the first to publish an analysis.</p>
+        <div className="rounded-3xl border border-border bg-card p-12 text-center shadow-card-soft">
+          <p className="text-sm text-muted-foreground">
+            No contributions yet. Be the first to publish an analysis.
+          </p>
         </div>
       ) : (
         <>
           {posts.map((post) => (
             <PostCard key={post.id} post={post} />
           ))}
-
-          {hasNextPage && (
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => fetchNextPage()}
-              disabled={isFetchingNextPage}
-            >
-              {isFetchingNextPage ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Loading...
-                </>
-              ) : (
-                'Load More'
-              )}
-            </Button>
-          )}
+          <div className="text-center text-xs text-muted-foreground">
+            {isFetching ? "Refreshing feed…" : "Auto-refresh active"}
+          </div>
         </>
       )}
     </div>

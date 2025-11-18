@@ -1,6 +1,6 @@
 import StaticPageLayout from "@/components/layout/StaticPageLayout";
-import { Badge } from "@/components/ui/badge";
 import { usePageMetadata } from "@/hooks/usePageMetadata";
+import ComingSoonCard from "@/components/ComingSoonCard";
 
 const LegalCookies = () => {
   usePageMetadata({
@@ -10,23 +10,10 @@ const LegalCookies = () => {
 
   return (
     <StaticPageLayout>
-      <section className="space-y-6 rounded-3xl border border-[color:var(--ring)] bg-[color:var(--bg-card)] p-8 shadow-sm">
-        <div className="flex items-center gap-3">
-          <Badge variant="outline" className="rounded-full border border-[color:var(--ring)] px-3 text-xs">
-            Coming soon
-          </Badge>
-          <p className="text-xs text-[color:var(--text-secondary)]">Consent tooling underway</p>
-        </div>
-        <div className="space-y-4">
-          <h1 className="text-3xl font-semibold text-[color:var(--text-primary)]">
-            Cookie policy
-          </h1>
-          <p className="text-sm text-[color:var(--text-secondary)]">
-            Until analytics launch, no non-essential cookies are stored. Once we flip the switch, you will see granular toggles
-            plus region-specific banners powered by this page.
-          </p>
-        </div>
-      </section>
+      <ComingSoonCard
+        title="Cookie & consent center"
+        description="Analytics and consent tooling launch with the next release. Until then we don't store non-essential cookies, and every request flows through the same secure proxy."
+      />
     </StaticPageLayout>
   );
 };

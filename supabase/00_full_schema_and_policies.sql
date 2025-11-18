@@ -236,6 +236,163 @@ using (auth.uid() = rater_id)
 with check (auth.uid() = rater_id);
 
 -- ---------------------------------------------------------------------
+-- Wallet-native social feed (wallet-authored profiles/posts)
+-- ---------------------------------------------------------------------
+
+create table if not exists public.social_profiles (
+  id uuid primary key default gen_random_uuid(),
+  wallet_address text unique not null,
+  display_name text,
+  avatar_url text,
+  bio text,
+  total_posts integer not null default 0,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists idx_social_profiles_wallet on public.social_profiles (lower(wallet_address));
+
+drop trigger if exists set_timestamp_social_profiles on public.social_profiles;
+create trigger set_timestamp_social_profiles
+before update on public.social_profiles
+for each row
+execute procedure public.set_updated_at();
+
+alter table public.social_profiles enable row level security;
+
+drop policy if exists "social_profiles_select_public" on public.social_profiles;
+create policy "social_profiles_select_public"
+on public.social_profiles
+for select
+using (true);
+
+drop policy if exists "social_profiles_insert_public" on public.social_profiles;
+create policy "social_profiles_insert_public"
+on public.social_profiles
+for insert
+with check (true);
+
+drop policy if exists "social_profiles_update_public" on public.social_profiles;
+create policy "social_profiles_update_public"
+on public.social_profiles
+for update
+using (true)
+with check (true);
+
+create table if not exists public.social_posts (
+  id bigserial primary key,
+  wallet_address text not null,
+  author_name text,
+  author_avatar_url text,
+  content text not null,
+  media_urls text[],
+  tags text[],
+  pool_enabled boolean not null default false,
+  contract_post_id bigint,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists idx_social_posts_wallet on public.social_posts (lower(wallet_address));
+create index if not exists idx_social_posts_created_at on public.social_posts (created_at desc);
+
+drop trigger if exists set_timestamp_social_posts on public.social_posts;
+create trigger set_timestamp_social_posts
+before update on public.social_posts
+for each row
+execute procedure public.set_updated_at();
+
+alter table public.social_posts enable row level security;
+
+drop policy if exists "social_posts_select_public" on public.social_posts;
+create policy "social_posts_select_public"
+on public.social_posts
+for select
+using (true);
+
+drop policy if exists "social_posts_insert_public" on public.social_posts;
+create policy "social_posts_insert_public"
+on public.social_posts
+for insert
+with check (true);
+
+drop policy if exists "social_posts_delete_admin" on public.social_posts;
+create policy "social_posts_delete_admin"
+on public.social_posts
+for delete
+using (auth.role() = 'service_role')
+with check (auth.role() = 'service_role');
+
+drop policy if exists "social_posts_update_admin" on public.social_posts;
+create policy "social_posts_update_admin"
+on public.social_posts
+for update
+using (auth.role() = 'service_role')
+with check (auth.role() = 'service_role');
+
+create table if not exists public.social_comments (
+  id bigserial primary key,
+  post_id bigint not null references public.social_posts(id) on delete cascade,
+  wallet_address text not null,
+  content text not null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_social_comments_post on public.social_comments (post_id);
+create index if not exists idx_social_comments_wallet on public.social_comments (lower(wallet_address));
+
+alter table public.social_comments enable row level security;
+
+drop policy if exists "social_comments_select_public" on public.social_comments;
+create policy "social_comments_select_public"
+on public.social_comments
+for select
+using (true);
+
+drop policy if exists "social_comments_insert_public" on public.social_comments;
+create policy "social_comments_insert_public"
+on public.social_comments
+for insert
+with check (true);
+
+drop policy if exists "social_comments_delete_public" on public.social_comments;
+create policy "social_comments_delete_public"
+on public.social_comments
+for delete
+using (true)
+with check (true);
+
+create table if not exists public.social_likes (
+  post_id bigint not null references public.social_posts(id) on delete cascade,
+  wallet_address text not null,
+  created_at timestamptz not null default now(),
+  primary key (post_id, wallet_address)
+);
+
+create index if not exists idx_social_likes_wallet on public.social_likes (lower(wallet_address));
+
+alter table public.social_likes enable row level security;
+
+drop policy if exists "social_likes_select_public" on public.social_likes;
+create policy "social_likes_select_public"
+on public.social_likes
+for select
+using (true);
+
+drop policy if exists "social_likes_insert_public" on public.social_likes;
+create policy "social_likes_insert_public"
+on public.social_likes
+for insert
+with check (true);
+
+drop policy if exists "social_likes_delete_public" on public.social_likes;
+create policy "social_likes_delete_public"
+on public.social_likes
+for delete
+using (true)
+with check (true);
+
+-- ---------------------------------------------------------------------
 -- Boosted tasks & rewards
 -- ---------------------------------------------------------------------
 

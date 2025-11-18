@@ -1,3 +1,11 @@
+export interface PostComment {
+  id: string;
+  postId: string;
+  walletAddress: string;
+  content: string;
+  createdAt: string;
+}
+
 export interface Post {
   id: string;
   author: {
@@ -8,6 +16,7 @@ export interface Post {
     refCode: string;
     verified?: boolean;
   };
+  walletAddress?: string;
   content: string;
   images?: string[];
   attachments?: string[];
@@ -23,6 +32,8 @@ export interface Post {
   aiLastUpdatedAt?: string;
   poolEnabled?: boolean;
   contractPostId?: number | null;
+  likedByViewer?: boolean;
+  comments?: PostComment[];
   engagement: {
     upvotes: number;
     comments: number;
@@ -38,5 +49,8 @@ export interface FeedResponse {
 
 export interface CreatePostInput {
   content: string;
+  walletAddress: string;
+  mediaUrls?: string[];
+  tags?: string[];
   taskId?: string;
 }

@@ -303,10 +303,10 @@ export default function Settings() {
                   Wallet-bound authentication will roll out shortly. Meanwhile, sessions auto-expire every 24h.
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <Badge variant="outline" className="rounded-full border border-[color:var(--ring)]">
-                  Coming soon
-                </Badge>
+                <CardContent>
+                  <Badge variant="outline" className="rounded-full border border-[color:var(--ring)]">
+                    Preview build
+                  </Badge>
               </CardContent>
             </Card>
           </div>

@@ -157,14 +157,14 @@ const Contact = () => {
             </p>
           </form>
 
-          <aside className="space-y-4 rounded-2xl bg-white p-6 shadow-sm leading-relaxed text-[#475569]">
+          <aside className="space-y-4 rounded-2xl border border-border bg-card p-6 shadow-card-soft leading-relaxed text-text-secondary">
             <div>
-              <h2 className="text-lg font-semibold text-[#0F172A]">Direct Email</h2>
+                <h2 className="text-lg font-semibold text-text-primary">Direct Email</h2>
               <p className="mt-2">
                 Prefer your own client? Write to{" "}
                 <a
                   href="mailto:hello@nopintelligencelayer.xyz"
-                  className="font-semibold text-[#0F172A] transition hover:underline"
+                    className="font-semibold text-text-primary transition hover:underline"
                 >
                   hello@nopintelligencelayer.xyz
                 </a>
@@ -172,10 +172,10 @@ const Contact = () => {
               </p>
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-[#0F172A]">Knowledge Base</h2>
-              <p className="mt-2">A self-serve FAQ and incident history is coming soon.</p>
-            </div>
-          </aside>
+              <h2 className="text-lg font-semibold text-text-primary">Knowledge Base</h2>
+            <p className="mt-2">A refreshed self-serve FAQ and incident history launches shortly.</p>
+          </div>
+        </aside>
         </div>
       </section>
     </StaticPageLayout>

@@ -20,8 +20,8 @@ const Security = () => {
           </p>
         </header>
 
-        <article className="rounded-2xl bg-white p-6 leading-relaxed text-[#475569] shadow-sm">
-          <h2 className="text-lg font-semibold text-[#0F172A]">Operational Practices</h2>
+          <article className="rounded-2xl border border-border bg-card p-6 leading-relaxed text-text-secondary shadow-card-soft">
+            <h2 className="text-lg font-semibold text-text-primary">Operational Practices</h2>
           <ul className="mt-3 space-y-2">
             <li>• End-to-end HTTPS across apps, APIs, and admin tooling.</li>
             <li>• Auth tokens scoped with JWT, rotated automatically on session refresh.</li>
@@ -30,8 +30,8 @@ const Security = () => {
           </ul>
         </article>
 
-        <article className="rounded-2xl bg-white p-6 leading-relaxed text-[#475569] shadow-sm">
-          <h2 className="text-lg font-semibold text-[#0F172A]">Supabase RLS Summary</h2>
+          <article className="rounded-2xl border border-border bg-card p-6 leading-relaxed text-text-secondary shadow-card-soft">
+            <h2 className="text-lg font-semibold text-text-primary">Supabase RLS Summary</h2>
           <p className="mt-3">
             Row Level Security (RLS) policies gate every table. Contributors only read and write
             records they own, while admin-only dashboards rely on explicit policy checks. Contact
@@ -39,8 +39,8 @@ const Security = () => {
           </p>
         </article>
 
-        <article className="rounded-2xl bg-white p-6 leading-relaxed text-[#475569] shadow-sm">
-          <h2 className="text-lg font-semibold text-[#0F172A]">Vulnerability Disclosure</h2>
+          <article className="rounded-2xl border border-border bg-card p-6 leading-relaxed text-text-secondary shadow-card-soft">
+            <h2 className="text-lg font-semibold text-text-primary">Vulnerability Disclosure</h2>
           <p className="mt-3">
             Found a security concern? Reach us through{" "}
             <a

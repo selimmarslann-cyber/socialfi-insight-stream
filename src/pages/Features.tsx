@@ -40,10 +40,10 @@ const Features = () => {
 
   return (
     <StaticPageLayout>
-      <section className="space-y-8">
-        <div className="space-y-5 rounded-3xl border border-[color:var(--ring)] bg-[color:var(--bg-card)] p-8 shadow-sm">
-          <Badge variant="outline" className="rounded-full border border-indigo-400/40 text-xs text-indigo-400">
-            Coming soon
+        <section className="space-y-8">
+          <div className="space-y-5 rounded-3xl border border-[color:var(--ring)] bg-[color:var(--bg-card)] p-8 shadow-sm">
+            <Badge variant="outline" className="rounded-full border border-indigo-400/40 text-xs text-indigo-400">
+              Roadmap
           </Badge>
           <div className="space-y-3">
             <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">
