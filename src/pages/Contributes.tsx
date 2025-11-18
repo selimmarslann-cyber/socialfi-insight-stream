@@ -11,7 +11,7 @@ const Contributes = () => {
   });
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
         <DashboardCard className="space-y-3">
         <DashboardSectionTitle label="Pools" title="Contributes" />
           <p className="text-sm-2 leading-relaxed text-text-secondary">

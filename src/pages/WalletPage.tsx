@@ -199,9 +199,9 @@ export default function WalletPage() {
     onCloseDialog();
   };
 
-  if (!connected) {
-    return (
-        <div className="mx-auto max-w-3xl space-y-5">
+    if (!connected) {
+      return (
+          <div className="mx-auto max-w-3xl space-y-4">
           <DashboardCard className="space-y-4 text-center">
             <DashboardSectionTitle label="Wallet" title="Connect your wallet" />
             <p className="text-sm-2 text-text-secondary">
@@ -215,8 +215,8 @@ export default function WalletPage() {
     );
   }
 
-  return (
-    <div className="space-y-5">
+    return (
+      <div className="space-y-4">
       <DashboardCard className="space-y-4">
         <DashboardSectionTitle label="Wallet" title="Your NOP Intelligence wallet" />
         <BalanceHeader
