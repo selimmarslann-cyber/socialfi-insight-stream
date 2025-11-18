@@ -21,6 +21,8 @@ export interface Post {
   aiMmActivity?: string;
   aiScore?: number;
   aiLastUpdatedAt?: string;
+  poolEnabled?: boolean;
+  contractPostId?: number | null;
   engagement: {
     upvotes: number;
     comments: number;
