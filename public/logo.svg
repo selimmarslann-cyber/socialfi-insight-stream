@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <defs>
+    <linearGradient id="logo-gradient" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#1B6BEA"/>
+      <stop offset="100%" stop-color="#32D3CE"/>
+    </linearGradient>
+  </defs>
+  <circle cx="200" cy="200" r="180" fill="none" stroke="url(#logo-gradient)" stroke-width="18"/>
+  <circle cx="200" cy="200" r="92" fill="none" stroke="url(#logo-gradient)" stroke-width="16"/>
+  <g stroke="url(#logo-gradient)" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <line x1="200" y1="116" x2="200" y2="44"/>
+    <line x1="200" y1="284" x2="200" y2="356"/>
+    <line x1="116" y1="200" x2="44" y2="200"/>
+    <line x1="284" y1="200" x2="356" y2="200"/>
+    <polyline points="241 159 300 100 332 68"/>
+    <polyline points="159 241 100 300 68 332"/>
+    <polyline points="241 241 300 300 332 332"/>
+    <polyline points="159 159 100 100 68 68"/>
+    <path d="M200 140c-34 0-34 28 0 28s34 28 0 28c-34 0-34 28 0 28s34 28 0 28"/>
+    <path d="M200 140c34 0 34 28 0 28s-34 28 0 28 34 28 0 28-34 28 0 28"/>
+  </g>
+  <g fill="url(#logo-gradient)">
+    <circle cx="200" cy="36" r="18"/>
+    <circle cx="200" cy="364" r="18"/>
+    <circle cx="36" cy="200" r="18"/>
+    <circle cx="364" cy="200" r="18"/>
+    <circle cx="332" cy="68" r="18"/>
+    <circle cx="68" cy="332" r="18"/>
+    <circle cx="332" cy="332" r="18"/>
+    <circle cx="68" cy="68" r="18"/>
+    <circle cx="300" cy="100" r="14"/>
+    <circle cx="100" cy="300" r="14"/>
+    <circle cx="300" cy="300" r="14"/>
+    <circle cx="100" cy="100" r="14"/>
+    <circle cx="241" cy="159" r="12"/>
+    <circle cx="159" cy="241" r="12"/>
+    <circle cx="241" cy="241" r="12"/>
+    <circle cx="159" cy="159" r="12"/>
+    <circle cx="200" cy="200" r="16"/>
+  </g>
+</svg>

@@ -1,0 +1,46 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap");
+
+@import "../styles/theme.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* NOP SocialFi Design System */
+
+@layer base {
+  * {
+    border-color: var(--color-border-subtle);
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: var(--font-sans);
+    color: var(--color-text-primary);
+    background: radial-gradient(circle at top left, #E5ECFF 0, #F5F8FF 45%, #F9FBFF 100%);
+    background-color: var(--color-background);
+    @apply font-sans antialiased;
+  }
+
+  .dark body,
+  body.dark {
+    background: radial-gradient(circle at top left, #020617 0, #020617 40%, #020617 100%);
+    color: var(--color-text-primary);
+  }
+
+  code,
+  pre {
+    font-family: "JetBrains Mono", "Courier New", monospace;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+[data-overlay-hidden="true"] {
+  pointer-events: none !important;
+}
