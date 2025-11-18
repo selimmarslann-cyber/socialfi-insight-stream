@@ -2,14 +2,14 @@ import { useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Container } from "@/components/layout/Container";
 import { usePoolAccess } from "@/hooks/usePoolAccess";
 import { useWalletStore } from "@/lib/store";
 import { getPreviewSell, getUserShares } from "@/lib/pool";
 import { formatTokenAmount } from "@/lib/format";
 import { applyMultiplier } from "@/lib/math";
 import { CHAIN_ID, SELL_SLIPPAGE } from "@/lib/config";
+import { DashboardCard } from "@/components/layout/visuals/DashboardCard";
+import { DashboardSectionTitle } from "@/components/layout/visuals/DashboardSectionTitle";
 
 const PoolOverview = () => {
   const { postId } = useParams<{ postId: string }>();
@@ -46,49 +46,43 @@ const PoolOverview = () => {
   const sellDisabled = !sellPreviewQuery.data || !postState || postState.reserve < netWithSlippage;
   const networkMismatch = connected && chainId !== CHAIN_ID;
 
-  return (
-    <Container>
-      <div className="max-w-4xl mx-auto space-y-6 py-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>{contribute?.title ?? `Pool #${postId}`}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {(contributeLoading || postStateLoading) && <p className="muted">Yükleniyor...</p>}
-            {!contributeLoading && !postStateLoading && (
-              <>
-                <div className="flex flex-col gap-1">
-                  <span className="text-sm text-muted-foreground">Pool balance</span>
-                  <span className="text-2xl font-semibold">{formatTokenAmount(postState?.reserve ?? 0n)} NOP</span>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Button asChild variant="secondary">
-                    <Link to={`/pool/${postId}/chart`}>Chart</Link>
+    return (
+      <div className="mx-auto max-w-4xl space-y-5">
+        <DashboardCard className="space-y-4">
+          <DashboardSectionTitle label="Pool" title={contribute?.title ?? `Pool #${postId}`} />
+          {(contributeLoading || postStateLoading) && <p className="text-sm text-slate-500">Yükleniyor...</p>}
+          {!contributeLoading && !postStateLoading ? (
+            <>
+              <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Pool balance</p>
+                <p className="text-2xl font-semibold text-slate-900">{formatTokenAmount(postState?.reserve ?? 0n)} NOP</p>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <Button asChild variant="outline" className="rounded-full">
+                  <Link to={`/pool/${postId}/chart`}>Chart</Link>
+                </Button>
+                <Button asChild className="rounded-full">
+                  <Link to={`/pool/${postId}/buy`}>Buy</Link>
+                </Button>
+                {hasShares && (
+                  <Button asChild disabled={sellDisabled} className="rounded-full">
+                    <Link to={`/pool/${postId}/sell`}>Sell</Link>
                   </Button>
-                  <Button asChild variant="default">
-                    <Link to={`/pool/${postId}/buy`}>Buy</Link>
-                  </Button>
-                  {hasShares && (
-                    <Button asChild disabled={sellDisabled}>
-                      <Link to={`/pool/${postId}/sell`}>Sell</Link>
-                    </Button>
-                  )}
+                )}
+              </div>
+              {hasShares && sellDisabled ? (
+                <p className="text-xs text-amber-600">Rezerv yetersiz olduğu için satış geçici olarak kapalı.</p>
+              ) : null}
+              {networkMismatch ? (
+                <div className="rounded-xl border border-amber-200 bg-amber-50/80 p-3 text-sm text-amber-800">
+                  zkSync Era ağına geçiş yaparak pool işlemlerini gerçekleştirebilirsiniz (Chain ID: {CHAIN_ID}).
                 </div>
-                {hasShares && sellDisabled && (
-                  <p className="muted">Rezerv yetersiz olduğu için satış geçici olarak kapalı.</p>
-                )}
-                {networkMismatch && (
-                  <div className="rounded-md border border-warning/40 bg-warning/10 p-3 text-sm">
-                    zkSync Era ağına geçiş yaparak pool işlemlerini gerçekleştirebilirsiniz (Chain ID: {CHAIN_ID}).
-                  </div>
-                )}
-              </>
-            )}
-          </CardContent>
-        </Card>
+              ) : null}
+            </>
+          ) : null}
+        </DashboardCard>
       </div>
-    </Container>
-  );
+    );
 };
 
 export default PoolOverview;

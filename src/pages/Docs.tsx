@@ -55,8 +55,7 @@ const Docs = () => {
   return (
     <div className="space-y-5">
       <DashboardCard className="space-y-3">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-indigo-500">Docs • Phase 5</p>
-        <h1 className="text-2xl font-semibold text-slate-900">NOP Intelligence Layer Library</h1>
+        <DashboardSectionTitle label="Docs • Phase 5" title="NOP Intelligence Layer Library" />
         <p className="text-sm text-slate-600">
           Every listing-ready narrative is now available in-app. Select a document to dive into protocol mechanics, economics,
           and the onboarding flow without leaving the dashboard.

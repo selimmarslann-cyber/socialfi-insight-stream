@@ -6,8 +6,11 @@ import { DashboardCard } from "@/components/layout/visuals/DashboardCard";
 import { DashboardSectionTitle } from "@/components/layout/visuals/DashboardSectionTitle";
 import { MarketMicroChart } from "@/components/market/MarketMicroChart";
 import { PUBLIC_ENV } from "@/config/env";
-import TopUsersCard from "@/components/TopUsersCard";
 import { IntelligenceFeed } from "@/components/intel/IntelligenceFeed";
+import { TrendingUsers } from "@/components/widgets/TrendingUsers";
+import CryptoNews from "@/components/CryptoNews";
+import BoostedTasks from "@/components/BoostedTasks";
+import TokenBurn from "@/components/TokenBurn";
 
 type PriceSignal = {
   symbol: string;
@@ -68,46 +71,68 @@ const Index = () => {
     }));
   }, [signals]);
 
+  const heroSnapshot = useMemo(
+    () => [
+      { label: "Assets tracked", value: loadingSignals ? "—" : `${Math.max(signals.length, 12)}+` },
+      { label: "Active positions", value: "312" },
+      { label: "Reputation leaders", value: "28" },
+      { label: "7d burn", value: "38.2K NOP" },
+    ],
+    [loadingSignals, signals.length],
+  );
+
   return (
     <div className="space-y-5">
       <DashboardCard className="space-y-4">
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-indigo-500">NOP Intelligence Layer</p>
-          <h1 className="text-2xl font-semibold text-slate-900">AI Market Scanner</h1>
-          <p className="text-sm text-slate-500">Live intelligence spanning chains, wallets, and creators.</p>
-        </div>
-
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {microCharts.length > 0 && !loadingSignals
-            ? microCharts.map((chart) => (
-                <MarketMicroChart key={chart.symbol} symbol={chart.symbol} changePct={chart.change} data={chart.data} />
-              ))
-            : Array.from({ length: 3 }).map((_, index) => (
-                <div
-                  key={`sparkline-skeleton-${index}`}
-                  className="h-28 rounded-2xl border border-slate-100 bg-slate-50/60"
-                />
-              ))}
+        <DashboardSectionTitle label="Overview" title="NOP Intelligence Layer" />
+        <p className="text-sm text-slate-600">
+          Track social positions, AI signals, and community performance inside a single calm SocialFi command center.
+        </p>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {heroSnapshot.map((item) => (
+            <div key={item.label} className="rounded-2xl border border-slate-100 bg-slate-50/60 px-3 py-3 text-left">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">{item.label}</p>
+              <p className="text-xl font-semibold text-slate-900 tabular-nums">{item.value}</p>
+            </div>
+          ))}
         </div>
       </DashboardCard>
 
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
-          <AIMarketBar />
-          <div className="space-y-4">
-            <IntelligenceFeed />
-            <TopUsersCard title="Top Operators" limit={5} />
-          </div>
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.8fr)_minmax(0,1.2fr)]">
+        <div className="space-y-4">
+          <DashboardCard className="space-y-4">
+            <DashboardSectionTitle label="Market" title="Market context" />
+            <AIMarketBar />
+            <div className="grid gap-3 md:grid-cols-2">
+              {microCharts.length > 0 && !loadingSignals
+                ? microCharts.map((chart) => (
+                    <MarketMicroChart key={chart.symbol} symbol={chart.symbol} changePct={chart.change} data={chart.data} />
+                  ))
+                : Array.from({ length: 2 }).map((_, index) => (
+                    <div key={`sparkline-skeleton-${index}`} className="h-28 rounded-2xl border border-slate-100 bg-slate-50/60" />
+                  ))}
+            </div>
+          </DashboardCard>
+
+          <DashboardCard className="space-y-3">
+            <DashboardSectionTitle label="Community" title="Share intelligence" />
+            <PostComposer />
+          </DashboardCard>
+
+          <DashboardCard className="space-y-3">
+            <DashboardSectionTitle label="Feed" title="Live SocialFi stream" />
+            <FeedList />
+          </DashboardCard>
         </div>
 
-      <section className="space-y-3">
-        <DashboardSectionTitle label="Community" title="Share Intelligence" />
-        <PostComposer />
-      </section>
-
-      <section className="space-y-3">
-        <DashboardSectionTitle label="Feed" title="Live SocialFi Stream" />
-        <FeedList />
-      </section>
+        <aside className="space-y-4">
+          <IntelligenceFeed />
+          <TrendingUsers limit={5} />
+          <CryptoNews />
+          <BoostedTasks />
+          <TokenBurn />
+        </aside>
+      </div>
     </div>
   );
 };
