@@ -57,7 +57,7 @@ create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
 security definer
-set search_path = public
+set search_path = ''
 as $$
 declare
   fallback_username text;
@@ -93,14 +93,14 @@ drop policy if exists "profiles_insert_self" on public.profiles;
 create policy "profiles_insert_self"
 on public.profiles
 for insert
-with check (auth.uid() = id);
+with check ((select auth.uid()) = id);
 
 drop policy if exists "profiles_update_self" on public.profiles;
 create policy "profiles_update_self"
 on public.profiles
 for update
-using (auth.uid() = id)
-with check (auth.uid() = id);
+using ((select auth.uid()) = id)
+with check ((select auth.uid()) = id);
 
 -- ---------------------------------------------------------------------
 -- Admin helper function
@@ -110,13 +110,13 @@ create or replace function public.is_admin()
 returns boolean
 language sql
 stable
-set search_path = public
+set search_path = ''
 as $$
   select coalesce(
     (
       select is_admin
       from public.profiles
-      where id = auth.uid()
+      where id = (select auth.uid())
     ),
     false
   );
@@ -159,20 +159,20 @@ drop policy if exists "posts_insert_own" on public.posts;
 create policy "posts_insert_own"
 on public.posts
 for insert
-with check (auth.uid() = author_id);
+with check ((select auth.uid()) = author_id);
 
 drop policy if exists "posts_update_own" on public.posts;
 create policy "posts_update_own"
 on public.posts
 for update
-using (auth.uid() = author_id)
-with check (auth.uid() = author_id);
+using ((select auth.uid()) = author_id)
+with check ((select auth.uid()) = author_id);
 
 drop policy if exists "posts_delete_own" on public.posts;
 create policy "posts_delete_own"
 on public.posts
 for delete
-using (auth.uid() = author_id);
+using ((select auth.uid()) = author_id);
 
 create table if not exists public.comments (
   id bigserial primary key,
@@ -194,20 +194,20 @@ drop policy if exists "comments_insert_own" on public.comments;
 create policy "comments_insert_own"
 on public.comments
 for insert
-with check (auth.uid() = author_id);
+with check ((select auth.uid()) = author_id);
 
 drop policy if exists "comments_update_own" on public.comments;
 create policy "comments_update_own"
 on public.comments
 for update
-using (auth.uid() = author_id)
-with check (auth.uid() = author_id);
+using ((select auth.uid()) = author_id)
+with check ((select auth.uid()) = author_id);
 
 drop policy if exists "comments_delete_own" on public.comments;
 create policy "comments_delete_own"
 on public.comments
 for delete
-using (auth.uid() = author_id);
+using ((select auth.uid()) = author_id);
 
 create table if not exists public.ratings (
   id bigserial primary key,
@@ -230,14 +230,14 @@ drop policy if exists "ratings_insert_own" on public.ratings;
 create policy "ratings_insert_own"
 on public.ratings
 for insert
-with check (auth.uid() = rater_id);
+with check ((select auth.uid()) = rater_id);
 
 drop policy if exists "ratings_update_own" on public.ratings;
 create policy "ratings_update_own"
 on public.ratings
 for update
-using (auth.uid() = rater_id)
-with check (auth.uid() = rater_id);
+using ((select auth.uid()) = rater_id)
+with check ((select auth.uid()) = rater_id);
 
 -- ---------------------------------------------------------------------
 -- Wallet-native social feed (wallet-authored profiles/posts)
@@ -358,8 +358,8 @@ drop policy if exists "social_posts_delete_admin" on public.social_posts;
 create policy "social_posts_delete_admin"
 on public.social_posts
 for delete
-using (auth.role() = 'service_role')
-with check (auth.role() = 'service_role');
+using ((select auth.role()) = 'service_role')
+with check ((select auth.role()) = 'service_role');
 
 drop policy if exists "social_posts_update_admin" on public.social_posts;
 drop policy if exists "social_posts_update_public" on public.social_posts;
@@ -467,8 +467,8 @@ drop policy if exists "boosted_tasks_manage_admin" on public.boosted_tasks;
 create policy "boosted_tasks_manage_admin"
 on public.boosted_tasks
 for all
-using (public.is_admin() or auth.role() = 'service_role')
-with check (public.is_admin() or auth.role() = 'service_role');
+using (public.is_admin() or (select auth.role()) = 'service_role')
+with check (public.is_admin() or (select auth.role()) = 'service_role');
 
 create table if not exists public.user_tasks (
   id uuid primary key default gen_random_uuid(),
@@ -493,20 +493,20 @@ drop policy if exists "user_tasks_select_own" on public.user_tasks;
 create policy "user_tasks_select_own"
 on public.user_tasks
 for select
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 drop policy if exists "user_tasks_insert_own" on public.user_tasks;
 create policy "user_tasks_insert_own"
 on public.user_tasks
 for insert
-with check (auth.uid() = user_id);
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "user_tasks_update_own" on public.user_tasks;
 create policy "user_tasks_update_own"
 on public.user_tasks
 for update
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
 
 create table if not exists public.user_task_rewards (
   id uuid primary key default gen_random_uuid(),
@@ -531,20 +531,20 @@ drop policy if exists "user_task_rewards_select_own" on public.user_task_rewards
 create policy "user_task_rewards_select_own"
 on public.user_task_rewards
 for select
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 drop policy if exists "user_task_rewards_insert_own" on public.user_task_rewards;
 create policy "user_task_rewards_insert_own"
 on public.user_task_rewards
 for insert
-with check (auth.uid() = user_id);
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "user_task_rewards_update_own" on public.user_task_rewards;
 create policy "user_task_rewards_update_own"
 on public.user_task_rewards
 for update
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
 
 -- ---------------------------------------------------------------------
 -- Investment marketplace primitives
@@ -571,8 +571,8 @@ drop policy if exists "investment_items_manage_admin" on public.investment_items
 create policy "investment_items_manage_admin"
 on public.investment_items
 for all
-using (public.is_admin() or auth.role() = 'service_role')
-with check (public.is_admin() or auth.role() = 'service_role');
+using (public.is_admin() or (select auth.role()) = 'service_role')
+with check (public.is_admin() or (select auth.role()) = 'service_role');
 
 create table if not exists public.investment_orders (
   id bigserial primary key,
@@ -594,16 +594,16 @@ create policy "investment_orders_select_scope"
 on public.investment_orders
 for select
 using (
-  auth.uid() = user_id
+  (select auth.uid()) = user_id
   or public.is_admin()
-  or auth.role() = 'service_role'
+  or (select auth.role()) = 'service_role'
 );
 
 drop policy if exists "investment_orders_insert_own" on public.investment_orders;
 create policy "investment_orders_insert_own"
 on public.investment_orders
 for insert
-with check (auth.uid() = user_id);
+with check ((select auth.uid()) = user_id);
 
 -- ---------------------------------------------------------------------
 -- Trade logs / on-chain reputation
@@ -638,7 +638,7 @@ drop policy if exists "nop_trades_insert_service" on public.nop_trades;
 create policy "nop_trades_insert_service"
 on public.nop_trades
 for insert
-with check (auth.role() = 'service_role');
+with check ((select auth.role()) = 'service_role');
 
 -- ---------------------------------------------------------------------
 -- Contact form
@@ -661,15 +661,15 @@ create policy "contact_messages_insert_public"
 on public.contact_messages
 for insert
 with check (
-  (auth.uid() = reporter_id)
-  or (auth.uid() is null and reporter_id is null)
+  ((select auth.uid()) = reporter_id)
+  or ((select auth.uid()) is null and reporter_id is null)
 );
 
 drop policy if exists "contact_messages_select_admin" on public.contact_messages;
 create policy "contact_messages_select_admin"
 on public.contact_messages
 for select
-using (public.is_admin() or auth.role() = 'service_role');
+using (public.is_admin() or (select auth.role()) = 'service_role');
 
 -- ---------------------------------------------------------------------
 -- News cache
@@ -700,8 +700,8 @@ drop policy if exists "news_cache_manage_admin" on public.news_cache;
 create policy "news_cache_manage_admin"
 on public.news_cache
 for all
-using (public.is_admin() or auth.role() = 'service_role')
-with check (public.is_admin() or auth.role() = 'service_role');
+using (public.is_admin() or (select auth.role()) = 'service_role')
+with check (public.is_admin() or (select auth.role()) = 'service_role');
 
 -- ---------------------------------------------------------------------
 -- Burn metrics
@@ -729,8 +729,8 @@ drop policy if exists "burn_widget_manage_admin" on public.burn_widget;
 create policy "burn_widget_manage_admin"
 on public.burn_widget
 for update
-using (public.is_admin() or auth.role() = 'service_role')
-with check (public.is_admin() or auth.role() = 'service_role');
+using (public.is_admin() or (select auth.role()) = 'service_role')
+with check (public.is_admin() or (select auth.role()) = 'service_role');
 
 create table if not exists public.burn_stats (
   id int primary key,
@@ -770,8 +770,8 @@ drop policy if exists "burn_stats_manage_admin" on public.burn_stats;
 create policy "burn_stats_manage_admin"
 on public.burn_stats
 for all
-using (public.is_admin() or auth.role() = 'service_role')
-with check (public.is_admin() or auth.role() = 'service_role');
+using (public.is_admin() or (select auth.role()) = 'service_role')
+with check (public.is_admin() or (select auth.role()) = 'service_role');
 
 -- ---------------------------------------------------------------------
 -- Games / leaderboard
@@ -808,27 +808,27 @@ drop policy if exists "gaming_scores_insert_own" on public.gaming_scores;
 create policy "gaming_scores_insert_own"
 on public.gaming_scores
 for insert
-with check (auth.uid() = user_id);
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "gaming_scores_update_own" on public.gaming_scores;
 create policy "gaming_scores_update_own"
 on public.gaming_scores
 for update
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "gaming_scores_admin_update" on public.gaming_scores;
 create policy "gaming_scores_admin_update"
 on public.gaming_scores
 for update
-using (public.is_admin() or auth.role() = 'service_role')
-with check (public.is_admin() or auth.role() = 'service_role');
+using (public.is_admin() or (select auth.role()) = 'service_role')
+with check (public.is_admin() or (select auth.role()) = 'service_role');
 
 create or replace function public.reset_daily_scores()
 returns void
 language sql
 security definer
-set search_path = public
+set search_path = ''
 as $$
   update public.gaming_scores
   set daily_score = 0;
@@ -838,7 +838,7 @@ create or replace function public.reset_weekly_scores()
 returns void
 language sql
 security definer
-set search_path = public
+set search_path = ''
 as $$
   update public.gaming_scores
   set weekly_score = 0;
@@ -860,16 +860,16 @@ create policy "game_sessions_select_scope"
 on public.game_sessions
 for select
 using (
-  auth.uid() = user_id
+  (select auth.uid()) = user_id
   or public.is_admin()
-  or auth.role() = 'service_role'
+  or (select auth.role()) = 'service_role'
 );
 
 drop policy if exists "game_sessions_insert_own" on public.game_sessions;
 create policy "game_sessions_insert_own"
 on public.game_sessions
 for insert
-with check (auth.uid() = user_id);
+with check ((select auth.uid()) = user_id);
 
 -- ---------------------------------------------------------------------
 -- Protocol social positions & reputation
@@ -909,13 +909,13 @@ create policy "social_positions_insert_self"
 on public.social_positions
 for insert
 with check (
-  auth.role() = 'service_role'
+  (select auth.role()) = 'service_role'
   or (
-    auth.uid() is not null
+    (select auth.uid()) is not null
     and exists (
       select 1
       from public.profiles p
-      where p.id = auth.uid()
+      where p.id = (select auth.uid())
         and p.wallet_address is not null
         and lower(p.wallet_address) = lower(user_address)
     )
@@ -927,26 +927,26 @@ create policy "social_positions_update_self"
 on public.social_positions
 for update
 using (
-  auth.role() = 'service_role'
+  (select auth.role()) = 'service_role'
   or (
-    auth.uid() is not null
+    (select auth.uid()) is not null
     and exists (
       select 1
       from public.profiles p
-      where p.id = auth.uid()
+      where p.id = (select auth.uid())
         and p.wallet_address is not null
         and lower(p.wallet_address) = lower(user_address)
     )
   )
 )
 with check (
-  auth.role() = 'service_role'
+  (select auth.role()) = 'service_role'
   or (
-    auth.uid() is not null
+    (select auth.uid()) is not null
     and exists (
       select 1
       from public.profiles p
-      where p.id = auth.uid()
+      where p.id = (select auth.uid())
         and p.wallet_address is not null
         and lower(p.wallet_address) = lower(user_address)
     )
@@ -980,8 +980,8 @@ drop policy if exists "reputation_scores_manage_auth" on public.reputation_score
 create policy "reputation_scores_manage_auth"
 on public.reputation_scores
 for all
-using (auth.role() = 'service_role' or auth.uid() is not null)
-with check (auth.role() = 'service_role' or auth.uid() is not null);
+using ((select auth.role()) = 'service_role' or (select auth.uid()) is not null)
+with check ((select auth.role()) = 'service_role' or (select auth.uid()) is not null);
 
 -- ---------------------------------------------------------------------
 -- Phase 3: On-chain positions & Alpha metrics
@@ -1026,8 +1026,8 @@ drop policy if exists "onchain_positions_update_service" on public.onchain_posit
 create policy "onchain_positions_update_service"
 on public.onchain_positions
 for update
-using (auth.role() = 'service_role')
-with check (auth.role() = 'service_role');
+using ((select auth.role()) = 'service_role')
+with check ((select auth.role()) = 'service_role');
 
 create table if not exists public.alpha_metrics (
   id uuid primary key default gen_random_uuid(),
@@ -1059,8 +1059,8 @@ drop policy if exists "alpha_metrics_manage_service" on public.alpha_metrics;
 create policy "alpha_metrics_manage_service"
 on public.alpha_metrics
 for all
-using (auth.role() = 'service_role')
-with check (auth.role() = 'service_role');
+using ((select auth.role()) = 'service_role')
+with check ((select auth.role()) = 'service_role');
 
 -- ---------------------------------------------------------------------
 -- Creator Earnings (Fair Fee Distribution)
@@ -1089,7 +1089,7 @@ create policy "creator_earnings_select_own"
 on public.creator_earnings
 for select
 using (
-  lower(wallet_address) = lower(coalesce((select wallet_address from public.social_profiles where id = auth.uid()), ''))
+  lower(wallet_address) = lower(coalesce((select wallet_address from public.social_profiles where id = (select auth.uid())), ''))
   or public.is_admin()
 );
 
@@ -1097,18 +1097,18 @@ drop policy if exists "creator_earnings_insert_service" on public.creator_earnin
 create policy "creator_earnings_insert_service"
 on public.creator_earnings
 for insert
-with check (auth.role() = 'service_role');
+with check ((select auth.role()) = 'service_role');
 
 drop policy if exists "creator_earnings_update_own" on public.creator_earnings;
 create policy "creator_earnings_update_own"
 on public.creator_earnings
 for update
 using (
-  lower(wallet_address) = lower(coalesce((select wallet_address from public.social_profiles where id = auth.uid()), ''))
+  lower(wallet_address) = lower(coalesce((select wallet_address from public.social_profiles where id = (select auth.uid())), ''))
   or public.is_admin()
 )
 with check (
-  lower(wallet_address) = lower(coalesce((select wallet_address from public.social_profiles where id = auth.uid()), ''))
+  lower(wallet_address) = lower(coalesce((select wallet_address from public.social_profiles where id = (select auth.uid())), ''))
   or public.is_admin()
 );
 
@@ -1144,7 +1144,7 @@ drop policy if exists "fee_distributions_insert_service" on public.fee_distribut
 create policy "fee_distributions_insert_service"
 on public.fee_distributions
 for insert
-with check (auth.role() = 'service_role');
+with check ((select auth.role()) = 'service_role');
 
 -- ---------------------------------------------------------------------
 -- Follow System
@@ -1174,13 +1174,13 @@ create policy "follows_insert_own"
 on public.follows
 for insert
 with check (
-  auth.role() = 'service_role'
+  (select auth.role()) = 'service_role'
   or (
-    auth.uid() is not null
+    (select auth.uid()) is not null
     and exists (
       select 1
       from public.social_profiles p
-      where p.id = auth.uid()
+      where p.id = (select auth.uid())
         and p.wallet_address is not null
         and lower(p.wallet_address) = lower(follower_address)
     )
@@ -1192,13 +1192,13 @@ create policy "follows_delete_own"
 on public.follows
 for delete
 using (
-  auth.role() = 'service_role'
+  (select auth.role()) = 'service_role'
   or (
-    auth.uid() is not null
+    (select auth.uid()) is not null
     and exists (
       select 1
       from public.social_profiles p
-      where p.id = auth.uid()
+      where p.id = (select auth.uid())
         and p.wallet_address is not null
         and lower(p.wallet_address) = lower(follower_address)
     )
@@ -1231,7 +1231,7 @@ create policy "notifications_select_own"
 on public.notifications
 for select
 using (
-  lower(user_address) = lower(coalesce((select wallet_address from public.social_profiles where id = auth.uid()), ''))
+  lower(user_address) = lower(coalesce((select wallet_address from public.social_profiles where id = (select auth.uid())), ''))
   or public.is_admin()
 );
 
@@ -1239,14 +1239,14 @@ drop policy if exists "notifications_insert_service" on public.notifications;
 create policy "notifications_insert_service"
 on public.notifications
 for insert
-with check (auth.role() = 'service_role');
+with check ((select auth.role()) = 'service_role');
 
 drop policy if exists "notifications_update_own" on public.notifications;
 create policy "notifications_update_own"
 on public.notifications
 for update
 using (
-  lower(user_address) = lower(coalesce((select wallet_address from public.social_profiles where id = auth.uid()), ''))
+  lower(user_address) = lower(coalesce((select wallet_address from public.social_profiles where id = (select auth.uid())), ''))
   or public.is_admin()
 );
 
@@ -1278,13 +1278,13 @@ create policy "shares_insert_own"
 on public.shares
 for insert
 with check (
-  auth.role() = 'service_role'
+  (select auth.role()) = 'service_role'
   or (
-    auth.uid() is not null
+    (select auth.uid()) is not null
     and exists (
       select 1
       from public.social_profiles p
-      where p.id = auth.uid()
+      where p.id = (select auth.uid())
         and p.wallet_address is not null
         and lower(p.wallet_address) = lower(sharer_address)
     )
@@ -1316,8 +1316,8 @@ create policy "copy_trades_select_own"
 on public.copy_trades
 for select
 using (
-  lower(copier_address) = lower(coalesce((select wallet_address from public.social_profiles where id = auth.uid()), ''))
-  or lower(copied_address) = lower(coalesce((select wallet_address from public.social_profiles where id = auth.uid()), ''))
+  lower(copier_address) = lower(coalesce((select wallet_address from public.social_profiles where id = (select auth.uid())), ''))
+  or lower(copied_address) = lower(coalesce((select wallet_address from public.social_profiles where id = (select auth.uid())), ''))
   or public.is_admin()
 );
 
@@ -1326,13 +1326,13 @@ create policy "copy_trades_insert_own"
 on public.copy_trades
 for insert
 with check (
-  auth.role() = 'service_role'
+  (select auth.role()) = 'service_role'
   or (
-    auth.uid() is not null
+    (select auth.uid()) is not null
     and exists (
       select 1
       from public.social_profiles p
-      where p.id = auth.uid()
+      where p.id = (select auth.uid())
         and p.wallet_address is not null
         and lower(p.wallet_address) = lower(copier_address)
     )
@@ -1344,7 +1344,7 @@ create policy "copy_trades_update_own"
 on public.copy_trades
 for update
 using (
-  lower(copier_address) = lower(coalesce((select wallet_address from public.social_profiles where id = auth.uid()), ''))
+  lower(copier_address) = lower(coalesce((select wallet_address from public.social_profiles where id = (select auth.uid())), ''))
   or public.is_admin()
 );
 
