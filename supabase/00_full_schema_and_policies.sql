@@ -243,14 +243,31 @@ create table if not exists public.social_profiles (
   id uuid primary key default gen_random_uuid(),
   wallet_address text unique not null,
   display_name text,
+  handle text unique,
   avatar_url text,
   bio text,
+  nop_id text unique,
+  is_banned boolean not null default false,
   total_posts integer not null default 0,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 
 create index if not exists idx_social_profiles_wallet on public.social_profiles (lower(wallet_address));
+create unique index if not exists idx_social_profiles_handle on public.social_profiles (lower(handle)) where handle is not null;
+create unique index if not exists idx_social_profiles_nop_id on public.social_profiles (lower(nop_id)) where nop_id is not null;
+create index if not exists idx_social_profiles_banned on public.social_profiles (is_banned);
+
+alter table public.social_profiles
+  add column if not exists display_name text,
+  add column if not exists handle text,
+  add column if not exists avatar_url text,
+  add column if not exists bio text,
+  add column if not exists nop_id text,
+  add column if not exists is_banned boolean not null default false,
+  add column if not exists total_posts integer not null default 0,
+  add column if not exists created_at timestamptz not null default now(),
+  add column if not exists updated_at timestamptz not null default now();
 
 drop trigger if exists set_timestamp_social_profiles on public.social_profiles;
 create trigger set_timestamp_social_profiles
@@ -282,6 +299,7 @@ with check (true);
 create table if not exists public.social_posts (
   id bigserial primary key,
   wallet_address text not null,
+  author_profile_id uuid references public.social_profiles(id) on delete set null,
   author_name text,
   author_avatar_url text,
   content text not null,
@@ -289,12 +307,22 @@ create table if not exists public.social_posts (
   tags text[],
   pool_enabled boolean not null default false,
   contract_post_id bigint,
+  is_hidden boolean not null default false,
+  is_featured boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 
 create index if not exists idx_social_posts_wallet on public.social_posts (lower(wallet_address));
 create index if not exists idx_social_posts_created_at on public.social_posts (created_at desc);
+create index if not exists idx_social_posts_author_profile on public.social_posts (author_profile_id);
+create index if not exists idx_social_posts_hidden on public.social_posts (is_hidden) where is_hidden = true;
+create index if not exists idx_social_posts_featured on public.social_posts (is_featured) where is_featured = true;
+
+alter table public.social_posts
+  add column if not exists author_profile_id uuid references public.social_profiles(id) on delete set null,
+  add column if not exists is_hidden boolean not null default false,
+  add column if not exists is_featured boolean not null default false;
 
 drop trigger if exists set_timestamp_social_posts on public.social_posts;
 create trigger set_timestamp_social_posts
@@ -324,11 +352,12 @@ using (auth.role() = 'service_role')
 with check (auth.role() = 'service_role');
 
 drop policy if exists "social_posts_update_admin" on public.social_posts;
-create policy "social_posts_update_admin"
+drop policy if exists "social_posts_update_public" on public.social_posts;
+create policy "social_posts_update_public"
 on public.social_posts
 for update
-using (auth.role() = 'service_role')
-with check (auth.role() = 'service_role');
+using (true)
+with check (true);
 
 create table if not exists public.social_comments (
   id bigserial primary key,
@@ -362,32 +391,35 @@ for delete
 using (true)
 with check (true);
 
-create table if not exists public.social_likes (
+create table if not exists public.post_likes (
+  id bigserial primary key,
   post_id bigint not null references public.social_posts(id) on delete cascade,
+  profile_id uuid not null references public.social_profiles(id) on delete cascade,
   wallet_address text not null,
   created_at timestamptz not null default now(),
-  primary key (post_id, wallet_address)
+  unique (post_id, profile_id)
 );
 
-create index if not exists idx_social_likes_wallet on public.social_likes (lower(wallet_address));
+create index if not exists idx_post_likes_wallet on public.post_likes (lower(wallet_address));
+create index if not exists idx_post_likes_profile on public.post_likes (profile_id);
 
-alter table public.social_likes enable row level security;
+alter table public.post_likes enable row level security;
 
-drop policy if exists "social_likes_select_public" on public.social_likes;
-create policy "social_likes_select_public"
-on public.social_likes
+drop policy if exists "post_likes_select_public" on public.post_likes;
+create policy "post_likes_select_public"
+on public.post_likes
 for select
 using (true);
 
-drop policy if exists "social_likes_insert_public" on public.social_likes;
-create policy "social_likes_insert_public"
-on public.social_likes
+drop policy if exists "post_likes_insert_public" on public.post_likes;
+create policy "post_likes_insert_public"
+on public.post_likes
 for insert
 with check (true);
 
-drop policy if exists "social_likes_delete_public" on public.social_likes;
-create policy "social_likes_delete_public"
-on public.social_likes
+drop policy if exists "post_likes_delete_public" on public.post_likes;
+create policy "post_likes_delete_public"
+on public.post_likes
 for delete
 using (true)
 with check (true);

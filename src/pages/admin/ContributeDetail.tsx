@@ -7,12 +7,12 @@ import { Container } from "@/components/layout/Container";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { fetchAdminContribute, toggleContributePool } from "@/backend/contributes";
-import { useAuthStore } from "@/lib/store";
+import { isAdminLoggedIn } from "@/lib/adminAuth";
 
 export default function AdminContributeDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { isAdmin } = useAuthStore();
+  const isAdmin = isAdminLoggedIn();
   const queryClient = useQueryClient();
 
   useEffect(() => {

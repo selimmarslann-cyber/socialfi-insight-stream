@@ -5,7 +5,7 @@
 - Parked the entire games suite: routes/navigation links removed, all game/admin/localStore files now carry the experimental notice, and the modules remain available for future reactivation.
 - Unified boosted-task surfaces around `tasks/BoostedTasks` + `TaskCard`; sidebar/widget variants are deprecated in-place so there is one canonical UI in LeftRail.
 - Flagged legacy feed components (`PostBox`, `PostList`, `SmartButton`, `EventsBoost`) with deprecation banners so they are clearly out of the main PHASE 2 experience.
-- Hardened the admin layer: `useAuthStore` no longer stores credentials, the `Admin` page and downstream routes explicitly state that access is disabled, and `BurnPanel` is now a mock-only UI that logs payloads instead of sending tokens from the client.
+- Hardened the admin layer: preview auth now lives in `src/lib/adminAuth.ts`, the `Admin` page and downstream routes explicitly state that access is disabled, and `BurnPanel` is now a mock-only UI that logs payloads instead of sending tokens from the client.
 
 ## Lint / Type / Build Status
 

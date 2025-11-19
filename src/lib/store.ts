@@ -2,24 +2,7 @@ import { create } from "zustand";
 import { generateRefCode } from "@/lib/utils";
 import type { WalletTx } from "@/types/wallet";
 import type { Post } from "@/types/feed";
-import { ensureSocialProfile } from "@/lib/social";
-
-const ADMIN_SESSION_KEY = "nop_admin_session";
-const ADMIN_USERNAME = "selimarslan";
-const ADMIN_PASSWORD = "selimarslan";
-
-const isBrowser = () => typeof window !== "undefined";
-const readAdminSession = () => {
-  if (!isBrowser()) return false;
-  return window.localStorage.getItem(ADMIN_SESSION_KEY) === ADMIN_USERNAME;
-};
-
-interface AuthState {
-  isAdmin: boolean;
-  adminUser: string | null;
-  login: (username: string, password: string) => boolean;
-  logout: () => void;
-}
+import { ensureProfileForWallet } from "@/lib/profile";
 
 type WalletProvider = 'metamask' | 'trust' | 'email';
 
@@ -50,27 +33,6 @@ interface WalletState {
   setChainId: (chainId?: number) => void;
   addTx: (tx: WalletTx) => void;
 }
-
-export const useAuthStore = create<AuthState>((set) => ({
-  isAdmin: readAdminSession(),
-  adminUser: readAdminSession() ? ADMIN_USERNAME : null,
-  login: (username, password) => {
-    const isValid = username === ADMIN_USERNAME && password === ADMIN_PASSWORD;
-    if (isValid && isBrowser()) {
-      window.localStorage.setItem(ADMIN_SESSION_KEY, ADMIN_USERNAME);
-    }
-    if (isValid) {
-      set({ isAdmin: true, adminUser: ADMIN_USERNAME });
-    }
-    return isValid;
-  },
-  logout: () => {
-    if (isBrowser()) {
-      window.localStorage.removeItem(ADMIN_SESSION_KEY);
-    }
-    set({ isAdmin: false, adminUser: null });
-  },
-}));
 
 export const useWalletStore = create<WalletState>((set) => ({
   connected: false,
@@ -153,7 +115,7 @@ export const useWalletStore = create<WalletState>((set) => ({
           chainId,
         };
       });
-    void ensureSocialProfile({ walletAddress: address });
+    void ensureProfileForWallet(address);
   },
   disconnect: () =>
     set((state) => ({
