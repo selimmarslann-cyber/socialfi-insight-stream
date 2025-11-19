@@ -1295,6 +1295,44 @@ with check (
 -- Contributes (Investment Pools)
 -- ---------------------------------------------------------------------
 
+-- Önce mevcut tabloyu kontrol et ve gerekirse düzelt
+DO $$ 
+BEGIN
+  -- Eğer author_id kolonu varsa, author'a dönüştür
+  IF EXISTS (
+    SELECT 1 
+    FROM information_schema.columns 
+    WHERE table_schema = 'public' 
+      AND table_name = 'contributes' 
+      AND column_name = 'author_id'
+  ) THEN
+    -- author_id kolonunu author'a dönüştür (eğer author kolonu yoksa)
+    IF NOT EXISTS (
+      SELECT 1 
+      FROM information_schema.columns 
+      WHERE table_schema = 'public' 
+        AND table_name = 'contributes' 
+        AND column_name = 'author'
+    ) THEN
+      ALTER TABLE public.contributes 
+        ADD COLUMN author text;
+      
+      -- author_id'den author'a veri kopyala (eğer uuid ise text'e çevir)
+      UPDATE public.contributes 
+      SET author = author_id::text 
+      WHERE author IS NULL;
+      
+      -- author_id kolonunu sil
+      ALTER TABLE public.contributes 
+        DROP COLUMN IF EXISTS author_id CASCADE;
+    ELSE
+      -- Sadece author_id'yi sil
+      ALTER TABLE public.contributes 
+        DROP COLUMN IF EXISTS author_id CASCADE;
+    END IF;
+  END IF;
+END $$;
+
 create table if not exists public.contributes (
   id uuid primary key default gen_random_uuid(),
   title text not null,
@@ -1311,6 +1349,26 @@ create table if not exists public.contributes (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+-- Eksik kolonları ekle
+alter table public.contributes
+  add column if not exists title text,
+  add column if not exists subtitle text,
+  add column if not exists description text,
+  add column if not exists author text,
+  add column if not exists tags text[],
+  add column if not exists category text default 'trading',
+  add column if not exists cover_image text,
+  add column if not exists pool_enabled boolean not null default false,
+  add column if not exists contract_post_id bigint,
+  add column if not exists weekly_score integer not null default 0,
+  add column if not exists weekly_volume_nop numeric(38,18) not null default 0,
+  add column if not exists created_at timestamptz not null default now(),
+  add column if not exists updated_at timestamptz not null default now();
+
+-- author_id kolonunu kaldır (eğer hala varsa)
+alter table public.contributes
+  drop column if exists author_id cascade;
 
 create index if not exists idx_contributes_author on public.contributes (lower(author));
 create index if not exists idx_contributes_created_at on public.contributes (created_at desc);
