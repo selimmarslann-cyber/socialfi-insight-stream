@@ -1,9 +1,30 @@
-/* Professional Animations & Transitions */
+/**
+ * Shared Animation Utilities for NOP Intelligence Layer
+ * 
+ * Usage in React components:
+ *   className="animate-fade-in"
+ *   className="animate-fade-in-up"
+ *   className="animate-pulse-soft"
+ *   className="animate-slide-left-loop"
+ * 
+ * All animations are GPU-friendly (use transform/opacity) and optimized for performance.
+ */
 
+/* Fade In - Simple opacity transition */
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Fade In Up - Slide up with fade */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
@@ -11,141 +32,49 @@
   }
 }
 
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateX(-12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
+/* Pulse Soft - Subtle scale/pulse animation */
+@keyframes pulseSoft {
+  0%, 100% {
     opacity: 1;
     transform: scale(1);
   }
+  50% {
+    opacity: 0.85;
+    transform: scale(0.98);
+  }
 }
 
-@keyframes shimmer {
+/* Slide Left Loop - Continuous left movement for tickers/charts */
+@keyframes slideLeftLoop {
   0% {
-    background-position: -1000px 0;
+    transform: translateX(0);
   }
   100% {
-    background-position: 1000px 0;
+    transform: translateX(-100%);
   }
 }
 
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes bounce {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-4px);
-  }
-}
-
-/* Utility Classes */
+/* Animation Utility Classes */
 .animate-fade-in {
-  animation: fadeIn 0.3s ease-out;
-}
-
-.animate-slide-in {
-  animation: slideIn 0.3s ease-out;
-}
-
-.animate-scale-in {
-  animation: scaleIn 0.2s ease-out;
-}
-
-.animate-shimmer {
-  animation: shimmer 2s infinite linear;
-  background: linear-gradient(
-    to right,
-    var(--color-surface-muted) 0%,
-    rgba(255, 255, 255, 0.1) 50%,
-    var(--color-surface-muted) 100%
-  );
-  background-size: 1000px 100%;
-}
-
-.animate-pulse-slow {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-/* Smooth Transitions */
-.transition-smooth {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.transition-bounce {
-  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-}
-
-/* Hover Effects */
-.hover-lift {
-  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
-}
-
-.hover-lift:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-elevated-card);
-}
-
-.hover-glow {
-  transition: box-shadow 0.3s ease-out;
-}
-
-.hover-glow:hover {
-  box-shadow: 0 0 20px rgba(79, 70, 229, 0.3);
-}
-
-/* Loading States */
-.skeleton {
-  background: linear-gradient(
-    90deg,
-    var(--color-surface-muted) 25%,
-    rgba(255, 255, 255, 0.1) 50%,
-    var(--color-surface-muted) 75%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-}
-
-/* Stagger Animation */
-.stagger-item {
-  opacity: 0;
   animation: fadeIn 0.4s ease-out forwards;
 }
 
-.stagger-item:nth-child(1) { animation-delay: 0.05s; }
-.stagger-item:nth-child(2) { animation-delay: 0.1s; }
-.stagger-item:nth-child(3) { animation-delay: 0.15s; }
-.stagger-item:nth-child(4) { animation-delay: 0.2s; }
-.stagger-item:nth-child(5) { animation-delay: 0.25s; }
-.stagger-item:nth-child(6) { animation-delay: 0.3s; }
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
 
+.animate-pulse-soft {
+  animation: pulseSoft 2s ease-in-out infinite;
+}
+
+.animate-slide-left-loop {
+  animation: slideLeftLoop 20s linear infinite;
+}
+
+/* Optional: Add will-change for better performance on animated elements */
+.animate-fade-in,
+.animate-fade-in-up,
+.animate-pulse-soft,
+.animate-slide-left-loop {
+  will-change: transform, opacity;
+}

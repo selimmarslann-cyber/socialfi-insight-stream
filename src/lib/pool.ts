@@ -395,13 +395,3 @@ export const getPreviewSell = async (
   }
 };
 
-/**
- * getUserShares
- * Minimal stub: always returns 0n (no shares).
- */
-export const getUserShares = async (
-  _user: string,
-  _postId: number | string | bigint,
-): Promise<bigint> => {
-  return 0n;
-};

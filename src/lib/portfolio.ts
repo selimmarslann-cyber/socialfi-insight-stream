@@ -71,6 +71,7 @@ export async function fetchUserPortfolio(
     for (const { contribute, postId, shares } of sharesResults) {
       if (shares === 0n) continue;
 
+      try {
         // Get cost basis (from trades) - parallel execution
         const [tradesResult, sellPreview] = await Promise.all([
           client
