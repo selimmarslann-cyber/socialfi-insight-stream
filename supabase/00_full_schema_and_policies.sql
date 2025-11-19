@@ -1292,6 +1292,119 @@ with check (
 );
 
 -- ---------------------------------------------------------------------
+-- Contributes (Investment Pools)
+-- ---------------------------------------------------------------------
+
+create table if not exists public.contributes (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  subtitle text,
+  description text,
+  author text not null,
+  tags text[],
+  category text default 'trading',
+  cover_image text,
+  pool_enabled boolean not null default false,
+  contract_post_id bigint,
+  weekly_score integer not null default 0,
+  weekly_volume_nop numeric(38,18) not null default 0,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists idx_contributes_author on public.contributes (lower(author));
+create index if not exists idx_contributes_created_at on public.contributes (created_at desc);
+create index if not exists idx_contributes_pool_enabled on public.contributes (pool_enabled) where pool_enabled = true;
+create index if not exists idx_contributes_contract_post_id on public.contributes (contract_post_id) where contract_post_id is not null;
+
+drop trigger if exists set_timestamp_contributes on public.contributes;
+create trigger set_timestamp_contributes
+before update on public.contributes
+for each row
+execute procedure public.set_updated_at();
+
+alter table public.contributes enable row level security;
+
+drop policy if exists "contributes_select_public" on public.contributes;
+create policy "contributes_select_public"
+on public.contributes
+for select
+using (true);
+
+drop policy if exists "contributes_insert_public" on public.contributes;
+create policy "contributes_insert_public"
+on public.contributes
+for insert
+with check (true);
+
+drop policy if exists "contributes_update_public" on public.contributes;
+create policy "contributes_update_public"
+on public.contributes
+for update
+using (true)
+with check (true);
+
+drop policy if exists "contributes_delete_admin" on public.contributes;
+create policy "contributes_delete_admin"
+on public.contributes
+for delete
+using (public.is_admin() or (select auth.role()) = 'service_role')
+with check (public.is_admin() or (select auth.role()) = 'service_role');
+
+-- ---------------------------------------------------------------------
+-- Pool Positions (User investments in contributes)
+-- ---------------------------------------------------------------------
+
+create table if not exists public.pool_positions (
+  id uuid primary key default gen_random_uuid(),
+  wallet_address text not null,
+  contribute_id uuid not null references public.contributes(id) on delete cascade,
+  post_id bigint,
+  shares numeric(38,18) not null default 0,
+  cost_basis numeric(38,18) not null default 0,
+  current_value numeric(38,18) not null default 0,
+  realized_pnl numeric(38,18) not null default 0,
+  unrealized_pnl numeric(38,18) not null default 0,
+  status text not null default 'open' check (status in ('open', 'closed')),
+  opened_at timestamptz not null default now(),
+  closed_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists idx_pool_positions_wallet on public.pool_positions (lower(wallet_address));
+create index if not exists idx_pool_positions_contribute on public.pool_positions (contribute_id);
+create index if not exists idx_pool_positions_post_id on public.pool_positions (post_id) where post_id is not null;
+create index if not exists idx_pool_positions_status on public.pool_positions (status);
+
+drop trigger if exists set_timestamp_pool_positions on public.pool_positions;
+create trigger set_timestamp_pool_positions
+before update on public.pool_positions
+for each row
+execute procedure public.set_updated_at();
+
+alter table public.pool_positions enable row level security;
+
+drop policy if exists "pool_positions_select_public" on public.pool_positions;
+create policy "pool_positions_select_public"
+on public.pool_positions
+for select
+using (true);
+
+drop policy if exists "pool_positions_insert_public" on public.pool_positions;
+create policy "pool_positions_insert_public"
+on public.pool_positions
+for insert
+with check (true);
+
+drop policy if exists "pool_positions_update_public" on public.pool_positions;
+create policy "pool_positions_update_public"
+on public.pool_positions
+for update
+using (true)
+with check (true);
+
+-- ---------------------------------------------------------------------
 -- Copy Trading
 -- ---------------------------------------------------------------------
 
