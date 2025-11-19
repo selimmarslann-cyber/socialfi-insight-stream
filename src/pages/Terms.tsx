@@ -41,12 +41,12 @@ const Terms = () => {
 
   return (
     <StaticPageLayout>
-      <section className="space-y-8">
-        <header className="space-y-3">
-          <h1 className="text-2xl font-semibold text-[#0F172A]">
-            Terms of Service (Template)
-          </h1>
-          <p className="leading-relaxed text-[#475569]">
+        <section className="space-y-8">
+          <header className="space-y-3">
+            <h1 className="text-2xl font-semibold text-text-primary">
+              Terms of Service (Template)
+            </h1>
+            <p className="leading-relaxed text-text-secondary">
             These terms define how you can access the NOP Intelligence Layer and the expectations
             for community participation. Please review them before contributing or connecting a wallet.
           </p>
@@ -56,9 +56,9 @@ const Terms = () => {
           {termsSections.map((section) => (
             <article
               key={section.title}
-              className="rounded-2xl bg-white p-6 leading-relaxed text-[#475569] shadow-sm"
+                className="rounded-2xl border border-border-subtle bg-surface p-6 leading-relaxed text-text-secondary shadow-card-soft"
             >
-              <h2 className="text-lg font-semibold text-[#0F172A]">{section.title}</h2>
+                <h2 className="text-lg font-semibold text-text-primary">{section.title}</h2>
               <p className="mt-3">{section.body}</p>
             </article>
           ))}

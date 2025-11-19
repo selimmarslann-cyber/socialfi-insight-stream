@@ -223,44 +223,44 @@ export default function BoostedTasks() {
 
   return (
     <DashboardCard className="p-4 md:p-5">
-      <DashboardSectionTitle
-        label="Onboarding"
-        title="Boosted Tasks"
-        action={<span className="text-xs font-semibold text-slate-500">({claimedCount}/{totalTasks})</span>}
-      />
+        <DashboardSectionTitle
+          label="Onboarding"
+          title="Boosted Tasks"
+          action={<span className="text-xs font-semibold text-text-secondary">({claimedCount}/{totalTasks})</span>}
+        />
 
-      {err ? (
-        <div className="rounded-2xl border border-rose-100 bg-rose-50/80 px-3 py-2 text-[12px] font-medium text-rose-700">
-          {err}
-        </div>
-      ) : null}
+        {err ? (
+          <div className="rounded-2xl border border-error/20 bg-error/10 px-3 py-2 text-[12px] font-medium text-error">
+            {err}
+          </div>
+        ) : null}
 
-      {notice ? (
-        <div className="rounded-2xl border border-slate-100 bg-slate-50/80 px-3 py-2 text-[12px] text-slate-600">
-          {notice}
-        </div>
-      ) : null}
+        {notice ? (
+          <div className="rounded-2xl border border-border-subtle bg-surface-muted px-3 py-2 text-[12px] text-text-secondary">
+            {notice}
+          </div>
+        ) : null}
 
       <div className="mt-3 space-y-3">
         {showSkeleton
-          ? Array.from({ length: totalTasks }).map((_, index) => (
-              <div
-                key={`boosted-task-skeleton-${index}`}
-                className="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50/40 px-3 py-2.5"
-              >
-                <div className="flex items-center gap-2.5">
-                  <div className="h-8 w-8 rounded-full bg-white/80" />
-                  <div className="space-y-1">
-                    <div className="h-3 w-28 rounded-full bg-slate-100" />
-                    <div className="h-3 w-20 rounded-full bg-slate-100" />
+            ? Array.from({ length: totalTasks }).map((_, index) => (
+                <div
+                  key={`boosted-task-skeleton-${index}`}
+                  className="flex items-center justify-between gap-3 rounded-2xl border border-border-subtle bg-surface-muted/80 px-3 py-2.5"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="h-8 w-8 rounded-full bg-surface opacity-70" />
+                    <div className="space-y-1">
+                      <div className="h-3 w-28 rounded-full bg-surface opacity-60" />
+                      <div className="h-3 w-20 rounded-full bg-surface opacity-60" />
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-1">
+                    <div className="h-5 w-20 rounded-full bg-amber-100/60 dark:bg-amber-500/20" />
+                    <div className="h-5 w-24 rounded-full bg-sky-100/70 dark:bg-sky-500/20" />
                   </div>
                 </div>
-                <div className="flex flex-col items-end gap-1">
-                  <div className="h-5 w-20 rounded-full bg-amber-100/60" />
-                  <div className="h-5 w-24 rounded-full bg-sky-100/70" />
-                </div>
-              </div>
-            ))
+              ))
           : state.map((task) => (
               <TaskCard
                 key={task.id}

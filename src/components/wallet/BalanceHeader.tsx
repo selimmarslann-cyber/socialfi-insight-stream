@@ -159,12 +159,12 @@ export const BalanceHeader = ({
               <SelectTrigger className="h-12 rounded-xl border-white/20 bg-white/10 text-sm font-medium text-white shadow-none hover:bg-white/15 focus:ring-0 focus:ring-offset-0">
                 <SelectValue placeholder="Select chain" />
               </SelectTrigger>
-              <SelectContent className="overflow-hidden rounded-xl border border-indigo-500/20 bg-white shadow-xl">
+              <SelectContent className="overflow-hidden rounded-xl border border-border-subtle bg-surface shadow-card-soft">
                 {chainOptions.map((option) => (
                   <SelectItem key={option.id} value={String(option.id)}>
                     <div className="flex flex-col">
-                      <span className="font-medium text-[#0F172A]">{option.label}</span>
-                      <span className="text-xs text-slate-500">{option.ecosystem}</span>
+                      <span className="font-medium text-text-primary">{option.label}</span>
+                      <span className="text-xs text-text-secondary">{option.ecosystem}</span>
                     </div>
                   </SelectItem>
                 ))}

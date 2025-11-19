@@ -303,7 +303,7 @@ export default function WalletPage() {
           <div className="rounded-card border border-border-subtle bg-surface-muted p-3">
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-text-muted">Reputation summary</p>
             {reputationQuery.isLoading ? (
-              <div className="mt-2 h-16 rounded-lg bg-white/60" />
+              <div className="mt-2 h-16 rounded-lg bg-surface-muted" />
             ) : reputationQuery.data ? (
               <div className="mt-3 grid grid-cols-3 gap-3 text-sm-2 text-text-secondary">
                 <div>

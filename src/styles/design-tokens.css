@@ -227,3 +227,30 @@ body {
   box-shadow: var(--shadow-card);
   border: 1px solid var(--ring);
 }
+
+.surface-root {
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+}
+
+.surface-card {
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+}
+
+.surface-subtle {
+  background-color: var(--color-surface-muted);
+  color: var(--color-text-primary);
+}
+
+.border-subtle {
+  border-color: var(--color-border-subtle);
+}
+
+.text-main {
+  color: var(--color-text-primary);
+}
+
+.text-muted {
+  color: var(--color-text-muted);
+}

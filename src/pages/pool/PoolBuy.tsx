@@ -111,16 +111,16 @@ const PoolBuy = () => {
       <div className="mx-auto max-w-3xl space-y-5">
         <DashboardCard className="space-y-5">
           <DashboardSectionTitle label="Pool" title={`${contribute?.title ?? `Pool #${postId}`} · Buy`} />
-          {(contributeLoading || postStateLoading) && <p className="text-sm text-slate-500">Yükleniyor...</p>}
+            {(contributeLoading || postStateLoading) && <p className="text-sm text-text-secondary">Yükleniyor...</p>}
           {!contributeLoading && !postStateLoading && (
             <>
-              <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Pool balance</p>
-                <p className="text-2xl font-semibold text-slate-900">{formatTokenAmount(postState?.reserve ?? 0n)} NOP</p>
+                <div className="rounded-2xl border border-border-subtle bg-surface-muted px-4 py-3">
+                  <p className="text-xs uppercase tracking-[0.2em] text-text-muted">Pool balance</p>
+                  <p className="text-2xl font-semibold text-text-primary">{formatTokenAmount(postState?.reserve ?? 0n)} NOP</p>
               </div>
 
               {networkMismatch && (
-                <div className="rounded-xl border border-amber-200 bg-amber-50/80 p-3 text-sm text-amber-800">
+                  <div className="rounded-xl border border-warning/30 bg-warning/10 p-3 text-sm text-warning">
                   zkSync Era ağına bağlanarak işlemi gerçekleştirebilirsiniz (Chain ID: {CHAIN_ID}).
                 </div>
               )}
@@ -147,31 +147,31 @@ const PoolBuy = () => {
                 />
               </div>
 
-              <div className="space-y-2 rounded-2xl border border-dashed border-slate-200 p-4">
-                <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Preview</h3>
+                <div className="space-y-2 rounded-2xl border border-dashed border-border-subtle/80 p-4">
+                  <h3 className="text-sm font-semibold uppercase tracking-wide text-text-secondary">Preview</h3>
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between">
                     <span>Maliyet</span>
                     <span>{formatTokenAmount(cost)} NOP</span>
                   </div>
-                  <div className="flex justify-between text-slate-500">
+                    <div className="flex justify-between text-text-secondary">
                     <span>Creator payı</span>
                     <span>{formatTokenAmount(creatorShare)} NOP</span>
                   </div>
-                  <div className="flex justify-between text-slate-500">
+                    <div className="flex justify-between text-text-secondary">
                     <span>Rezerv katkısı</span>
                     <span>{formatTokenAmount(reserveShare)} NOP</span>
                   </div>
-                  <div className="flex justify-between text-slate-500">
+                    <div className="flex justify-between text-text-secondary">
                     <span>Max (slippage {Math.round((BUY_SLIPPAGE - 1) * 100)}%)</span>
                     <span>{formatTokenAmount(maxCost)} NOP</span>
                   </div>
                 </div>
-                {showMinWarning && <p className="text-xs text-amber-600">Min: {MIN_BUY_TEXT} NOP</p>}
+                  {showMinWarning && <p className="text-xs text-warning">Min: {MIN_BUY_TEXT} NOP</p>}
               </div>
 
-              <div className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-600">
-                <p className="font-semibold text-slate-900">Ekonomi notu</p>
+                <div className="rounded-2xl bg-surface-muted p-4 text-sm text-text-secondary">
+                  <p className="font-semibold text-text-primary">Ekonomi notu</p>
                 <p>Creator payı ≈ cost × ({CREATOR_BPS_UI} / 10,000). Rezerv = cost - paylar.</p>
                 <p>Kâr hesaplaması: realized = netSell - maliyet; unrealized = netNow - maliyet (hodl).</p>
               </div>
@@ -183,7 +183,7 @@ const PoolBuy = () => {
                 </Button>
               </div>
 
-              <p className="text-xs text-slate-500">
+                <p className="text-xs text-text-secondary">
                 Yatırım NOP yönetimi tarafından garanti edilmez. Bütçenize uygun küçük miktarlarla yatırım öneririz.
               </p>
             </>

@@ -47,15 +47,15 @@ const PoolOverview = () => {
   const networkMismatch = connected && chainId !== CHAIN_ID;
 
     return (
-      <div className="mx-auto max-w-4xl space-y-5">
-        <DashboardCard className="space-y-4">
-          <DashboardSectionTitle label="Pool" title={contribute?.title ?? `Pool #${postId}`} />
-          {(contributeLoading || postStateLoading) && <p className="text-sm text-slate-500">Yükleniyor...</p>}
+        <div className="mx-auto max-w-4xl space-y-5">
+          <DashboardCard className="space-y-4">
+            <DashboardSectionTitle label="Pool" title={contribute?.title ?? `Pool #${postId}`} />
+            {(contributeLoading || postStateLoading) && <p className="text-sm text-text-secondary">Yükleniyor...</p>}
           {!contributeLoading && !postStateLoading ? (
             <>
-              <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Pool balance</p>
-                <p className="text-2xl font-semibold text-slate-900">{formatTokenAmount(postState?.reserve ?? 0n)} NOP</p>
+                <div className="rounded-2xl border border-border-subtle bg-surface-muted px-4 py-3">
+                  <p className="text-xs uppercase tracking-[0.2em] text-text-muted">Pool balance</p>
+                  <p className="text-2xl font-semibold text-text-primary">{formatTokenAmount(postState?.reserve ?? 0n)} NOP</p>
               </div>
               <div className="flex flex-wrap gap-3">
                 <Button asChild variant="outline" className="rounded-full">
@@ -70,11 +70,11 @@ const PoolOverview = () => {
                   </Button>
                 )}
               </div>
-              {hasShares && sellDisabled ? (
-                <p className="text-xs text-amber-600">Rezerv yetersiz olduğu için satış geçici olarak kapalı.</p>
+                {hasShares && sellDisabled ? (
+                  <p className="text-xs text-warning">Rezerv yetersiz olduğu için satış geçici olarak kapalı.</p>
               ) : null}
               {networkMismatch ? (
-                <div className="rounded-xl border border-amber-200 bg-amber-50/80 p-3 text-sm text-amber-800">
+                  <div className="rounded-xl border border-warning/30 bg-warning/10 p-3 text-sm text-warning">
                   zkSync Era ağına geçiş yaparak pool işlemlerini gerçekleştirebilirsiniz (Chain ID: {CHAIN_ID}).
                 </div>
               ) : null}

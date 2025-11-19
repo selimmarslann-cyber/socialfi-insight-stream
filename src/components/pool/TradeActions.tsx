@@ -139,7 +139,7 @@ export function TradeActions({ contractPostId, onSettled, className }: TradeActi
           }}
           className="h-10 flex-1 rounded-xl text-sm sm:flex-none sm:w-28"
         />
-        <span className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          <span className="text-xs font-semibold uppercase tracking-wide text-text-secondary">
           NOP
         </span>
       </div>
@@ -154,13 +154,13 @@ export function TradeActions({ contractPostId, onSettled, className }: TradeActi
           >
             {isApproving ? "Approving…" : "Approve NOP to trade"}
           </Button>
-          <p className="text-[11px] text-slate-500 dark:text-slate-400">
+            <p className="text-[11px] text-text-secondary">
             First time trading? Approve NOP once, then you can Buy and Sell instantly.
           </p>
         </div>
       ) : (
         <div className="flex flex-col gap-2 sm:flex-row">
-          <Button
+            <Button
             size="sm"
             className="flex-1 rounded-xl bg-indigo-600 text-white shadow-indigo-500/30 hover:bg-indigo-500"
             disabled={isBuying}
@@ -171,10 +171,10 @@ export function TradeActions({ contractPostId, onSettled, className }: TradeActi
           <Button
             size="sm"
             variant={hasPosition ? "outline" : "ghost"}
-            className={cn(
-              "flex-1 rounded-xl",
-              hasPosition ? "border-slate-200 text-slate-700 hover:bg-slate-50" : "text-slate-400",
-            )}
+              className={cn(
+                "flex-1 rounded-xl",
+                hasPosition ? "border-border-subtle text-text-primary hover:bg-surface-muted" : "text-text-muted",
+              )}
             disabled={isSelling || !hasPosition}
             onClick={hasPosition ? handleSell : undefined}
           >

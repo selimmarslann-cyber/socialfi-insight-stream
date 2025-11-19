@@ -85,9 +85,9 @@ const Tokenomics = () => {
       </DashboardCard>
 
       <DashboardCard className="space-y-4">
-        <DashboardSectionTitle label="Fees" title="1% protocol fee split" />
-        <div className="space-y-4">
-          <ul className="space-y-2 text-sm text-slate-600">
+          <DashboardSectionTitle label="Fees" title="1% protocol fee split" />
+          <div className="space-y-4">
+            <ul className="space-y-2 text-sm text-text-secondary">
             {feeBullets.map((bullet) => (
               <li key={bullet} className="flex gap-3">
                 <span className="mt-1 h-1.5 w-1.5 rounded-full bg-indigo-500" />
@@ -96,9 +96,9 @@ const Tokenomics = () => {
             ))}
           </ul>
 
-          <div className="overflow-x-auto rounded-2xl border border-slate-100">
-            <table className="min-w-full text-left text-sm text-slate-600">
-              <thead className="bg-slate-50/70 text-xs uppercase text-slate-500">
+            <div className="overflow-x-auto rounded-2xl border border-border-subtle">
+              <table className="min-w-full text-left text-sm text-text-secondary">
+                <thead className="bg-surface-muted text-xs uppercase text-text-secondary">
                 <tr>
                   <th className="px-4 py-3 font-semibold">Notional</th>
                   <th className="px-4 py-3 font-semibold">Fee (1%)</th>
@@ -107,10 +107,10 @@ const Tokenomics = () => {
                   <th className="px-4 py-3 font-semibold">Rewards 25%</th>
                 </tr>
               </thead>
-              <tbody>
+                <tbody>
                 {feeExamples.map((row) => (
-                  <tr key={row.notional} className="border-t border-slate-100">
-                    <td className="px-4 py-3 font-medium text-slate-900">{row.notional}</td>
+                    <tr key={row.notional} className="border-t border-border-subtle">
+                      <td className="px-4 py-3 font-medium text-text-primary">{row.notional}</td>
                     <td className="px-4 py-3">{row.fee}</td>
                     <td className="px-4 py-3">{row.burn}</td>
                     <td className="px-4 py-3">{row.treasury}</td>
@@ -125,8 +125,8 @@ const Tokenomics = () => {
 
       <DashboardCard className="space-y-5">
         <DashboardSectionTitle label="Rewards" title="Emissions & Sustainability" />
-          <div className="grid gap-4 lg:grid-cols-2">
-            <section className="rounded-2xl border border-border bg-card p-5 shadow-card-soft">
+            <div className="grid gap-4 lg:grid-cols-2">
+              <section className="rounded-2xl border border-border-subtle bg-surface p-5 shadow-card-soft">
               <h3 className="text-sm font-semibold uppercase tracking-wide text-text-muted">Emission Controls</h3>
               <ul className="mt-3 space-y-3 text-sm text-text-secondary">
               {emissionBullets.map((item) => (
@@ -136,7 +136,7 @@ const Tokenomics = () => {
                     <span>{item.text}</span>
                   </div>
                   {item.subpoints.length > 0 ? (
-                      <ul className="mt-2 space-y-1 pl-6 text-[13px] text-muted-foreground">
+                        <ul className="mt-2 space-y-1 pl-6 text-[13px] text-text-muted">
                       {item.subpoints.map((subpoint) => (
                         <li key={subpoint} className="list-disc">
                           {subpoint}
@@ -148,7 +148,7 @@ const Tokenomics = () => {
               ))}
             </ul>
           </section>
-            <section className="rounded-2xl border border-border bg-card p-5 shadow-card-soft">
+              <section className="rounded-2xl border border-border-subtle bg-surface p-5 shadow-card-soft">
               <h3 className="text-sm font-semibold uppercase tracking-wide text-text-muted">Sustainability</h3>
               <ul className="mt-3 space-y-3 text-sm text-text-secondary">
               {sustainabilityBullets.map((bullet) => (

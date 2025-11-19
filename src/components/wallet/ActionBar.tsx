@@ -48,27 +48,27 @@ export const ActionBar = ({ disabled, onSelect }: ActionBarProps) => {
       {ACTIONS.map((action) => {
         const Icon = action.icon;
         return (
-          <button
+            <button
             key={action.key}
             type="button"
             onClick={() => onSelect(action.key)}
             disabled={disabled}
             className={cn(
-              'group flex h-full flex-col rounded-2xl border border-indigo-500/10 bg-white p-5 text-left shadow-lg transition focus-visible:outline-none',
-              'hover:-translate-y-0.5 hover:border-indigo-500/20 hover:shadow-xl focus-visible:ring-2 focus-visible:ring-indigo-500/40 focus-visible:ring-offset-2',
+                'group flex h-full flex-col rounded-2xl border border-border-subtle bg-surface p-5 text-left shadow-card-soft transition focus-visible:outline-none',
+                'hover:-translate-y-0.5 hover:border-ring-subtle hover:bg-surface-muted focus-visible:ring-2 focus-visible:ring-[var(--color-accent-start)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-background)]',
               disabled && 'pointer-events-none opacity-60'
             )}
           >
             <div className="flex items-center justify-between">
-              <span className="rounded-full bg-indigo-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-indigo-600">
+                <span className="rounded-full bg-indigo-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-100">
                 {action.label}
               </span>
               <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[var(--brand-gradient-soft)] text-indigo-600 shadow-inner">
                 <Icon className="h-5 w-5 transition group-hover:scale-110" />
               </div>
             </div>
-            <p className="mt-4 text-sm font-medium text-slate-900">{action.description}</p>
-            <p className="mt-auto text-xs text-slate-500">
+              <p className="mt-4 text-sm font-medium text-text-primary">{action.description}</p>
+              <p className="mt-auto text-xs text-text-secondary">
               {action.key === 'buy' ? 'Slippage control 0.2%' : 'No hidden fees'}
             </p>
           </button>

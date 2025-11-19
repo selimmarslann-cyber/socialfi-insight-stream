@@ -44,14 +44,16 @@ export function TaskCard({
 }: TaskCardProps) {
   const Icon = iconVisuals[iconVariant] ?? iconVisuals.default;
 
-  const iconWrapperClassName = clsx(
-    "flex h-10 w-10 items-center justify-center rounded-2xl text-[13px] font-medium",
-    "ring-1 ring-border-subtle/70 bg-surface-muted",
-    iconVariant === "signup" && "bg-indigo-50 text-indigo-600 ring-indigo-100/80",
-    iconVariant === "deposit" && "bg-cyan-50 text-cyan-600 ring-cyan-100/80",
-    iconVariant === "contribute" && "bg-amber-50 text-amber-600 ring-amber-100/80",
-    iconVariant === "default" && "bg-slate-50 text-slate-600",
-  );
+    const iconWrapperClassName = clsx(
+      "flex h-10 w-10 items-center justify-center rounded-2xl text-[13px] font-medium",
+      "ring-1 ring-border-subtle/70 bg-surface-muted text-text-secondary",
+      iconVariant === "signup" &&
+        "bg-indigo-50 text-indigo-600 ring-indigo-100/80 dark:bg-indigo-500/20 dark:text-indigo-100 dark:ring-indigo-400/40",
+      iconVariant === "deposit" &&
+        "bg-cyan-50 text-cyan-600 ring-cyan-100/80 dark:bg-cyan-500/20 dark:text-cyan-100 dark:ring-cyan-400/40",
+      iconVariant === "contribute" &&
+        "bg-amber-50 text-amber-600 ring-amber-100/80 dark:bg-amber-500/20 dark:text-amber-100 dark:ring-amber-300/40",
+    );
 
   const renderAction = () => {
     if (state === "ready") {

@@ -102,17 +102,17 @@ export function RegisterPositionDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 text-sm text-slate-600">
-          <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3 text-[12px]">
-            <p className="font-semibold text-slate-900">How it works</p>
-            <ol className="mt-1 space-y-1 text-slate-600">
+          <div className="space-y-4 text-sm text-text-secondary">
+            <div className="rounded-xl border border-border-subtle bg-surface-muted p-3 text-[12px]">
+              <p className="font-semibold text-text-primary">How it works</p>
+              <ol className="mt-1 space-y-1">
               <li>1. Execute your NOP trade via your preferred wallet or DEX.</li>
               <li>2. Paste the resulting transaction hash to register the social position.</li>
             </ol>
             {contractPostId ? (
               <Link
                 to={`/pool/${contractPostId}/buy`}
-                className="mt-2 inline-flex items-center text-[11px] font-semibold text-indigo-600"
+                  className="mt-2 inline-flex items-center text-[11px] font-semibold text-indigo-600 dark:text-indigo-300"
                 onClick={() => onOpenChange(false)}
               >
                 Go to pool dashboard →
@@ -121,19 +121,19 @@ export function RegisterPositionDialog({
           </div>
 
           {!connected ? (
-            <p className="rounded-lg border border-amber-100 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+              <p className="rounded-lg border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning">
               Connect your wallet to register new positions.
             </p>
           ) : null}
 
           <div className="space-y-2">
-            <Label className="text-xs uppercase tracking-[0.2em] text-slate-500">Direction</Label>
+              <Label className="text-xs uppercase tracking-[0.2em] text-text-muted">Direction</Label>
             <RadioGroup value={direction} onValueChange={(value) => setDirection(value as "long" | "short")} className="grid grid-cols-2 gap-3">
               {(["long", "short"] as const).map((option) => (
                 <label
                   key={option}
-                  className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-[13px] font-semibold ${
-                    direction === option ? "border-slate-900 bg-slate-900/5 text-slate-900" : "border-slate-200 text-slate-600"
+                    className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-[13px] font-semibold transition ${
+                      direction === option ? "border-[var(--color-accent-start)] bg-[var(--color-accent-start)]/10 text-text-primary" : "border-border-subtle text-text-secondary"
                   }`}
                 >
                   <RadioGroupItem value={option} />
@@ -180,7 +180,7 @@ export function RegisterPositionDialog({
           </div>
         </div>
 
-        <DialogFooter>
+          <DialogFooter>
           <Button
             type="button"
             className="w-full"

@@ -80,20 +80,20 @@ const Contact = () => {
 
   return (
     <StaticPageLayout>
-      <section className="space-y-8">
-        <header className="space-y-3">
-          <h1 className="text-2xl font-semibold text-[#0F172A]">Contact</h1>
-          <p className="leading-relaxed text-[#475569]">
+        <section className="space-y-8">
+          <header className="space-y-3">
+            <h1 className="text-2xl font-semibold text-text-primary">Contact</h1>
+            <p className="leading-relaxed text-text-secondary">
             Reach the NOP Intelligence Layer core team for partnerships, press enquiries, and protocol
             support. We aim to respond within 72 hours.
           </p>
         </header>
 
         <div className="grid gap-6 md:grid-cols-[3fr_2fr]">
-          <form
-            className="space-y-4 rounded-2xl bg-white p-6 shadow-sm"
-            onSubmit={handleSubmit}
-          >
+            <form
+              className="space-y-4 rounded-2xl border border-border-subtle bg-surface p-6 shadow-card-soft"
+              onSubmit={handleSubmit}
+            >
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="contact-name">Name</Label>
@@ -148,16 +148,16 @@ const Contact = () => {
               {submitting ? "Sending…" : "Send message"}
             </Button>
 
-            <p className="text-xs leading-relaxed text-slate-500">
+              <p className="text-xs leading-relaxed text-text-secondary">
               We log submissions securely in Supabase under{" "}
-              <code className="rounded bg-slate-100 px-1 py-0.5 text-[11px]">
+                <code className="rounded bg-surface-muted px-1 py-0.5 text-[11px] text-text-primary">
                 contact_messages
               </code>{" "}
               with optional linkage to your authenticated profile.
             </p>
           </form>
 
-          <aside className="space-y-4 rounded-2xl border border-border bg-card p-6 shadow-card-soft leading-relaxed text-text-secondary">
+            <aside className="space-y-4 rounded-2xl border border-border-subtle bg-surface p-6 shadow-card-soft leading-relaxed text-text-secondary">
             <div>
                 <h2 className="text-lg font-semibold text-text-primary">Direct Email</h2>
               <p className="mt-2">

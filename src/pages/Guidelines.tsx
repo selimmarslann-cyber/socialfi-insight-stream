@@ -33,12 +33,12 @@ const Guidelines = () => {
 
   return (
     <StaticPageLayout>
-      <section className="space-y-8">
-        <header className="space-y-3">
-          <h1 className="text-2xl font-semibold text-[#0F172A]">
-            Community Guidelines
-          </h1>
-          <p className="leading-relaxed text-[#475569]">
+        <section className="space-y-8">
+          <header className="space-y-3">
+            <h1 className="text-2xl font-semibold text-text-primary">
+              Community Guidelines
+            </h1>
+            <p className="leading-relaxed text-text-secondary">
             These guidelines protect the integrity of the NOP Intelligence Layer and ensure
             contributors can focus on uncovering real signal together.
           </p>
@@ -48,9 +48,9 @@ const Guidelines = () => {
           {guidelines.map((item) => (
             <article
               key={item.title}
-              className="rounded-2xl bg-white p-6 leading-relaxed text-[#475569] shadow-sm"
+                className="rounded-2xl border border-border-subtle bg-surface p-6 leading-relaxed text-text-secondary shadow-card-soft"
             >
-              <h2 className="text-lg font-semibold text-[#0F172A]">{item.title}</h2>
+                <h2 className="text-lg font-semibold text-text-primary">{item.title}</h2>
               <p className="mt-3">{item.body}</p>
             </article>
           ))}

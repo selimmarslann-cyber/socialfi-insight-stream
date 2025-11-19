@@ -217,10 +217,10 @@ export default function CryptoNews({ className }: CryptoNewsProps) {
                 key={index}
                 className="flex items-center gap-3 rounded-[16px] border border-border-subtle bg-surface-muted px-3 py-2"
               >
-                <div className="h-10 w-10 rounded-xl bg-white/80" />
+                <div className="h-10 w-10 rounded-xl bg-surface opacity-70" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-3 w-3/4 rounded-full bg-surface" />
-                  <div className="h-3 w-1/3 rounded-full bg-surface" />
+                  <div className="h-3 w-3/4 rounded-full bg-surface opacity-60" />
+                  <div className="h-3 w-1/3 rounded-full bg-surface opacity-60" />
                 </div>
               </div>
             ))}
