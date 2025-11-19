@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { AIMarketBar } from "@/components/ai/AIMarketBar";
 import { PostComposer } from "@/components/post/PostComposer";
 import { FeedList } from "@/components/feed/FeedList";
@@ -13,6 +14,7 @@ import CryptoNews from "@/components/CryptoNews";
 import BoostedTasks from "@/components/BoostedTasks";
 import TokenBurn from "@/components/TokenBurn";
 import { Button } from "@/components/ui/button";
+import { fetchPlatformMetrics, formatMetric } from "@/lib/metrics";
 
 type PriceSignal = {
   symbol: string;
@@ -73,14 +75,35 @@ const Index = () => {
     }));
   }, [signals]);
 
+  const metricsQuery = useQuery({
+    queryKey: ["platform-metrics"],
+    queryFn: fetchPlatformMetrics,
+    staleTime: 60 * 1000, // 1 minute
+    refetchInterval: 5 * 60 * 1000, // 5 minutes
+  });
+
+  const metrics = metricsQuery.data;
+
     const heroSnapshot = useMemo(
       () => [
-        { label: "Assets tracked", value: loadingSignals ? "—" : `${Math.max(signals.length, 12)}+` },
-        { label: "Active positions", value: "312" },
-        { label: "Reputation leaders", value: "28" },
-        { label: "7d burn", value: "38.2K NOP" },
+        { 
+          label: "Total Users", 
+          value: metrics ? formatMetric(metrics.totalUsers) : (metricsQuery.isLoading ? "—" : "0")
+        },
+        { 
+          label: "Active Positions", 
+          value: metrics ? formatMetric(metrics.activePositions) : (metricsQuery.isLoading ? "—" : "0")
+        },
+        { 
+          label: "Reputation Leaders", 
+          value: metrics ? formatMetric(metrics.reputationLeaders) : (metricsQuery.isLoading ? "—" : "0")
+        },
+        { 
+          label: "7d Burn", 
+          value: metrics ? `${formatMetric(metrics.burn7d)} NOP` : (metricsQuery.isLoading ? "—" : "0 NOP")
+        },
       ],
-      [loadingSignals, signals.length],
+      [metrics, metricsQuery.isLoading],
     );
 
     return (

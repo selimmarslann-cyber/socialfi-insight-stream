@@ -102,15 +102,28 @@ export function TradeActions({ contractPostId, onSettled, className }: TradeActi
       toast.error("Enter a valid NOP amount.");
       return;
     }
+    if (typeof window === "undefined" || !(window as any).ethereum) {
+      toast.error("Please install MetaMask or connect a wallet.");
+      return;
+    }
     try {
       setIsBuying(true);
       await buyShares(contractPostId, amount);
-      toast.success("Buy transaction submitted.");
+      toast.success("Buy transaction submitted successfully.");
       await refreshPosition();
       await onSettled?.();
     } catch (err: unknown) {
       console.error(err);
-      const message = err instanceof Error ? err.message : "Buy failed";
+      let message = "Buy transaction failed.";
+      if (err instanceof Error) {
+        if (err.message.includes("user rejected") || err.message.includes("User denied")) {
+          message = "Transaction cancelled by user.";
+        } else if (err.message.includes("insufficient funds") || err.message.includes("balance")) {
+          message = "Insufficient NOP balance or gas.";
+        } else {
+          message = err.message;
+        }
+      }
       toast.error(message);
     } finally {
       setIsBuying(false);
@@ -123,15 +136,32 @@ export function TradeActions({ contractPostId, onSettled, className }: TradeActi
       toast.error("Enter a valid NOP amount.");
       return;
     }
+    if (!hasPosition) {
+      toast.error("You don't have a position to sell.");
+      return;
+    }
+    if (typeof window === "undefined" || !(window as any).ethereum) {
+      toast.error("Please install MetaMask or connect a wallet.");
+      return;
+    }
     try {
       setIsSelling(true);
       await sellShares(contractPostId, amount);
-      toast.success("Sell transaction submitted.");
+      toast.success("Sell transaction submitted successfully.");
       await refreshPosition();
       await onSettled?.();
     } catch (err: unknown) {
       console.error(err);
-      const message = err instanceof Error ? err.message : "Sell failed";
+      let message = "Sell transaction failed.";
+      if (err instanceof Error) {
+        if (err.message.includes("user rejected") || err.message.includes("User denied")) {
+          message = "Transaction cancelled by user.";
+        } else if (err.message.includes("insufficient funds") || err.message.includes("balance")) {
+          message = "Insufficient balance or gas.";
+        } else {
+          message = err.message;
+        }
+      }
       toast.error(message);
     } finally {
       setIsSelling(false);
@@ -141,7 +171,7 @@ export function TradeActions({ contractPostId, onSettled, className }: TradeActi
   return (
     <div
       className={cn(
-        "relative flex flex-col gap-3 rounded-2xl border border-slate-200/70 bg-gradient-to-br from-white via-white to-indigo-50/40 p-4 shadow-[0_10px_35px_-25px_rgba(79,70,229,0.85)] backdrop-blur-sm dark:border-slate-800/70 dark:from-slate-900/90 dark:via-slate-900/80 dark:to-indigo-900/20",
+        "relative flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 shadow-card-soft",
         "sm:gap-4",
         className,
       )}
@@ -155,12 +185,12 @@ export function TradeActions({ contractPostId, onSettled, className }: TradeActi
 
       <div className="flex items-center justify-between gap-2">
         <div className="space-y-1">
-          <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Trade this pool</p>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Demo flow · NOPSocialPool · Sepolia test environment
+          <p className="text-sm font-semibold text-text-primary">Trade this pool</p>
+          <p className="text-xs text-text-secondary">
+            NOPSocialPool · On-chain trading
           </p>
         </div>
-        <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-indigo-600 shadow-inner dark:bg-indigo-500/10 dark:text-indigo-200">
+        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-600 shadow-inner dark:bg-emerald-500/10 dark:text-emerald-200">
           Active
         </span>
       </div>
@@ -181,7 +211,7 @@ export function TradeActions({ contractPostId, onSettled, className }: TradeActi
           className="h-10 flex-1 rounded-xl text-sm sm:flex-none sm:w-28"
           disabled={banned}
         />
-        <span className="text-xs font-semibold uppercase tracking-wide text-text-secondary">
+        <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">
           NOP
         </span>
       </div>
@@ -196,7 +226,7 @@ export function TradeActions({ contractPostId, onSettled, className }: TradeActi
           >
             {isApproving ? "Approving…" : "Approve NOP to trade"}
           </Button>
-          <p className="text-[11px] text-text-secondary">
+          <p className="text-[11px] text-text-muted">
             First time trading? Approve NOP once, then you can Buy and Sell instantly.
           </p>
         </div>
@@ -204,11 +234,17 @@ export function TradeActions({ contractPostId, onSettled, className }: TradeActi
         <div className="flex flex-col gap-2 sm:flex-row">
           <Button
             size="sm"
-            className="flex-1 rounded-xl bg-indigo-600 text-white shadow-indigo-500/30 hover:bg-indigo-500"
-            disabled={banned || isBuying}
+            className="flex-1 rounded-xl bg-emerald-600 text-white shadow-emerald-500/30 hover:bg-emerald-500 disabled:opacity-50"
+            disabled={banned || isBuying || !hasValidAmount}
             onClick={handleBuy}
           >
-            {isBuying ? "Buying…" : "Buy"}
+            {isBuying ? (
+              <>
+                <span className="mr-2">⏳</span> Buying…
+              </>
+            ) : (
+              "Buy"
+            )}
           </Button>
           <Button
             size="sm"
@@ -216,13 +252,21 @@ export function TradeActions({ contractPostId, onSettled, className }: TradeActi
             className={cn(
               "flex-1 rounded-xl",
               hasPosition
-                ? "border-slate-200 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
-                : "text-slate-400 dark:text-slate-500",
+                ? "border-red-200 text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
+                : "text-text-muted opacity-50 cursor-not-allowed",
             )}
-            disabled={banned || isSelling || !hasPosition}
+            disabled={banned || isSelling || !hasPosition || !hasValidAmount}
             onClick={hasPosition ? handleSell : undefined}
           >
-            {isSelling ? "Selling…" : hasPosition ? "Sell" : "Sell (no position)"}
+            {isSelling ? (
+              <>
+                <span className="mr-2">⏳</span> Selling…
+              </>
+            ) : hasPosition ? (
+              "Sell"
+            ) : (
+              "Sell (no position)"
+            )}
           </Button>
         </div>
       )}

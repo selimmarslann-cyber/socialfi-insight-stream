@@ -14,6 +14,7 @@ import { SidebarNav } from "@/components/navigation/SidebarNav";
 import { WalletConnectButton } from "@/components/wallet/WalletConnectButton";
 import { NopHeaderCounter } from "@/components/wallet/NopHeaderCounter";
 import { NetworkStatus } from "@/components/wallet/NetworkStatus";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { Container } from "@/components/layout/Container";
 import { useSidebarNavItems } from "@/hooks/useSidebarNavItems";
 import Logo from "@/assets/nop-logo-circle.svg";
@@ -96,12 +97,21 @@ export const Header = () => {
           <div className="relative hidden h-10 max-w-md flex-1 md:block">
             <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
             <Input
-              placeholder="Search market intel…"
+              placeholder="Search contributes, creators…"
               className="h-full border border-border-subtle/60 bg-surface pl-11 pr-4 text-sm-2 shadow-subtle/10 placeholder:text-text-muted"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  const query = (e.target as HTMLInputElement).value;
+                  if (query.trim()) {
+                    navigate(`/search?q=${encodeURIComponent(query)}`);
+                  }
+                }
+              }}
             />
           </div>
 
           <div className="flex items-center gap-2">
+            <NotificationBell />
             <NopHeaderCounter />
             <NetworkStatus />
             <Button

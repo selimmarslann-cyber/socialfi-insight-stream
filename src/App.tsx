@@ -12,6 +12,8 @@ import WalletPage from "./pages/WalletPage";
 import Settings from "./pages/Settings";
 import Admin from "./pages/Admin";
 import Contributes from "./pages/Contributes";
+import Portfolio from "./pages/Portfolio";
+import Search from "./pages/Search";
 import AdminContributeDetail from "./pages/admin/ContributeDetail";
 import PoolOverview from "./pages/pool/PoolOverview";
 import PoolBuy from "./pages/pool/PoolBuy";
@@ -22,13 +24,8 @@ import About from "./pages/About";
 import Whitepaper from "./pages/Whitepaper";
 import Tokenomics from "./pages/Tokenomics";
 import Burn from "./pages/Burn";
-import Privacy from "./pages/Privacy";
-import Terms from "./pages/Terms";
-import Cookies from "./pages/Cookies";
-import Security from "./pages/Security";
-import Guidelines from "./pages/Guidelines";
+import Legal from "./pages/Legal";
 import Contact from "./pages/Contact";
-import Support from "./pages/Support";
 import Features from "./pages/Features";
 import Roadmap from "./pages/Roadmap";
 import FAQ from "./pages/FAQ";
@@ -44,6 +41,7 @@ import Onboarding from "./pages/Onboarding";
 import ProfileMe from "./pages/ProfileMe";
 import ProfilePublic from "./pages/ProfilePublic";
 import Intelligence from "./pages/Intelligence";
+import PoolAnalytics from "./pages/PoolAnalytics";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -79,7 +77,10 @@ const App = () => {
                   <Route path="/" element={<Index />} />
                   <Route path="/explore" element={<Explore />} />
                   <Route path="/intelligence" element={<Intelligence />} />
+                  <Route path="/analytics" element={<PoolAnalytics />} />
                   <Route path="/contributes" element={<Contributes />} />
+                  <Route path="/portfolio" element={<Portfolio />} />
+                  <Route path="/search" element={<Search />} />
                   <Route path="/wallet" element={<WalletPage />} />
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/profile" element={<ProfileMe />} />
@@ -102,16 +103,11 @@ const App = () => {
                   <Route path="/community" element={<Community />} />
                   <Route path="/status" element={<Status />} />
                 <Route path="/burn" element={<Burn />} />
-                <Route path="/privacy" element={<Privacy />} />
-                <Route path="/terms" element={<Terms />} />
-                <Route path="/cookies" element={<Cookies />} />
-                  <Route path="/legal/privacy" element={<LegalPrivacy />} />
-                  <Route path="/legal/terms" element={<LegalTerms />} />
-                  <Route path="/legal/cookies" element={<LegalCookies />} />
-                <Route path="/security" element={<Security />} />
-                <Route path="/guidelines" element={<Guidelines />} />
+                <Route path="/legal" element={<Legal />} />
+                <Route path="/legal/privacy" element={<LegalPrivacy />} />
+                <Route path="/legal/terms" element={<LegalTerms />} />
+                <Route path="/legal/cookies" element={<LegalCookies />} />
                 <Route path="/contact" element={<Contact />} />
-                <Route path="/support" element={<Support />} />
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/admin/contributes/:id" element={<AdminContributeDetail />} />
                 <Route path="/pool/:postId" element={<PoolOverview />} />

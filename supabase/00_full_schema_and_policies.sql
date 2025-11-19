@@ -1062,6 +1062,292 @@ for all
 using (auth.role() = 'service_role')
 with check (auth.role() = 'service_role');
 
+-- ---------------------------------------------------------------------
+-- Creator Earnings (Fair Fee Distribution)
+-- ---------------------------------------------------------------------
+
+create table if not exists public.creator_earnings (
+  id uuid primary key default gen_random_uuid(),
+  wallet_address text not null,
+  contribute_id text not null,
+  amount numeric(36,18) not null,
+  tx_hash text not null,
+  status text not null default 'pending' check (status in ('pending', 'withdrawn')),
+  created_at timestamptz not null default now(),
+  withdrawn_at timestamptz,
+  unique(wallet_address, contribute_id, tx_hash)
+);
+
+create index if not exists idx_creator_earnings_wallet on public.creator_earnings (lower(wallet_address));
+create index if not exists idx_creator_earnings_contribute on public.creator_earnings (contribute_id);
+create index if not exists idx_creator_earnings_status on public.creator_earnings (status);
+
+alter table public.creator_earnings enable row level security;
+
+drop policy if exists "creator_earnings_select_own" on public.creator_earnings;
+create policy "creator_earnings_select_own"
+on public.creator_earnings
+for select
+using (
+  lower(wallet_address) = lower(coalesce((select wallet_address from public.social_profiles where id = auth.uid()), ''))
+  or public.is_admin()
+);
+
+drop policy if exists "creator_earnings_insert_service" on public.creator_earnings;
+create policy "creator_earnings_insert_service"
+on public.creator_earnings
+for insert
+with check (auth.role() = 'service_role');
+
+drop policy if exists "creator_earnings_update_own" on public.creator_earnings;
+create policy "creator_earnings_update_own"
+on public.creator_earnings
+for update
+using (
+  lower(wallet_address) = lower(coalesce((select wallet_address from public.social_profiles where id = auth.uid()), ''))
+  or public.is_admin()
+)
+with check (
+  lower(wallet_address) = lower(coalesce((select wallet_address from public.social_profiles where id = auth.uid()), ''))
+  or public.is_admin()
+);
+
+-- ---------------------------------------------------------------------
+-- Fee Distribution Tracking
+-- ---------------------------------------------------------------------
+
+create table if not exists public.fee_distributions (
+  id uuid primary key default gen_random_uuid(),
+  tx_hash text not null unique,
+  post_id integer not null,
+  total_fee numeric(36,18) not null,
+  creator_share numeric(36,18) not null,
+  lp_share numeric(36,18) not null,
+  treasury_share numeric(36,18) not null,
+  early_bonus numeric(36,18) not null default 0,
+  creator_wallet text,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_fee_distributions_tx_hash on public.fee_distributions (tx_hash);
+create index if not exists idx_fee_distributions_post_id on public.fee_distributions (post_id);
+
+alter table public.fee_distributions enable row level security;
+
+drop policy if exists "fee_distributions_select_public" on public.fee_distributions;
+create policy "fee_distributions_select_public"
+on public.fee_distributions
+for select
+using (true);
+
+drop policy if exists "fee_distributions_insert_service" on public.fee_distributions;
+create policy "fee_distributions_insert_service"
+on public.fee_distributions
+for insert
+with check (auth.role() = 'service_role');
+
+-- ---------------------------------------------------------------------
+-- Follow System
+-- ---------------------------------------------------------------------
+
+create table if not exists public.follows (
+  id uuid primary key default gen_random_uuid(),
+  follower_address text not null,
+  following_address text not null,
+  created_at timestamptz not null default now(),
+  unique(follower_address, following_address)
+);
+
+create index if not exists idx_follows_follower on public.follows (lower(follower_address));
+create index if not exists idx_follows_following on public.follows (lower(following_address));
+
+alter table public.follows enable row level security;
+
+drop policy if exists "follows_select_public" on public.follows;
+create policy "follows_select_public"
+on public.follows
+for select
+using (true);
+
+drop policy if exists "follows_insert_own" on public.follows;
+create policy "follows_insert_own"
+on public.follows
+for insert
+with check (
+  auth.role() = 'service_role'
+  or (
+    auth.uid() is not null
+    and exists (
+      select 1
+      from public.social_profiles p
+      where p.id = auth.uid()
+        and p.wallet_address is not null
+        and lower(p.wallet_address) = lower(follower_address)
+    )
+  )
+);
+
+drop policy if exists "follows_delete_own" on public.follows;
+create policy "follows_delete_own"
+on public.follows
+for delete
+using (
+  auth.role() = 'service_role'
+  or (
+    auth.uid() is not null
+    and exists (
+      select 1
+      from public.social_profiles p
+      where p.id = auth.uid()
+        and p.wallet_address is not null
+        and lower(p.wallet_address) = lower(follower_address)
+    )
+  )
+);
+
+-- ---------------------------------------------------------------------
+-- Notifications
+-- ---------------------------------------------------------------------
+
+create table if not exists public.notifications (
+  id uuid primary key default gen_random_uuid(),
+  user_address text not null,
+  type text not null check (type in ('new_contribute', 'price_alert', 'lp_reward', 'creator_earnings', 'mention', 'follow')),
+  title text not null,
+  message text not null,
+  link text,
+  read boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_notifications_user on public.notifications (lower(user_address));
+create index if not exists idx_notifications_read on public.notifications (read);
+create index if not exists idx_notifications_created on public.notifications (created_at desc);
+
+alter table public.notifications enable row level security;
+
+drop policy if exists "notifications_select_own" on public.notifications;
+create policy "notifications_select_own"
+on public.notifications
+for select
+using (
+  lower(user_address) = lower(coalesce((select wallet_address from public.social_profiles where id = auth.uid()), ''))
+  or public.is_admin()
+);
+
+drop policy if exists "notifications_insert_service" on public.notifications;
+create policy "notifications_insert_service"
+on public.notifications
+for insert
+with check (auth.role() = 'service_role');
+
+drop policy if exists "notifications_update_own" on public.notifications;
+create policy "notifications_update_own"
+on public.notifications
+for update
+using (
+  lower(user_address) = lower(coalesce((select wallet_address from public.social_profiles where id = auth.uid()), ''))
+  or public.is_admin()
+);
+
+-- ---------------------------------------------------------------------
+-- Share Tracking (for referral rewards)
+-- ---------------------------------------------------------------------
+
+create table if not exists public.shares (
+  id uuid primary key default gen_random_uuid(),
+  sharer_address text not null,
+  contribute_id text not null,
+  platform text not null check (platform in ('twitter', 'telegram', 'link', 'qr')),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_shares_sharer on public.shares (lower(sharer_address));
+create index if not exists idx_shares_contribute on public.shares (contribute_id);
+
+alter table public.shares enable row level security;
+
+drop policy if exists "shares_select_public" on public.shares;
+create policy "shares_select_public"
+on public.shares
+for select
+using (true);
+
+drop policy if exists "shares_insert_own" on public.shares;
+create policy "shares_insert_own"
+on public.shares
+for insert
+with check (
+  auth.role() = 'service_role'
+  or (
+    auth.uid() is not null
+    and exists (
+      select 1
+      from public.social_profiles p
+      where p.id = auth.uid()
+        and p.wallet_address is not null
+        and lower(p.wallet_address) = lower(sharer_address)
+    )
+  )
+);
+
+-- ---------------------------------------------------------------------
+-- Copy Trading
+-- ---------------------------------------------------------------------
+
+create table if not exists public.copy_trades (
+  id uuid primary key default gen_random_uuid(),
+  copier_address text not null,
+  copied_address text not null,
+  max_amount_per_trade numeric(36,18),
+  auto_sell boolean not null default false,
+  active boolean not null default true,
+  created_at timestamptz not null default now(),
+  unique(copier_address, copied_address)
+);
+
+create index if not exists idx_copy_trades_copier on public.copy_trades (lower(copier_address));
+create index if not exists idx_copy_trades_copied on public.copy_trades (lower(copied_address));
+
+alter table public.copy_trades enable row level security;
+
+drop policy if exists "copy_trades_select_own" on public.copy_trades;
+create policy "copy_trades_select_own"
+on public.copy_trades
+for select
+using (
+  lower(copier_address) = lower(coalesce((select wallet_address from public.social_profiles where id = auth.uid()), ''))
+  or lower(copied_address) = lower(coalesce((select wallet_address from public.social_profiles where id = auth.uid()), ''))
+  or public.is_admin()
+);
+
+drop policy if exists "copy_trades_insert_own" on public.copy_trades;
+create policy "copy_trades_insert_own"
+on public.copy_trades
+for insert
+with check (
+  auth.role() = 'service_role'
+  or (
+    auth.uid() is not null
+    and exists (
+      select 1
+      from public.social_profiles p
+      where p.id = auth.uid()
+        and p.wallet_address is not null
+        and lower(p.wallet_address) = lower(copier_address)
+    )
+  )
+);
+
+drop policy if exists "copy_trades_update_own" on public.copy_trades;
+create policy "copy_trades_update_own"
+on public.copy_trades
+for update
+using (
+  lower(copier_address) = lower(coalesce((select wallet_address from public.social_profiles where id = auth.uid()), ''))
+  or public.is_admin()
+);
+
 -- =====================================================================
 -- End of schema
 -- =====================================================================

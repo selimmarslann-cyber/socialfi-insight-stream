@@ -4,42 +4,19 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/lib/supabaseClient";
 import { formatDistanceToNow } from "date-fns";
+import { fetchUserSocialPositions } from "@/lib/protocol/positions";
 
 type TopPositionsProps = {
   walletAddress: string;
   limit?: number;
 };
 
-type PositionRow = {
-  id: string;
-  side: string;
-  amount: number;
-  opened_at: string;
-  closed_at: string | null;
-  roi: number | null;
-  tx_hash: string | null;
-};
-
 export function TopPositions({ walletAddress, limit = 5 }: TopPositionsProps) {
   const positionsQuery = useQuery({
     queryKey: ["top-positions", walletAddress, limit],
     queryFn: async () => {
-      const client = supabase;
-      if (!client) return [];
-
-      const { data, error } = await client
-        .from("onchain_positions")
-        .select("id, side, amount, opened_at, closed_at, roi, tx_hash")
-        .eq("wallet_address", walletAddress.toLowerCase())
-        .order("opened_at", { ascending: false })
-        .limit(limit);
-
-      if (error) {
-        console.warn("[TopPositions] Failed to fetch positions", error);
-        return [];
-      }
-
-      return (data ?? []) as PositionRow[];
+      const positions = await fetchUserSocialPositions(walletAddress);
+      return positions.slice(0, limit);
     },
     enabled: Boolean(walletAddress),
   });
@@ -73,12 +50,17 @@ export function TopPositions({ walletAddress, limit = 5 }: TopPositionsProps) {
         <p className="text-xs uppercase tracking-[0.2em] text-text-muted">Top Positions</p>
         <div className="space-y-2">
           {positions.map((position) => {
-            const isOpen = position.closed_at === null;
-            const roi = position.roi;
+            const isOpen = position.status === "open";
+            const pnl = position.realized_pnl_usd;
+            const sizeNop = typeof position.size_nop === "number" ? position.size_nop : Number(position.size_nop ?? 0);
             const formattedAmount = new Intl.NumberFormat(undefined, {
               minimumFractionDigits: 0,
               maximumFractionDigits: 2,
-            }).format(position.amount);
+            }).format(sizeNop);
+
+            const pnlPercent = position.entry_price_usd && position.exit_price_usd
+              ? ((position.exit_price_usd - position.entry_price_usd) / position.entry_price_usd) * 100
+              : null;
 
             return (
               <div
@@ -87,10 +69,10 @@ export function TopPositions({ walletAddress, limit = 5 }: TopPositionsProps) {
               >
                 <div className="flex items-center gap-3">
                   <Badge
-                    variant={position.side === "BUY" ? "default" : "secondary"}
+                    variant={position.direction === "long" ? "default" : "secondary"}
                     className="rounded-full"
                   >
-                    {position.side}
+                    {position.direction.toUpperCase()}
                   </Badge>
                   <div>
                     <p className="text-sm font-semibold text-text-primary">
@@ -106,14 +88,22 @@ export function TopPositions({ walletAddress, limit = 5 }: TopPositionsProps) {
                     <Badge variant="outline" className="rounded-full">
                       Open
                     </Badge>
-                  ) : roi !== null ? (
+                  ) : pnlPercent !== null ? (
                     <p
                       className={`text-sm font-semibold ${
-                        roi > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"
+                        pnlPercent > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"
                       }`}
                     >
-                      {roi > 0 ? "+" : ""}
-                      {roi.toFixed(1)}%
+                      {pnlPercent > 0 ? "+" : ""}
+                      {pnlPercent.toFixed(1)}%
+                    </p>
+                  ) : pnl !== null ? (
+                    <p
+                      className={`text-xs font-semibold ${
+                        pnl > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"
+                      }`}
+                    >
+                      {pnl > 0 ? "+" : ""}${pnl.toFixed(2)}
                     </p>
                   ) : (
                     <p className="text-xs text-text-secondary">Closed</p>

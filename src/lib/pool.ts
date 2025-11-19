@@ -5,6 +5,10 @@ import erc20Abi from "@/abi/erc20.json";
 import { apiClient } from "@/lib/axios";
 import { logTrade } from "@/lib/reputation";
 import { logBuyPosition, logSellPosition } from "@/lib/positions";
+import { mintPositionNft } from "@/lib/positionNft";
+import { calculateFairFeeDistribution } from "@/lib/fairFeeDistribution";
+import { recordCreatorEarnings } from "@/lib/creatorRewards";
+import { getContributeAuthor, getBuyerCount } from "@/lib/contributeHelpers";
 
 const poolAbi = ((poolArtifact as { abi?: InterfaceAbi }).abi ?? (poolArtifact as InterfaceAbi)) as InterfaceAbi;
 const tokenAbi = erc20Abi as InterfaceAbi;
@@ -84,13 +88,19 @@ export async function approveToken(maxAmount?: string | bigint) {
   return tx.wait();
 }
 
-export async function buyShares(postId: number, amountNop: number) {
+export async function buyShares(postId: number, amountNop: number, contributeTitle?: string) {
   const signer = await getSigner();
   const user = await signer.getAddress();
   const pool = getPoolContractInstance(signer);
   const amount = parseUnits(String(amountNop), 18);
   const tx = await pool.depositNOP(postId, amount);
   const receipt = await tx.wait();
+
+  // Get buyer count for early buyer bonus
+  const buyerCount = await getBuyerCount(postId);
+  
+  // Calculate fair fee distribution
+  const feeBreakdown = calculateFairFeeDistribution(amount, true, buyerCount);
 
   try {
     await logTrade({
@@ -105,14 +115,57 @@ export async function buyShares(postId: number, amountNop: number) {
   }
 
   try {
+    // Look up contribute_id by contractPostId
+    const { getContributeByPostId } = await import("@/lib/contributeHelpers");
+    const contribute = await getContributeByPostId(postId);
+    
     await logBuyPosition({
       wallet: user,
-      contributeId: null, // TODO: Look up contribute_id by contractPostId
+      contributeId: contribute?.id || null,
       amount: amount,
       txHash: tx.hash,
     });
   } catch (error) {
     console.warn("[pool] Failed to log BUY position", error);
+  }
+
+  // Record creator earnings (fair distribution)
+  try {
+    const creatorWallet = await getContributeAuthor(postId);
+    if (creatorWallet && feeBreakdown.creatorShare > 0n) {
+      // Find contribute ID
+      const { getContributeByPostId } = await import("@/lib/contributeHelpers");
+      const contribute = await getContributeByPostId(postId);
+      
+      if (contribute) {
+        await recordCreatorEarnings({
+          creatorWallet,
+          contributeId: contribute.id,
+          buyAmount: Number(amount) / 1e18,
+          txHash: tx.hash,
+        });
+      }
+    }
+  } catch (error) {
+    console.warn("[pool] Failed to record creator earnings (non-critical):", error);
+  }
+
+  // Auto-mint NFT on successful buy
+  try {
+    const poolAddress = getPoolAddress();
+    const tag = contributeTitle ? `#${postId}-${contributeTitle.slice(0, 20)}` : `Pool-${postId}`;
+    const nftTxHash = await mintPositionNft({
+      walletAddress: user,
+      poolAddress,
+      amount,
+      tag,
+    });
+    if (nftTxHash) {
+      console.log("[pool] Position NFT minted:", nftTxHash);
+    }
+  } catch (error) {
+    // NFT mint is optional, don't fail the buy if it fails
+    console.warn("[pool] Failed to mint position NFT (non-critical):", error);
   }
 
   return receipt;
@@ -188,6 +241,26 @@ export async function getUserPosition(postId: number, ownerAddress?: string) {
   }
 }
 
+/**
+ * Get user shares for a specific post
+ */
+export async function getUserShares(
+  walletAddress: string,
+  postId: string | number
+): Promise<bigint> {
+  try {
+    const postIdNum = typeof postId === "string" ? Number.parseInt(postId, 10) : postId;
+    if (!Number.isFinite(postIdNum)) return 0n;
+
+    const pool = getPoolContractInstance();
+    const raw = await pool.getPosition(walletAddress, postIdNum);
+    return toBigInt(raw);
+  } catch (error) {
+    console.warn("[pool] Failed to get user shares", error);
+    return 0n;
+  }
+}
+
 export type PostState = {
   active: boolean;
   reserve: bigint;
@@ -254,28 +327,72 @@ export const getPostState = async (
 
 /**
  * getPreviewBuyCost
- * Minimal stub: always returns 0n so UI can render without crashing.
+ * Calculate buy cost using bonding curve
  */
 export const getPreviewBuyCost = async (
-  _postId: number | string | bigint,
-  _shares: bigint,
+  postId: number | string | bigint,
+  shares: bigint,
 ): Promise<bigint> => {
-  return 0n;
+  try {
+    const postIdNum = typeof postId === "string" ? Number.parseInt(postId, 10) : Number(postId);
+    if (!Number.isFinite(postIdNum)) return 0n;
+    
+    // Get pool state
+    const state = await getPostStateInternal(String(postIdNum));
+    if (!state.active) return 0n;
+    
+    // Use bonding curve to calculate cost
+    const { getBuyQuote, initBondingCurve } = await import("@/lib/bondingCurve");
+    const curveState = initBondingCurve(state.reserve, 0n); // Supply will be calculated
+    
+    // For now, use simple calculation: cost = shares * price
+    // TODO: Implement full bonding curve with supply tracking
+    const price = state.reserve > 0n ? (state.reserve * 10n ** 18n) / (1000n * 10n ** 18n) : 10n ** 15n;
+    return (shares * price) / 10n ** 18n;
+  } catch (error) {
+    console.warn("[pool] Failed to calculate buy cost", error);
+    return 0n;
+  }
 };
 
 /**
  * getPreviewSell
- * Minimal stub: always returns zero values.
+ * Calculate sell payout using bonding curve
  */
 export const getPreviewSell = async (
-  _postId: number | string | bigint,
-  _shares: bigint,
+  postId: number | string | bigint,
+  shares: bigint,
 ): Promise<{ gross: bigint; fee: bigint; net: bigint }> => {
-  return {
-    gross: 0n,
-    fee: 0n,
-    net: 0n,
-  };
+  try {
+    const postIdNum = typeof postId === "string" ? Number.parseInt(postId, 10) : Number(postId);
+    if (!Number.isFinite(postIdNum)) {
+      return { gross: 0n, fee: 0n, net: 0n };
+    }
+    
+    // Get pool state
+    const state = await getPostStateInternal(String(postIdNum));
+    if (!state.active || state.reserve === 0n) {
+      return { gross: 0n, fee: 0n, net: 0n };
+    }
+    
+    // Calculate gross payout using bonding curve
+    const { getSellQuote, initBondingCurve } = await import("@/lib/bondingCurve");
+    const curveState = initBondingCurve(state.reserve, 0n); // Supply will be calculated
+    
+    // For now, use simple calculation: gross = shares * price
+    // TODO: Implement full bonding curve with supply tracking
+    const price = state.reserve > 0n ? (state.reserve * 10n ** 18n) / (1000n * 10n ** 18n) : 10n ** 15n;
+    const gross = (shares * price) / 10n ** 18n;
+    
+    // Calculate fee (1%)
+    const fee = (gross * 100n) / 10000n;
+    const net = gross - fee;
+    
+    return { gross, fee, net };
+  } catch (error) {
+    console.warn("[pool] Failed to calculate sell payout", error);
+    return { gross: 0n, fee: 0n, net: 0n };
+  }
 };
 
 /**

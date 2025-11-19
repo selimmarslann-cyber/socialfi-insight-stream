@@ -215,7 +215,7 @@ export default function ProfileMe() {
 
         <TabsContent value="positions" className="space-y-4">
           {walletAddress ? (
-            <TopPositions walletAddress={walletAddress} limit={10} />
+            <TopPositions walletAddress={walletAddress} limit={20} />
           ) : (
             <ComingSoonCard
               title="On-chain positions"

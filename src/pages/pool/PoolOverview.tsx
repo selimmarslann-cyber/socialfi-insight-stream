@@ -10,6 +10,7 @@ import { applyMultiplier } from "@/lib/math";
 import { CHAIN_ID, SELL_SLIPPAGE } from "@/lib/config";
 import { DashboardCard } from "@/components/layout/visuals/DashboardCard";
 import { DashboardSectionTitle } from "@/components/layout/visuals/DashboardSectionTitle";
+import { LiquidityDepthChart } from "@/components/pool/LiquidityDepthChart";
 
 const PoolOverview = () => {
   const { postId } = useParams<{ postId: string }>();
@@ -53,10 +54,18 @@ const PoolOverview = () => {
             {(contributeLoading || postStateLoading) && <p className="text-sm text-text-secondary">Yükleniyor...</p>}
           {!contributeLoading && !postStateLoading ? (
             <>
-                <div className="rounded-2xl border border-border-subtle bg-surface-muted px-4 py-3">
-                  <p className="text-xs uppercase tracking-[0.2em] text-text-muted">Pool balance</p>
-                  <p className="text-2xl font-semibold text-text-primary">{formatTokenAmount(postState?.reserve ?? 0n)} NOP</p>
-              </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="rounded-2xl border border-border-subtle bg-surface-muted px-4 py-3">
+                    <p className="text-xs uppercase tracking-[0.2em] text-text-muted">Pool balance</p>
+                    <p className="text-2xl font-semibold text-text-primary">{formatTokenAmount(postState?.reserve ?? 0n)} NOP</p>
+                  </div>
+                  {postState && postState.reserve > 0n && (
+                    <LiquidityDepthChart
+                      reserve={postState.reserve}
+                      supply={0n} // TODO: Get actual supply from contract
+                    />
+                  )}
+                </div>
               <div className="flex flex-wrap gap-3">
                 <Button asChild variant="outline" className="rounded-full">
                   <Link to={`/pool/${postId}/chart`}>Chart</Link>

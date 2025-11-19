@@ -20,15 +20,17 @@ const roadmapPhases = [
   {
     title: "Phase 2 – Protocol Positions & Reputation",
     timeframe: "Q4 2024 – Q1 2025",
-    objectives: ["Production social_positions + reputation_scores", "Intelligence-feed API", "Fee modeling"],
-    tech: ["Tx-hash registration flow", "Alpha Score recalculations", "Wallet fee summaries"],
+    status: "✅ COMPLETE",
+    objectives: ["Production social_positions + reputation_scores", "Intelligence-feed API", "Fee modeling", "Profile system with avatar/bio", "Admin panel with pool management", "Buy/Sell UI finalization"],
+    tech: ["Tx-hash registration flow", "Alpha Score recalculations", "Wallet fee summaries", "Mobile-responsive UI", "Dark mode polish"],
     goToMarket: ["Public beta", "Partner dashboards", "Data room for listings"],
   },
   {
-    title: "Phase 3 – On-chain Fee Routing & Treasury",
+    title: "Phase 3 – Intelligence Layer & Protocol Features",
     timeframe: "H1 2025",
-    objectives: ["Route 1% fee on-chain", "Automate burns", "Treasury payouts"],
-    tech: ["Fee split contracts", "Scheduled burn executor", "Treasury dashboard"],
+    status: "✅ LIVE / IN PILOT",
+    objectives: ["Alpha Score integration", "AI Sentiment Engine", "Social→Price correlation", "Pool Analytics Dashboard", "Multi-chain readiness"],
+    tech: ["Reputation scoring system", "Sentiment analysis API", "Price correlation charts", "Analytics dashboard", "Multi-chain config"],
     goToMarket: ["Campaigns with DEX/CEX partners", "Burn announcements", "Ecosystem grants"],
   },
   {
@@ -50,23 +52,30 @@ const Roadmap = () => {
     <div className="space-y-5">
       <DashboardCard className="space-y-3">
         <DashboardSectionTitle label="Roadmap" title="Phase-by-phase plan" />
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-slate-600 dark:text-slate-400">
           The intelligence layer is staged for exchange readiness: prototype (Phase 0), clean dashboard (Phase 1), protocol
-          mechanics (Phase 2), on-chain fee routing (Phase 3), and governance + multi-chain expansion (Phase 4).
+          mechanics (Phase 2 - <strong>COMPLETE</strong>), intelligence layer & protocol features (Phase 3 - <strong>LIVE</strong>), and governance + multi-chain expansion (Phase 4).
         </p>
       </DashboardCard>
 
       <div className="grid gap-4 xl:grid-cols-2">
         {roadmapPhases.map((phase) => (
-          <DashboardCard key={phase.title} className="space-y-3 border border-slate-100">
+          <DashboardCard key={phase.title} className="space-y-3 border border-slate-100 dark:border-slate-800">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <h3 className="text-lg font-semibold text-slate-900">{phase.title}</h3>
-              <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">{phase.timeframe}</span>
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{phase.title}</h3>
+                {(phase as { status?: string }).status && (
+                  <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                    {(phase as { status?: string }).status}
+                  </span>
+                )}
+              </div>
+              <span className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{phase.timeframe}</span>
             </div>
             <div className="grid gap-4 md:grid-cols-3">
               <section>
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Objectives</p>
-                <ul className="mt-2 space-y-1.5 text-sm text-slate-600">
+                <ul className="mt-2 space-y-1.5 text-sm text-slate-600 dark:text-slate-400">
                   {phase.objectives.map((item) => (
                     <li key={item} className="flex gap-2">
                       <span className="mt-1 h-1.5 w-1.5 rounded-full bg-indigo-500" />
@@ -76,8 +85,8 @@ const Roadmap = () => {
                 </ul>
               </section>
               <section>
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Tech milestones</p>
-                <ul className="mt-2 space-y-1.5 text-sm text-slate-600">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Tech milestones</p>
+                <ul className="mt-2 space-y-1.5 text-sm text-slate-600 dark:text-slate-400">
                   {phase.tech.map((item) => (
                     <li key={item} className="flex gap-2">
                       <span className="mt-1 h-1.5 w-1.5 rounded-full bg-emerald-500" />
@@ -87,8 +96,8 @@ const Roadmap = () => {
                 </ul>
               </section>
               <section>
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Go-to-market</p>
-                <ul className="mt-2 space-y-1.5 text-sm text-slate-600">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Go-to-market</p>
+                <ul className="mt-2 space-y-1.5 text-sm text-slate-600 dark:text-slate-400">
                   {phase.goToMarket.map((item) => (
                     <li key={item} className="flex gap-2">
                       <span className="mt-1 h-1.5 w-1.5 rounded-full bg-amber-500" />

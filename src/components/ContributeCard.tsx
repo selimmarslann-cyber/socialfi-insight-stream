@@ -9,6 +9,7 @@ import type { Contribute } from "@/lib/types";
 import { TradeActions } from "@/components/pool/TradeActions";
 import { getUserPosition } from "@/lib/pool";
 import { getPoolAnalyticsForContribute } from "@/lib/poolAnalytics";
+import { ShareButton } from "@/components/share/ShareButton";
 
 type ContributeCardProps = {
   item: Contribute;
@@ -62,13 +63,15 @@ function ContributeCard({ item }: ContributeCardProps) {
     weeklyVolume === null ? null : volumeFormatter.format(weeklyVolume);
 
     return (
-      <Card className="space-y-5 rounded-3xl border border-border bg-card p-5 shadow-card-soft">
+      <Card className="group space-y-5 rounded-2xl border-2 border-border-subtle bg-card p-6 shadow-lg transition-all duration-300 hover:border-indigo-400 hover:shadow-xl hover:shadow-indigo-500/20 dark:hover:border-cyan-600 dark:hover:shadow-cyan-500/20">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="space-y-1">
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Weekly popular pool
           </p>
-            <h3 className="text-xl font-semibold text-foreground">{item.title}</h3>
+            <h3 className="text-xl font-semibold text-foreground transition-colors duration-200 group-hover:text-indigo-600 dark:group-hover:text-cyan-400">
+              {item.title}
+            </h3>
           {item.subtitle ? (
               <p className="text-sm text-muted-foreground">{item.subtitle}</p>
           ) : null}
@@ -95,7 +98,12 @@ function ContributeCard({ item }: ContributeCardProps) {
             ) : null}
           <Badge
             variant={isPoolActive ? "secondary" : "outline"}
-            className={isPoolActive ? "bg-emerald-50 text-emerald-600" : ""}
+            className={cn(
+              "transition-all duration-200",
+              isPoolActive
+                ? "bg-emerald-50 text-emerald-600 shadow-sm shadow-emerald-500/20 dark:bg-emerald-950/40 dark:text-emerald-300"
+                : "bg-surface-muted text-text-muted"
+            )}
           >
             {isPoolActive ? "Active" : "Locked"}
           </Badge>
@@ -107,7 +115,7 @@ function ContributeCard({ item }: ContributeCardProps) {
           {item.tags.map((tag) => (
             <span
               key={tag}
-                className="rounded-full bg-muted px-3 py-1 font-semibold text-foreground"
+              className="rounded-full bg-indigo-50 px-3 py-1 font-semibold text-indigo-700 transition-all duration-200 hover:bg-indigo-100 hover:scale-105 dark:bg-cyan-950/40 dark:text-cyan-300 dark:hover:bg-cyan-950/60"
             >
               {tag.startsWith("#") ? tag : `#${tag}`}
             </span>
@@ -125,17 +133,27 @@ function ContributeCard({ item }: ContributeCardProps) {
         <PoolStatsCard contributeId={item.id} />
       ) : null}
 
-      {isPoolActive ? (
+      <div className="flex items-center justify-between gap-2">
+        {isPoolActive ? (
           <TradeActions
             contractPostId={contractPostId}
             onSettled={refreshPosition}
-              className="bg-muted/50"
+            className="bg-muted/50"
           />
-      ) : (
-          <div className="rounded-2xl border border-dashed border-border p-4 text-sm text-muted-foreground">
-          Pool will open soon. Follow this contribution for launch updates.
+        ) : (
+          <div className="flex-1 rounded-xl border-2 border-dashed border-border-subtle bg-surface-muted p-4 text-sm text-text-secondary">
+            Pool will open soon. Follow this contribution for launch updates.
+          </div>
+        )}
+        
+        <div className="flex items-center gap-2">
+          <ShareButton
+            contributeId={item.id}
+            contributeTitle={item.title}
+            postId={contractPostId || undefined}
+          />
         </div>
-      )}
+      </div>
 
         <p className="text-xs text-muted-foreground">
         Your on-chain position:{" "}
@@ -161,7 +179,7 @@ function PoolStatsCard({ contributeId }: { contributeId: string }) {
   }
 
   return (
-    <div className="rounded-2xl border border-border-subtle bg-card/70 p-4">
+    <div className="rounded-xl border-2 border-border-subtle bg-surface-muted/50 p-4">
       <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-text-muted">Pool Stats</p>
       {analyticsQuery.isLoading ? (
         <Skeleton className="h-20 w-full rounded-xl" />

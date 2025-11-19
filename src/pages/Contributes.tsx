@@ -10,6 +10,10 @@ import { DashboardCard } from "@/components/layout/visuals/DashboardCard";
 import { DashboardSectionTitle } from "@/components/layout/visuals/DashboardSectionTitle";
 import BoostedTasks from "@/components/BoostedTasks";
 import TokenBurn from "@/components/TokenBurn";
+import { CreateContributeDialog } from "@/components/contribute/CreateContributeDialog";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { LoadingState, Skeleton } from "@/components/ui/LoadingState";
+import { Sparkles } from "lucide-react";
 
 const withDemoPoolFallback = (items: ContributeWithStats[]): ContributeWithStats[] => {
   if (items.length > 0) {
@@ -66,11 +70,18 @@ const Contributes = () => {
 
     return (
       <div className="space-y-4 lg:space-y-6">
-        <DashboardCard className="space-y-3">
-          <DashboardSectionTitle label="Pools" title="Contributes" />
-          <p className="text-sm-2 leading-relaxed text-text-secondary">
-            Follow the latest community pools, view on-chain BUY / SELL flows, and explore weekly popular positions.
-          </p>
+        <DashboardCard className="space-y-4">
+            <div className="flex items-start justify-between gap-4">
+            <div className="flex-1 space-y-3">
+              <DashboardSectionTitle label="Pools" title="Contributes" />
+              <p className="text-sm-2 leading-relaxed text-text-secondary">
+                Follow the latest community pools, view on-chain BUY / SELL flows, and explore weekly popular positions.
+              </p>
+            </div>
+            <div data-create-contribute>
+              <CreateContributeDialog />
+            </div>
+          </div>
         </DashboardCard>
 
         <div className="grid gap-5 lg:grid-cols-[minmax(0,2.1fr)_minmax(0,1.1fr)] lg:gap-6">
@@ -97,29 +108,51 @@ const Contributes = () => {
             </DashboardCard>
 
             {isLoading ? (
-              <DashboardCard>
-                <p className="text-sm-2 text-text-muted">Loading pools…</p>
+              <DashboardCard className="animate-fade-in">
+                <div className="space-y-4">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="space-y-3">
+                      <Skeleton className="h-32 w-full" />
+                    </div>
+                  ))}
+                </div>
               </DashboardCard>
             ) : null}
 
             {isError ? (
-              <DashboardCard>
-                <p className="text-sm-2 text-destructive">
-                  Could not load pools from the API. Showing the demo trading pool instead.
-                </p>
+              <DashboardCard className="animate-fade-in">
+                <EmptyState
+                  icon="⚠️"
+                  title="Failed to load contributes"
+                  description="Could not load pools from the API. Please try again later."
+                />
               </DashboardCard>
             ) : null}
 
             {showEmptyState ? (
-              <DashboardCard>
-                <p className="text-sm-2 text-text-muted">Henüz aktif katkı bulunmuyor.</p>
+              <DashboardCard className="animate-fade-in">
+                <EmptyState
+                  icon={<Sparkles className="h-8 w-8 text-indigo-500" />}
+                  title="No contributes yet"
+                  description="Be the first to create a contribute and share your trading idea with the community."
+                  action={{
+                    label: "Create Contribute",
+                    onClick: () => {
+                      // Trigger create dialog
+                      const button = document.querySelector('[data-create-contribute]') as HTMLButtonElement;
+                      button?.click();
+                    },
+                  }}
+                />
               </DashboardCard>
             ) : null}
 
             {showCards ? (
-              <div className="grid gap-4">
-                {contributes.map((item) => (
-                  <ContributeCard key={item.id} item={item} />
+              <div className="grid gap-4 animate-fade-in">
+                {contributes.map((item, index) => (
+                  <div key={item.id} className="stagger-item">
+                    <ContributeCard item={item} />
+                  </div>
                 ))}
               </div>
             ) : null}

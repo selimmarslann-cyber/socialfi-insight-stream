@@ -7,18 +7,20 @@ import { Input } from "@/components/ui/input";
 import { usePoolAccess } from "@/hooks/usePoolAccess";
 import { useWalletStore } from "@/lib/store";
 import { getPreviewBuyCost } from "@/lib/pool";
-import { applyBps, applyMultiplier } from "@/lib/math";
+import { applyMultiplier } from "@/lib/math";
 import { formatTokenAmount } from "@/lib/format";
 import {
   BUY_SLIPPAGE,
   CHAIN_ID,
-  CREATOR_BPS_UI,
   MIN_BUY_NOP,
 } from "@/lib/config";
 import { postPoolBuy } from "@/backend/pool";
 import { logInvestmentBuy } from "@/lib/orders";
 import { DashboardCard } from "@/components/layout/visuals/DashboardCard";
 import { DashboardSectionTitle } from "@/components/layout/visuals/DashboardSectionTitle";
+import { FeeDistributionCard } from "@/components/pool/FeeDistributionCard";
+import { useQuery } from "@tanstack/react-query";
+import { getBuyerCount } from "@/lib/contributeHelpers";
 
 const MIN_BUY_VALUE = Number(MIN_BUY_NOP);
 const MIN_BUY_TEXT = MIN_BUY_VALUE.toLocaleString();
@@ -51,8 +53,6 @@ const PoolBuy = () => {
 
   const cost = previewQuery.data ?? 0n;
   const maxCost = applyMultiplier(cost, BUY_SLIPPAGE);
-  const creatorShare = applyBps(cost, CREATOR_BPS_UI);
-  const reserveShare = cost - creatorShare;
   const networkMismatch = connected && chainId !== CHAIN_ID;
   const buyDisabled =
     !connected ||
@@ -64,6 +64,12 @@ const PoolBuy = () => {
 
   const showMinWarning = cost > 0n && cost < MIN_BUY_NOP;
   const postIdNumeric = postId ? Number.parseInt(postId, 10) : NaN;
+
+  const buyerCountQuery = useQuery({
+    queryKey: ["buyer-count", postId],
+    queryFn: () => getBuyerCount(postIdNumeric),
+    enabled: Number.isFinite(postIdNumeric),
+  });
 
   const buyMutation = useMutation({
     mutationFn: async () => {
@@ -155,14 +161,6 @@ const PoolBuy = () => {
                     <span>{formatTokenAmount(cost)} NOP</span>
                   </div>
                     <div className="flex justify-between text-text-secondary">
-                    <span>Creator payı</span>
-                    <span>{formatTokenAmount(creatorShare)} NOP</span>
-                  </div>
-                    <div className="flex justify-between text-text-secondary">
-                    <span>Rezerv katkısı</span>
-                    <span>{formatTokenAmount(reserveShare)} NOP</span>
-                  </div>
-                    <div className="flex justify-between text-text-secondary">
                     <span>Max (slippage {Math.round((BUY_SLIPPAGE - 1) * 100)}%)</span>
                     <span>{formatTokenAmount(maxCost)} NOP</span>
                   </div>
@@ -170,9 +168,17 @@ const PoolBuy = () => {
                   {showMinWarning && <p className="text-xs text-warning">Min: {MIN_BUY_TEXT} NOP</p>}
               </div>
 
+                {cost > 0n && (
+                  <FeeDistributionCard
+                    amount={cost}
+                    isBuy={true}
+                    buyerCount={buyerCountQuery.data || 0}
+                  />
+                )}
+
                 <div className="rounded-2xl bg-surface-muted p-4 text-sm text-text-secondary">
                   <p className="font-semibold text-text-primary">Ekonomi notu</p>
-                <p>Creator payı ≈ cost × ({CREATOR_BPS_UI} / 10,000). Rezerv = cost - paylar.</p>
+                <p>Fair fee distribution: Creator 40%, LPs 30%, Treasury 20%, Early Buyers 10%.</p>
                 <p>Kâr hesaplaması: realized = netSell - maliyet; unrealized = netNow - maliyet (hodl).</p>
               </div>
 

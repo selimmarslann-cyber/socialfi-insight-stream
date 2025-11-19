@@ -21,7 +21,7 @@ const footerColumns = [
   {
     title: "Support",
     links: [
-      { label: "Help & Support", to: "/support" },
+      { label: "Legal & Support", to: "/legal" },
       { label: "Contact", to: "/contact" },
       { label: "Community", to: "/community" },
     ],

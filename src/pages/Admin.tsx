@@ -545,10 +545,46 @@ const AdminPostsTab = () => {
   );
 };
 
+const fetchAdminPools = async () => {
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from("social_posts")
+    .select("id, content, pool_enabled, contract_post_id, created_at, wallet_address")
+    .order("created_at", { ascending: false })
+    .limit(100);
+  if (error) throw error;
+  return data ?? [];
+};
+
 const AdminPoolsTab = () => {
+  const queryClient = useQueryClient();
   const poolsQuery = useQuery({
-    queryKey: ["admin-pools"],
-    queryFn: fetchContributesWithStats,
+    queryKey: ["admin-pools-social"],
+    queryFn: fetchAdminPools,
+  });
+
+  const updatePool = useMutation({
+    mutationFn: async ({
+      id,
+      poolEnabled,
+      contractPostId,
+    }: {
+      id: number;
+      poolEnabled?: boolean;
+      contractPostId?: number | null;
+    }) => {
+      if (!supabase) throw new Error("Supabase not configured");
+      const updates: Record<string, unknown> = {};
+      if (typeof poolEnabled === "boolean") updates.pool_enabled = poolEnabled;
+      if (contractPostId !== undefined) updates.contract_post_id = contractPostId;
+      const { error } = await supabase.from("social_posts").update(updates).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["admin-pools-social"] });
+      toast.success("Pool updated.");
+    },
+    onError: () => toast.error("Unable to update pool."),
   });
 
   return (
@@ -556,7 +592,7 @@ const AdminPoolsTab = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-foreground">
           <TrendingUp className="h-5 w-5 text-indigo-400" />
-          Pools
+          Pools / Contributes
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -564,25 +600,67 @@ const AdminPoolsTab = () => {
           <Skeleton className="h-48 w-full rounded-2xl" />
         ) : poolsQuery.data?.length ? (
           <div className="space-y-3">
-            {poolsQuery.data.map((pool) => (
-              <div
-                key={pool.id}
-                className="rounded-2xl border border-border-subtle px-4 py-3 text-sm text-text-secondary"
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-semibold text-text-primary">{pool.title}</p>
-                    <p className="text-xs text-text-muted">#{pool.contractPostId ?? pool.id}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs text-text-muted">TVL</p>
-                    <p className="text-lg font-semibold text-text-primary">
-                      {pool.weeklyVolumeNop?.toFixed(2) ?? "0"} NOP
-                    </p>
+            {poolsQuery.data.map((pool) => {
+              const poolId = Number(pool.id);
+              const isPoolEnabled = pool.pool_enabled === true;
+              const contractPostId = pool.contract_post_id;
+              const contentPreview = pool.content?.slice(0, 100) ?? "";
+
+              return (
+                <div
+                  key={pool.id}
+                  className="rounded-2xl border border-border-subtle bg-card px-4 py-3 text-sm text-text-secondary"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex-1">
+                      <p className="font-semibold text-text-primary">
+                        Post #{pool.id}
+                      </p>
+                      <p className="text-xs text-text-muted mt-1">
+                        {contentPreview}
+                        {pool.content && pool.content.length > 100 ? "…" : ""}
+                      </p>
+                      <p className="text-xs text-text-muted mt-1">
+                        Contract Post ID: {contractPostId ?? "—"} • Creator: {formatWallet(pool.wallet_address)}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 text-xs">
+                        <span>Pool Enabled</span>
+                        <Switch
+                          checked={isPoolEnabled}
+                          onCheckedChange={(next) => {
+                            if (Number.isFinite(poolId)) {
+                              updatePool.mutate({ id: poolId, poolEnabled: next });
+                            }
+                          }}
+                        />
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          const newId = prompt("Enter contract post ID (or leave empty to clear):");
+                          if (newId !== null) {
+                            const parsed = newId.trim() === "" ? null : Number.parseInt(newId, 10);
+                            if (newId.trim() === "" || Number.isFinite(parsed)) {
+                              updatePool.mutate({
+                                id: poolId,
+                                contractPostId: parsed ?? null,
+                              });
+                            } else {
+                              toast.error("Invalid contract post ID");
+                            }
+                          }
+                        }}
+                      >
+                        Set Contract ID
+                      </Button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">No pools yet.</p>
