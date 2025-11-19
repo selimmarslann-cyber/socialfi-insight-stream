@@ -1,0 +1,3 @@
+-- Moved: gaming_scores, game_sessions and helper functions were merged
+-- into supabase/00_full_schema_and_policies.sql under the
+-- "Games / leaderboard" section.

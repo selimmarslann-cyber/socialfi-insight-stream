@@ -1,0 +1,3 @@
+-- Moved: news_cache + burn_widget/burn_stats definitions merged into
+-- supabase/00_full_schema_and_policies.sql ("News cache" and
+-- "Burn metrics" sections).
