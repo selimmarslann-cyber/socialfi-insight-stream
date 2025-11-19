@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Shield } from 'lucide-react';
 import { Container } from '@/components/layout/Container';
-import { useAuthStore } from '@/lib/store';
+import { isAdminLoggedIn } from '@/lib/adminAuth';
 import {
   UserSettings,
   getAllSettings,
@@ -15,7 +15,7 @@ import {
 type CapValue = number | '';
 
 export default function GamesAdmin() {
-  const { isAdmin } = useAuthStore();
+  const isAdmin = isAdminLoggedIn();
   const [list, setList] = useState<UserSettings[]>([]);
   const [address, setAddress] = useState('');
   const [cap, setCap] = useState<CapValue>('');

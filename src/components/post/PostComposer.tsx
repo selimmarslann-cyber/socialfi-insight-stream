@@ -24,6 +24,9 @@ import { useFeedStore, useWalletStore } from "@/lib/store";
 import type { Post } from "@/types/feed";
 import { ImageGrid } from "./ImageGrid";
 import { createSocialPost } from "@/lib/social";
+import { useCurrentProfile } from "@/hooks/useCurrentProfile";
+import { isProfileBanned } from "@/lib/profile";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const hashtagSuggestions = [
   "#Bitcoin",
@@ -55,6 +58,8 @@ export const PostComposer = () => {
   const queryClient = useQueryClient();
   const { prependPost } = useFeedStore();
   const { address, refCode } = useWalletStore();
+  const { profile } = useCurrentProfile();
+  const banned = isProfileBanned(profile);
 
   const [content, setContent] = useState("");
   const [files, setFiles] = useState<File[]>([]);
@@ -81,11 +86,13 @@ export const PostComposer = () => {
   }, [content]);
 
   const handleFileSelect = (event: ChangeEvent<HTMLInputElement>) => {
+    if (banned) return;
     const selectedFiles = Array.from(event.target.files ?? []);
     processFiles(selectedFiles);
   };
 
   const processFiles = (selectedFiles: File[]) => {
+    if (banned) return;
     if (!selectedFiles.length) return;
     if (!supabaseReady && !storageHintShown) {
       toast.info(
@@ -120,6 +127,7 @@ export const PostComposer = () => {
 
   const handleDrop = (event: DragEvent<HTMLDivElement>) => {
     event.preventDefault();
+    if (banned) return;
     const dropped = Array.from(event.dataTransfer.files);
     processFiles(dropped);
   };
@@ -141,6 +149,7 @@ export const PostComposer = () => {
   };
 
   const handleContentChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
+    if (banned) return;
     const value = event.target.value;
     setContent(value);
     const match = value
@@ -203,7 +212,11 @@ export const PostComposer = () => {
     }
   };
 
-    const handleSubmit = async () => {
+  const handleSubmit = async () => {
+    if (banned) {
+      toast.error("Your account is restricted. Contact support for next steps.");
+      return;
+    }
     if (!canSubmit) {
       setError("Add at least 3 characters or an image");
       return;
@@ -255,9 +268,17 @@ export const PostComposer = () => {
     }
   };
 
-      return (
-        <Card className="rounded-2xl border border-border bg-card shadow-card-soft">
-        <div className="flex flex-col gap-5 p-5">
+  return (
+    <Card className="rounded-2xl border border-border bg-card shadow-card-soft">
+      <div className="flex flex-col gap-5 p-5">
+        {banned ? (
+          <Alert className="border-amber-200 bg-amber-50/60 text-amber-800">
+            <AlertTitle>Posting disabled</AlertTitle>
+            <AlertDescription>
+              Your account has been restricted by the ops team. Reach out to support if you believe this is an error.
+            </AlertDescription>
+          </Alert>
+        ) : null}
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-sm font-semibold text-foreground">Share your alpha</p>
@@ -282,12 +303,13 @@ export const PostComposer = () => {
             onDrop={handleDrop}
             onDragOver={handleDragOver}
           >
-            <Textarea
+          <Textarea
               ref={textareaRef}
               placeholder="Break down the trade, tag protocols, drop the charts…"
               value={content}
               onChange={handleContentChange}
-                className="min-h-[150px] w-full resize-none border-none bg-transparent p-0 text-sm text-foreground placeholder:text-muted-foreground focus-visible:ring-0"
+              className="min-h-[150px] w-full resize-none border-none bg-transparent p-0 text-sm text-foreground placeholder:text-muted-foreground focus-visible:ring-0"
+            disabled={banned}
             />
           </div>
 
@@ -313,10 +335,11 @@ export const PostComposer = () => {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <button
+                <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
                     className="flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 text-sm font-semibold text-foreground shadow-sm transition hover:border-indigo-200"
+                  disabled={banned}
                   >
                     <Paperclip className="h-4 w-4" />
                     Attach media
@@ -330,19 +353,21 @@ export const PostComposer = () => {
               </Tooltip>
             </TooltipProvider>
 
-            <input
+              <input
               ref={fileInputRef}
               type="file"
               accept="image/*"
               multiple
               className="hidden"
               onChange={handleFileSelect}
+                disabled={banned}
             />
 
-            <button
+              <button
               type="button"
               className="flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 text-sm font-semibold text-muted-foreground shadow-sm transition hover:border-indigo-200"
               onClick={() => setShowEmojiPanel((prev) => !prev)}
+                disabled={banned}
             >
               <Smile className="h-4 w-4" />
               Emoji
@@ -396,7 +421,7 @@ export const PostComposer = () => {
             </Button>
             <Button
               onClick={handleSubmit}
-              disabled={!canSubmit || isSubmitting}
+              disabled={banned || !canSubmit || isSubmitting}
               className="h-11 w-full rounded-full bg-gradient-to-r from-indigo-500 to-cyan-500 text-sm font-semibold text-white shadow-md transition hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
             >
               {isSubmitting ? (

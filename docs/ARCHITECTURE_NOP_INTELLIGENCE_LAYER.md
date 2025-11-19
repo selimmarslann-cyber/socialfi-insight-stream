@@ -5,13 +5,13 @@ The NOP Intelligence Layer is a social coordination network that fuses AI-evalua
 
 ## 2. Frontend Architecture
 The client is a Vite + React + TypeScript application styled with Tailwind and shadcn-ui. Routing is handled by React Router with a shared `AppShell` component that renders the header, left rail, and responsive layout. UI primitives (cards, tables, badges, charts) live under `src/components`, while feature-specific pages reside in `src/pages`. State is managed through:
-- **Zustand stores** (`useWalletStore`, `useAuthStore`, `useFeedStore`) for lightweight global state.
+- **Zustand stores** (`useWalletStore`, `useFeedStore`) for lightweight global state. Admin preview auth now lives in a dedicated helper (`src/lib/adminAuth.ts`) that simply toggles a localStorage flag.
 - **React Query** for data fetching, caching, and optimistic updates.
 Theme tokens are defined in CSS variables (`src/styles/design-tokens.css`) and consumed through Tailwind’s extended palette. The client integrates Web3 actions (MetaMask, pool trading) via ethers v6 modules in `src/lib/pool.ts`. Error boundaries, skeleton states, and toasts ensure the dashboard remains responsive even when Supabase or on-chain calls are delayed.
 
 ## 3. Backend & Data
 Supabase is the canonical datastore and auth layer. Key tables include:
-- `social_profiles`, `social_posts`, `social_comments`, `social_likes` for the wallet-native social feed.
+- `social_profiles`, `social_posts`, `social_comments`, `post_likes` for the wallet-native social feed.
 - `nop_trades`, `boosted_tasks`, `user_tasks`, `burn_stats`, `contact_messages`, and `news_cache` for protocol telemetry.
 Row Level Security is enabled everywhere. Public reads are allowed for analytics, while inserts/updates are scoped per table (some preview flows use permissive policies until the MPC auth service ships). The schema file `supabase/00_full_schema_and_policies.sql` contains all DDL plus helper triggers such as `set_updated_at`. Supabase Storage stores media (charts, screenshots) uploaded from the Post Composer, and every request is proxied through Supabase’s REST or serverless endpoints to keep credentials off the client.
 
@@ -30,7 +30,7 @@ Every trade, boosted task, and contribution feeds into analytics modules:
 React Query keeps these feeds fresh while maintaining client-side caches for smooth navigation. The Admin dashboard surfaces the same metrics—total profiles, posts, pools with trades, and cumulative NOP volume—so ops teams can detect regressions before a public release.
 
 ## 6. Admin & Operations
-The admin panel is a dev-only shell gated by local credentials (selimarslan / selimarslan). It hydrates stats from Supabase and exposes preview modules: top pools, top alpha users, and the mock burn panel. Authentication intentionally lives in a dedicated Zustand store that persists a localStorage flag—this keeps the UI simple while back-end teams finish MPC + SafeAuth integration. Every admin action is clearly labeled as “preview-only” to avoid implying production-grade security.
+The admin panel is a dev-only shell gated by local credentials (selimarslan / selimarslan). It now lives in `src/pages/Admin.tsx` with a left-hand nav covering Overview, Users, Posts, Pools, and System tabs. Stats hydrate from Supabase and actions (ban/unban, hide/feature posts, burn panel inputs) mutate preview data only. Authentication intentionally uses the lightweight helper in `src/lib/adminAuth.ts`, which simply compares credentials from environment variables and sets a `nop_admin_session_v2` flag—this keeps the UI simple while back-end teams finish MPC + SafeAuth integration. Every admin action is clearly labeled as “preview-only” to avoid implying production-grade security.
 
 ## 7. Future Work
 1. **Reputation v2**: Incorporate AI confidence, trade profitability, and social graph weighting into Alpha Score.

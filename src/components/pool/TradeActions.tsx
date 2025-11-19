@@ -4,6 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { approveToken, buyShares, sellShares, getAllowance, getUserPosition } from "@/lib/pool";
+import { useCurrentProfile } from "@/hooks/useCurrentProfile";
+import { isProfileBanned } from "@/lib/profile";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 type TradeActionsProps = {
   contractPostId: number;
@@ -18,6 +21,8 @@ export function TradeActions({ contractPostId, onSettled, className }: TradeActi
   const [isSelling, setIsSelling] = useState(false);
   const [hasAllowance, setHasAllowance] = useState<boolean>(false);
   const [hasPosition, setHasPosition] = useState<boolean>(false);
+  const { profile } = useCurrentProfile();
+  const banned = isProfileBanned(profile);
 
   useEffect(() => {
     async function syncState() {
@@ -38,7 +43,16 @@ export function TradeActions({ contractPostId, onSettled, className }: TradeActi
     void syncState();
   }, [contractPostId]);
 
+  const blockIfBanned = () => {
+    if (banned) {
+      toast.error("Your account is restricted. Trading is disabled.");
+      return true;
+    }
+    return false;
+  };
+
   const handleApprove = async () => {
+    if (blockIfBanned()) return;
     try {
       setIsApproving(true);
       await approveToken();
@@ -65,6 +79,7 @@ export function TradeActions({ contractPostId, onSettled, className }: TradeActi
   };
 
   const handleBuy = async () => {
+    if (blockIfBanned()) return;
     if (!hasValidAmount) {
       toast.error("Enter a valid NOP amount.");
       return;
@@ -85,6 +100,7 @@ export function TradeActions({ contractPostId, onSettled, className }: TradeActi
   };
 
   const handleSell = async () => {
+    if (blockIfBanned()) return;
     if (!hasValidAmount) {
       toast.error("Enter a valid NOP amount.");
       return;
@@ -112,6 +128,12 @@ export function TradeActions({ contractPostId, onSettled, className }: TradeActi
         className,
       )}
     >
+      {banned ? (
+        <Alert className="border-amber-200 bg-amber-50/60 text-amber-800">
+          <AlertTitle>Trading disabled</AlertTitle>
+          <AlertDescription>Your account has been restricted. Reach out to support to regain access.</AlertDescription>
+        </Alert>
+      ) : null}
       <div className="flex items-center justify-between gap-2">
         <div className="space-y-1">
           <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Trade this pool</p>
@@ -138,6 +160,7 @@ export function TradeActions({ contractPostId, onSettled, className }: TradeActi
             setAmount(Number(nextValue));
           }}
           className="h-10 flex-1 rounded-xl text-sm sm:flex-none sm:w-28"
+          disabled={banned}
         />
           <span className="text-xs font-semibold uppercase tracking-wide text-text-secondary">
           NOP
@@ -149,7 +172,7 @@ export function TradeActions({ contractPostId, onSettled, className }: TradeActi
           <Button
             size="sm"
             className="w-full rounded-xl bg-indigo-600 text-white shadow-indigo-500/30 hover:bg-indigo-500"
-            disabled={isApproving}
+            disabled={banned || isApproving}
             onClick={handleApprove}
           >
             {isApproving ? "Approving…" : "Approve NOP to trade"}
@@ -163,19 +186,27 @@ export function TradeActions({ contractPostId, onSettled, className }: TradeActi
             <Button
             size="sm"
             className="flex-1 rounded-xl bg-indigo-600 text-white shadow-indigo-500/30 hover:bg-indigo-500"
-            disabled={isBuying}
+              disabled={banned || isBuying}
             onClick={handleBuy}
           >
             {isBuying ? "Buying…" : "Buy"}
           </Button>
-          <Button
+            <Button
             size="sm"
             variant={hasPosition ? "outline" : "ghost"}
+       <<<<<<< cursor/polish-dark-mode-visual-consistency-157e
               className={cn(
                 "flex-1 rounded-xl",
                 hasPosition ? "border-border-subtle text-text-primary hover:bg-surface-muted" : "text-text-muted",
               )}
             disabled={isSelling || !hasPosition}
+=======
+            className={cn(
+              "flex-1 rounded-xl",
+              hasPosition ? "border-slate-200 text-slate-700 hover:bg-slate-50" : "text-slate-400",
+            )}
+              disabled={banned || isSelling || !hasPosition}
+         >>>>>>> main
             onClick={hasPosition ? handleSell : undefined}
           >
             {isSelling ? "Selling…" : hasPosition ? "Sell" : "Sell (no position)"}

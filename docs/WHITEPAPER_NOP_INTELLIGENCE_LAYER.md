@@ -31,7 +31,7 @@ Wallet reputations derive from trade logs plus on-feed interactions. The alpha s
 \[
 \text{alpha}(w) = \underbrace{\lambda_1 \cdot T_w}_{\text{consistency}} + \underbrace{\lambda_2 \cdot \log(1 + V_w)}_{\text{conviction}} + \underbrace{\lambda_3 \cdot \log(1 + |N_w|) \cdot \text{sign}(N_w)}_{\text{bias}}
 \]
-Where `T_w` is trade count, `V_w` total NOP volume, and `N_w` net volume (buys minus sells). In preview, \(\lambda_1 = 1, \lambda_2 = 2, \lambda_3 = 1\). Likes/comments from `social_likes` and `social_comments` will soon add social-weighted modifiers, but on-chain behavior remains the source of truth. Profiles aggregate:
+Where `T_w` is trade count, `V_w` total NOP volume, and `N_w` net volume (buys minus sells). In preview, \(\lambda_1 = 1, \lambda_2 = 2, \lambda_3 = 1\). Likes/comments from `post_likes` and `social_comments` will soon add social-weighted modifiers, but on-chain behavior remains the source of truth. Profiles aggregate:
 - Total trades, volume, pool positions.
 - Social posts (with likes/comments) for qualitative review.
 - Alpha score plus percentile rank for governance gating.
