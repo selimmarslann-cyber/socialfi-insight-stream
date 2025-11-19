@@ -174,7 +174,7 @@ export function CreateContributeDialog({ onSuccess }: CreateContributeDialogProp
           Create Contribute
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+             <DialogContent className="max-h-[95vh] max-w-2xl overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-cyan-500 bg-clip-text text-transparent">
             Create New Contribute
@@ -355,26 +355,27 @@ export function CreateContributeDialog({ onSuccess }: CreateContributeDialogProp
             )}
           </div>
 
-          <div className="flex gap-3 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setOpen(false)}
-              className="flex-1 rounded-xl"
-              disabled={createMutation.isPending}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={!canSubmit || createMutation.isPending}
-              className={cn(
-                "flex-1 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-500",
-                "font-semibold text-white shadow-lg shadow-indigo-500/30",
-                "transition-all hover:scale-105 hover:shadow-xl hover:shadow-indigo-500/40",
-                "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-              )}
-            >
+                 <div className="flex flex-col gap-3 pt-4 sm:flex-row">
+                   <Button
+                     type="button"
+                     variant="outline"
+                     onClick={() => setOpen(false)}
+                     className="min-h-[44px] flex-1 rounded-xl touch-manipulation"
+                     disabled={createMutation.isPending}
+                   >
+                     Cancel
+                   </Button>
+                   <Button
+                     type="submit"
+                     disabled={!canSubmit || createMutation.isPending}
+                     className={cn(
+                       "min-h-[44px] flex-1 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-500",
+                       "font-semibold text-white shadow-lg shadow-indigo-500/30",
+                       "transition-all hover:scale-105 hover:shadow-xl hover:shadow-indigo-500/40",
+                       "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100",
+                       "touch-manipulation"
+                     )}
+                   >
               {createMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

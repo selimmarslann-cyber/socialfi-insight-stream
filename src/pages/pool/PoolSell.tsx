@@ -66,8 +66,8 @@ const PoolSell = () => {
   };
 
     return (
-      <div className="mx-auto max-w-3xl space-y-5">
-        <DashboardCard className="space-y-5">
+      <div className="mx-auto max-w-3xl space-y-4 sm:space-y-5">
+        <DashboardCard className="space-y-4 sm:space-y-5">
             <DashboardSectionTitle label="Pool" title={`${contribute?.title ?? `Pool #${postId}`} · Sell`} />
             {(contributeLoading || postStateLoading) && <p className="text-sm text-text-secondary">Yükleniyor...</p>}
           {!contributeLoading && !postStateLoading && (
@@ -95,6 +95,7 @@ const PoolSell = () => {
                   value={sharesInput}
                   onChange={(event) => handleInputChange(event.target.value)}
                   placeholder="0"
+                  className="h-12 text-base sm:h-10 sm:text-sm"
                 />
                 {exceedingBalance && <p className="text-xs text-rose-600">Pay miktarı bakiyenizi aşamaz.</p>}
               </div>
@@ -129,7 +130,12 @@ const PoolSell = () => {
                 <p>Kâr hesaplaması: realized = netSell - maliyet; unrealized = netNow - maliyet (hodl).</p>
               </div>
 
-              <Button disabled={sellDisabled}>Sell</Button>
+              <Button 
+                disabled={sellDisabled}
+                className="min-h-[44px] w-full touch-manipulation sm:w-auto"
+              >
+                Sell
+              </Button>
 
                 <p className="text-xs text-text-secondary">Satış işlemleri geri alınamaz.</p>
             </>

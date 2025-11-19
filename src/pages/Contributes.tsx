@@ -71,14 +71,14 @@ const Contributes = () => {
     return (
       <div className="space-y-4 lg:space-y-6">
         <DashboardCard className="space-y-4">
-            <div className="flex items-start justify-between gap-4">
-            <div className="flex-1 space-y-3">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex-1 space-y-2 sm:space-y-3">
               <DashboardSectionTitle label="Pools" title="Contributes" />
-              <p className="text-sm-2 leading-relaxed text-text-secondary">
+              <p className="text-sm leading-relaxed text-text-secondary sm:text-sm-2">
                 Follow the latest community pools, view on-chain BUY / SELL flows, and explore weekly popular positions.
               </p>
             </div>
-            <div data-create-contribute>
+            <div data-create-contribute className="flex-shrink-0">
               <CreateContributeDialog />
             </div>
           </div>

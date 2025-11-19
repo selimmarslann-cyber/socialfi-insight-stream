@@ -52,7 +52,7 @@ export const Header = () => {
   return (
     <header className="sticky top-0 z-40 border-b border-border-subtle bg-[color:rgba(245,248,255,0.9)] backdrop-blur-xl dark:bg-[color:rgba(15,23,42,0.92)]">
       <Container>
-        <div className="flex h-16 items-center justify-between gap-3">
+        <div className="flex h-14 items-center justify-between gap-2 sm:h-16 sm:gap-3">
           <div className="flex items-center gap-3">
               <Sheet open={isNavOpen} onOpenChange={setIsNavOpen}>
                 <SheetTrigger asChild>
@@ -109,11 +109,26 @@ export const Header = () => {
               }}
             />
           </div>
+          
+          {/* Mobile Search Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-10 w-10 rounded-full border border-border-subtle/70 bg-surface text-text-secondary shadow-subtle/30 hover:text-text-primary md:hidden"
+            onClick={() => navigate("/search")}
+            aria-label="Search"
+          >
+            <Search className="h-4 w-4" />
+          </Button>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <NotificationBell />
-            <NopHeaderCounter />
-            <NetworkStatus />
+            <div className="hidden sm:block">
+              <NopHeaderCounter />
+            </div>
+            <div className="hidden md:block">
+              <NetworkStatus />
+            </div>
             <Button
               variant="ghost"
               size="icon"

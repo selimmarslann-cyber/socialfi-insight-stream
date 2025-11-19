@@ -113,14 +113,14 @@ const Index = () => {
           <p className="text-sm-2 leading-relaxed text-text-secondary">
             Track social positions, AI signals, and community performance inside a single calm SocialFi command center.
           </p>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-4">
             {heroSnapshot.map((item) => (
               <div
                 key={item.label}
-                className="rounded-[16px] border border-border-subtle bg-surface px-4 py-3 text-left shadow-subtle/30"
+                className="rounded-xl border border-border-subtle bg-surface px-3 py-2.5 text-left shadow-subtle/30 sm:rounded-[16px] sm:px-4 sm:py-3"
               >
-                <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-text-muted">{item.label}</p>
-                <p className="text-2xl-2 font-semibold text-text-primary tabular-nums">{item.value}</p>
+                <p className="text-[9px] font-semibold uppercase tracking-[0.25em] text-text-muted sm:text-[10px]">{item.label}</p>
+                <p className="text-xl font-semibold text-text-primary tabular-nums sm:text-2xl-2">{item.value}</p>
               </div>
             ))}
           </div>

@@ -59,53 +59,53 @@ export default function Portfolio() {
         <DashboardSectionTitle label="Overview" title="Portfolio Summary" />
         
         {summary ? (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card className="rounded-2xl border border-border-subtle bg-surface p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-text-muted">Total Value</p>
-              <p className="mt-2 text-2xl font-semibold text-text-primary">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <Card className="rounded-xl border border-border-subtle bg-surface p-3 sm:rounded-2xl sm:p-4">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-text-muted sm:text-xs">Total Value</p>
+              <p className="mt-1.5 text-xl font-semibold text-text-primary sm:mt-2 sm:text-2xl">
                 {formatPortfolioValue(summary.totalValue)}
               </p>
-              <p className="mt-1 text-xs text-text-secondary">
+              <p className="mt-1 text-[10px] text-text-secondary sm:text-xs">
                 Invested: {formatPortfolioValue(summary.totalInvested)}
               </p>
             </Card>
 
-            <Card className="rounded-2xl border border-border-subtle bg-surface p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-text-muted">Total PnL</p>
+            <Card className="rounded-xl border border-border-subtle bg-surface p-3 sm:rounded-2xl sm:p-4">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-text-muted sm:text-xs">Total PnL</p>
               <div className="mt-2 flex items-center gap-2">
                 {summary.totalPnLPercent >= 0 ? (
                   <TrendingUp className="h-5 w-5 text-emerald-500" />
                 ) : (
                   <TrendingDown className="h-5 w-5 text-red-500" />
                 )}
-                <p className={`text-2xl font-semibold ${
+                <p className={`text-xl font-semibold sm:text-2xl ${
                   summary.totalPnLPercent >= 0 ? "text-emerald-500" : "text-red-500"
                 }`}>
                   {summary.totalPnLPercent >= 0 ? "+" : ""}
                   {summary.totalPnLPercent.toFixed(2)}%
                 </p>
               </div>
-              <p className="mt-1 text-xs text-text-secondary">
+              <p className="mt-1 text-[10px] text-text-secondary sm:text-xs">
                 {formatPortfolioValue(summary.totalPnL)}
               </p>
             </Card>
 
-            <Card className="rounded-2xl border border-border-subtle bg-surface p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-text-muted">Open Positions</p>
-              <p className="mt-2 text-2xl font-semibold text-text-primary">
+            <Card className="rounded-xl border border-border-subtle bg-surface p-3 sm:rounded-2xl sm:p-4">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-text-muted sm:text-xs">Open Positions</p>
+              <p className="mt-1.5 text-xl font-semibold text-text-primary sm:mt-2 sm:text-2xl">
                 {summary.openPositions}
               </p>
-              <p className="mt-1 text-xs text-text-secondary">
+              <p className="mt-1 text-[10px] text-text-secondary sm:text-xs">
                 of {summary.totalPositions} total
               </p>
             </Card>
 
-            <Card className="rounded-2xl border border-border-subtle bg-surface p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-text-muted">Win Rate</p>
-              <p className="mt-2 text-2xl font-semibold text-text-primary">
+            <Card className="rounded-xl border border-border-subtle bg-surface p-3 sm:rounded-2xl sm:p-4">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-text-muted sm:text-xs">Win Rate</p>
+              <p className="mt-1.5 text-xl font-semibold text-text-primary sm:mt-2 sm:text-2xl">
                 {summary.winRate.toFixed(1)}%
               </p>
-              <p className="mt-1 text-xs text-text-secondary">
+              <p className="mt-1 text-[10px] text-text-secondary sm:text-xs">
                 {positions.filter(p => p.unrealizedPnL > 0n).length} winning
               </p>
             </Card>
@@ -191,7 +191,7 @@ function PositionCard({ position }: { position: PortfolioPosition }) {
               </Badge>
             </div>
             
-            <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="grid grid-cols-2 gap-3 text-xs sm:gap-4 sm:text-sm">
               <div>
                 <p className="text-xs text-text-muted">Shares</p>
                 <p className="font-semibold text-text-primary">
@@ -229,7 +229,12 @@ function PositionCard({ position }: { position: PortfolioPosition }) {
             </div>
           </div>
 
-          <Button variant="ghost" size="sm" asChild>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            asChild
+            className="min-h-[44px] min-w-[80px] touch-manipulation"
+          >
             <Link to={`/pool/${position.postId}/sell`}>
               Sell
             </Link>

@@ -63,8 +63,8 @@ function ContributeCard({ item }: ContributeCardProps) {
     weeklyVolume === null ? null : volumeFormatter.format(weeklyVolume);
 
     return (
-      <Card className="group space-y-5 rounded-2xl border-2 border-border-subtle bg-card p-6 shadow-lg transition-all duration-300 hover:border-indigo-400 hover:shadow-xl hover:shadow-indigo-500/20 dark:hover:border-cyan-600 dark:hover:shadow-cyan-500/20">
-      <div className="flex flex-wrap items-start justify-between gap-4">
+      <Card className="group space-y-4 rounded-2xl border-2 border-border-subtle bg-card p-4 shadow-lg transition-all duration-300 hover:border-indigo-400 hover:shadow-xl hover:shadow-indigo-500/20 dark:hover:border-cyan-600 dark:hover:shadow-cyan-500/20 sm:space-y-5 sm:p-6">
+      <div className="flex flex-col items-start gap-3 sm:flex-row sm:flex-wrap sm:justify-between sm:gap-4">
         <div className="space-y-1">
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Weekly popular pool
@@ -133,20 +133,22 @@ function ContributeCard({ item }: ContributeCardProps) {
         <PoolStatsCard contributeId={item.id} />
       ) : null}
 
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         {isPoolActive ? (
-          <TradeActions
-            contractPostId={contractPostId}
-            onSettled={refreshPosition}
-            className="bg-muted/50"
-          />
+          <div className="flex-1">
+            <TradeActions
+              contractPostId={contractPostId}
+              onSettled={refreshPosition}
+              className="bg-muted/50"
+            />
+          </div>
         ) : (
-          <div className="flex-1 rounded-xl border-2 border-dashed border-border-subtle bg-surface-muted p-4 text-sm text-text-secondary">
+          <div className="flex-1 rounded-xl border-2 border-dashed border-border-subtle bg-surface-muted p-3 text-sm text-text-secondary sm:p-4">
             Pool will open soon. Follow this contribution for launch updates.
           </div>
         )}
         
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 sm:flex-shrink-0">
           <ShareButton
             contributeId={item.id}
             contributeTitle={item.title}

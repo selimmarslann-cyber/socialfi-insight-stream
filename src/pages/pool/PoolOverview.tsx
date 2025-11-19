@@ -48,7 +48,7 @@ const PoolOverview = () => {
   const networkMismatch = connected && chainId !== CHAIN_ID;
 
     return (
-        <div className="mx-auto max-w-4xl space-y-5">
+        <div className="mx-auto max-w-4xl space-y-4 sm:space-y-5">
           <DashboardCard className="space-y-4">
             <DashboardSectionTitle label="Pool" title={contribute?.title ?? `Pool #${postId}`} />
             {(contributeLoading || postStateLoading) && <p className="text-sm text-text-secondary">Yükleniyor...</p>}
@@ -66,15 +66,26 @@ const PoolOverview = () => {
                     />
                   )}
                 </div>
-              <div className="flex flex-wrap gap-3">
-                <Button asChild variant="outline" className="rounded-full">
+              <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-3">
+                <Button 
+                  asChild 
+                  variant="outline" 
+                  className="min-h-[44px] w-full rounded-full touch-manipulation sm:w-auto"
+                >
                   <Link to={`/pool/${postId}/chart`}>Chart</Link>
                 </Button>
-                <Button asChild className="rounded-full">
+                <Button 
+                  asChild 
+                  className="min-h-[44px] w-full rounded-full touch-manipulation sm:w-auto"
+                >
                   <Link to={`/pool/${postId}/buy`}>Buy</Link>
                 </Button>
                 {hasShares && (
-                  <Button asChild disabled={sellDisabled} className="rounded-full">
+                  <Button 
+                    asChild 
+                    disabled={sellDisabled} 
+                    className="min-h-[44px] w-full rounded-full touch-manipulation sm:w-auto"
+                  >
                     <Link to={`/pool/${postId}/sell`}>Sell</Link>
                   </Button>
                 )}

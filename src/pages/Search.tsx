@@ -66,13 +66,13 @@ export default function Search() {
         
         <form onSubmit={handleSearch} className="space-y-4">
           <div className="relative">
-            <SearchIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-text-muted" />
+            <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-text-muted sm:left-4" />
             <Input
               type="text"
               placeholder="Search by title, author, tags, description…"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="h-12 pl-12 pr-4 text-base"
+              className="h-12 pl-10 pr-4 text-base sm:pl-12"
             />
           </div>
           

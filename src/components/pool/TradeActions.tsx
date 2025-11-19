@@ -195,7 +195,7 @@ export function TradeActions({ contractPostId, onSettled, className }: TradeActi
         </span>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3">
         <Input
           type="number"
           min={1}
@@ -208,7 +208,7 @@ export function TradeActions({ contractPostId, onSettled, className }: TradeActi
             }
             setAmount(Number(nextValue));
           }}
-          className="h-10 flex-1 rounded-xl text-sm sm:flex-none sm:w-28"
+          className="h-11 flex-1 rounded-xl text-base sm:h-10 sm:flex-none sm:w-28 sm:text-sm"
           disabled={banned}
         />
         <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">
@@ -234,7 +234,7 @@ export function TradeActions({ contractPostId, onSettled, className }: TradeActi
         <div className="flex flex-col gap-2 sm:flex-row">
           <Button
             size="sm"
-            className="flex-1 rounded-xl bg-emerald-600 text-white shadow-emerald-500/30 hover:bg-emerald-500 disabled:opacity-50"
+            className="min-h-[44px] flex-1 rounded-xl bg-emerald-600 text-white shadow-emerald-500/30 hover:bg-emerald-500 disabled:opacity-50 touch-manipulation"
             disabled={banned || isBuying || !hasValidAmount}
             onClick={handleBuy}
           >
@@ -250,7 +250,7 @@ export function TradeActions({ contractPostId, onSettled, className }: TradeActi
             size="sm"
             variant={hasPosition ? "outline" : "ghost"}
             className={cn(
-              "flex-1 rounded-xl",
+              "min-h-[44px] flex-1 rounded-xl touch-manipulation",
               hasPosition
                 ? "border-red-200 text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
                 : "text-text-muted opacity-50 cursor-not-allowed",

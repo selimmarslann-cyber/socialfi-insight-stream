@@ -114,8 +114,8 @@ const PoolBuy = () => {
   });
 
     return (
-      <div className="mx-auto max-w-3xl space-y-5">
-        <DashboardCard className="space-y-5">
+      <div className="mx-auto max-w-3xl space-y-4 sm:space-y-5">
+        <DashboardCard className="space-y-4 sm:space-y-5">
           <DashboardSectionTitle label="Pool" title={`${contribute?.title ?? `Pool #${postId}`} · Buy`} />
             {(contributeLoading || postStateLoading) && <p className="text-sm text-text-secondary">Yükleniyor...</p>}
           {!contributeLoading && !postStateLoading && (
@@ -150,6 +150,7 @@ const PoolBuy = () => {
                     }
                   }}
                   placeholder="0"
+                  className="h-12 text-base sm:h-10 sm:text-sm"
                 />
               </div>
 
@@ -183,8 +184,17 @@ const PoolBuy = () => {
               </div>
 
               <div className="flex flex-col gap-3">
-                <Button disabled={!connected || networkMismatch}>Approve NOP</Button>
-                <Button disabled={buyDisabled || buyMutation.isPending} onClick={() => buyMutation.mutate()}>
+                <Button 
+                  disabled={!connected || networkMismatch}
+                  className="min-h-[44px] touch-manipulation"
+                >
+                  Approve NOP
+                </Button>
+                <Button 
+                  disabled={buyDisabled || buyMutation.isPending} 
+                  onClick={() => buyMutation.mutate()}
+                  className="min-h-[44px] touch-manipulation"
+                >
                   {buyMutation.isPending ? "Buying..." : "Buy"}
                 </Button>
               </div>
