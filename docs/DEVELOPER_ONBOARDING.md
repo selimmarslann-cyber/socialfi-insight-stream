@@ -39,7 +39,7 @@ Visit `http://localhost:5173`. The dev server hot reloads React, Tailwind, and s
 ## 6. Social Feed Persistence
 The feed now writes to Supabase tables:
 - `social_posts` for wallet-authored posts.
-- `social_comments`, `social_likes` for interactions.
+- `social_comments`, `post_likes` for interactions.
 - `social_profiles` for wallet metadata.
 When you connect a wallet through the header, the client calls `ensureSocialProfile`. Posting requires a wallet because `createSocialPost` inserts with `wallet_address`. Likes and comments use the same address, and optimistic updates ensure the UI stays responsive.
 

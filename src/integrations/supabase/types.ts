@@ -332,36 +332,59 @@ export type Database = {
           }
         }
         posts: {
-        Row: {
-          id: number
-          author_id: string
-          text: string
-          media_url: string | null
-          tags: string[] | null
-          is_investable: boolean
-          invest_open: boolean
-          created_at: string | null
+          Row: {
+            id: number
+            author_id: string
+            text: string
+            media_url: string | null
+            tags: string[] | null
+            is_investable: boolean
+            invest_open: boolean
+            created_at: string | null
+          }
+          Insert: {
+            id?: number
+            author_id: string
+            text: string
+            media_url?: string | null
+            tags?: string[] | null
+            is_investable?: boolean
+            invest_open?: boolean
+            created_at?: string | null
+          }
+          Update: {
+            id?: number
+            author_id?: string
+            text?: string
+            media_url?: string | null
+            tags?: string[] | null
+            is_investable?: boolean
+            invest_open?: boolean
+            created_at?: string | null
+          }
         }
-        Insert: {
-          id?: number
-          author_id: string
-          text: string
-          media_url?: string | null
-          tags?: string[] | null
-          is_investable?: boolean
-          invest_open?: boolean
-          created_at?: string | null
-        }
-        Update: {
-          id?: number
-          author_id?: string
-          text?: string
-          media_url?: string | null
-          tags?: string[] | null
-          is_investable?: boolean
-          invest_open?: boolean
-          created_at?: string | null
-        }
+        post_likes: {
+          Row: {
+            id: number
+            post_id: number
+            profile_id: string
+            wallet_address: string
+            created_at: string | null
+          }
+          Insert: {
+            id?: number
+            post_id: number
+            profile_id: string
+            wallet_address: string
+            created_at?: string | null
+          }
+          Update: {
+            id?: number
+            post_id?: number
+            profile_id?: string
+            wallet_address?: string
+            created_at?: string | null
+          }
         }
           profiles: {
           Row: {
@@ -421,27 +444,11 @@ export type Database = {
               created_at?: string | null
             }
           }
-          social_likes: {
-            Row: {
-              post_id: number
-              wallet_address: string
-              created_at: string | null
-            }
-            Insert: {
-              post_id: number
-              wallet_address: string
-              created_at?: string | null
-            }
-            Update: {
-              post_id?: number
-              wallet_address?: string
-              created_at?: string | null
-            }
-          }
           social_posts: {
             Row: {
               id: number
               wallet_address: string
+            author_profile_id: string | null
               author_name: string | null
               author_avatar_url: string | null
               content: string
@@ -449,12 +456,15 @@ export type Database = {
               tags: string[] | null
               pool_enabled: boolean
               contract_post_id: number | null
+            is_hidden: boolean
+            is_featured: boolean
               created_at: string | null
               updated_at: string | null
             }
             Insert: {
               id?: number
               wallet_address: string
+            author_profile_id?: string | null
               author_name?: string | null
               author_avatar_url?: string | null
               content: string
@@ -462,12 +472,15 @@ export type Database = {
               tags?: string[] | null
               pool_enabled?: boolean
               contract_post_id?: number | null
+            is_hidden?: boolean
+            is_featured?: boolean
               created_at?: string | null
               updated_at?: string | null
             }
             Update: {
               id?: number
               wallet_address?: string
+            author_profile_id?: string | null
               author_name?: string | null
               author_avatar_url?: string | null
               content?: string
@@ -475,6 +488,8 @@ export type Database = {
               tags?: string[] | null
               pool_enabled?: boolean
               contract_post_id?: number | null
+            is_hidden?: boolean
+            is_featured?: boolean
               created_at?: string | null
               updated_at?: string | null
             }
@@ -484,8 +499,11 @@ export type Database = {
               id: string
               wallet_address: string
               display_name: string | null
+            handle: string | null
               avatar_url: string | null
               bio: string | null
+            nop_id: string | null
+            is_banned: boolean
               total_posts: number
               created_at: string | null
               updated_at: string | null
@@ -494,8 +512,11 @@ export type Database = {
               id?: string
               wallet_address: string
               display_name?: string | null
+            handle?: string | null
               avatar_url?: string | null
               bio?: string | null
+            nop_id?: string | null
+            is_banned?: boolean
               total_posts?: number
               created_at?: string | null
               updated_at?: string | null
@@ -504,8 +525,11 @@ export type Database = {
               id?: string
               wallet_address?: string
               display_name?: string | null
+            handle?: string | null
               avatar_url?: string | null
               bio?: string | null
+            nop_id?: string | null
+            is_banned?: boolean
               total_posts?: number
               created_at?: string | null
               updated_at?: string | null

@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { BadgeCheck, Clock, Heart, MessageCircle, Share2, Coins } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -9,9 +10,10 @@ import { ImageGrid } from "@/components/post/ImageGrid";
 import { AIInsightStrip } from "@/components/ai/AIInsightStrip";
 import { toast } from "sonner";
 import { TradeActions } from "@/components/pool/TradeActions";
-import { togglePostLike, createPostComment } from "@/lib/social";
+import { createPostComment } from "@/lib/social";
 import { useWalletStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
+import { toggleLike } from "@/lib/likes";
 
 interface PostCardProps {
   post: Post;
@@ -61,30 +63,31 @@ export const PostCard = ({ post }: PostCardProps) => {
     return `${addressValue.slice(0, 6)}…${addressValue.slice(-4)}`;
   };
 
-  const handleLike = async () => {
-    if (!viewerAddress) {
-      toast.error("Connect your wallet to like posts.");
-      return;
-    }
-    if (!canMutatePost) {
-      toast.info("Demo posts cannot record likes.");
-      return;
-    }
-    try {
-      setIsLiking(true);
-      const { liked: next } = await togglePostLike(numericPostId, viewerAddress);
-      setLiked(next);
-      setEngagement((prev) => ({
-        ...prev,
-        upvotes: Math.max(0, prev.upvotes + (next ? 1 : -1)),
-      }));
-    } catch (error) {
-      toast.error("Unable to update like at the moment.");
-      console.error(error);
-    } finally {
-      setIsLiking(false);
-    }
-  };
+    const handleLike = async () => {
+      if (!viewerAddress) {
+        toast.error("Connect your wallet to like posts.");
+        return;
+      }
+      if (!canMutatePost) {
+        toast.info("Demo posts cannot record likes.");
+        return;
+      }
+      try {
+        setIsLiking(true);
+        const { liked: next, total } = await toggleLike(post.id);
+        setLiked(next);
+        setEngagement((prev) => ({
+          ...prev,
+          upvotes: total,
+        }));
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Unable to update like at the moment.";
+        toast.error(message);
+        console.error(error);
+      } finally {
+        setIsLiking(false);
+      }
+    };
 
   const handleCommentSubmit = async () => {
     const value = commentValue.trim();
@@ -133,32 +136,35 @@ export const PostCard = ({ post }: PostCardProps) => {
 
     return (
       <article className="rounded-2xl bg-[color:var(--bg-card)] p-6 text-[color:var(--text-primary)] shadow-lg ring-1 ring-[color:var(--ring)] transition will-change-transform hover:translate-y-[1px] hover:ring-indigo-500/30">
-      <header className="flex items-start justify-between gap-4">
-        <div className="flex flex-1 items-start gap-3">
-          <Avatar className="h-12 w-12 border border-indigo-500/10">
-            {post.author.avatar ? (
-              <AvatarImage src={post.author.avatar} alt={post.author.displayName} />
-            ) : null}
-            <AvatarFallback className="bg-indigo-500/10 text-sm font-semibold text-indigo-600">
-              {post.author.displayName.slice(0, 2).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          <div className="min-w-0 flex-1">
+        <header className="flex items-start justify-between gap-4">
+          <Link
+            to={`/u/${post.walletAddress ?? post.author.username}`}
+            className="flex flex-1 items-start gap-3 text-left no-underline"
+          >
+            <Avatar className="h-12 w-12 border border-indigo-500/10">
+              {post.author.avatar ? (
+                <AvatarImage src={post.author.avatar} alt={post.author.displayName} />
+              ) : null}
+              <AvatarFallback className="bg-indigo-500/10 text-sm font-semibold text-indigo-600">
+                {post.author.displayName.slice(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-1 text-sm">
                 <span className="font-semibold text-[color:var(--text-primary)]">{post.author.displayName}</span>
-              {post.author.verified && <BadgeCheck className="h-4 w-4 text-cyan-500" />}
+                {post.author.verified && <BadgeCheck className="h-4 w-4 text-cyan-500" />}
                 <span className="text-[color:var(--text-secondary)]">@{post.author.username}</span>
                 <span className="text-[color:var(--text-secondary)]">·</span>
                 <span className="flex items-center gap-1 text-xs text-[color:var(--text-secondary)]">
-                <Clock className="h-3 w-3" />
-                {timeAgo(post.createdAt)}
-              </span>
-            </div>
+                  <Clock className="h-3 w-3" />
+                  {timeAgo(post.createdAt)}
+                </span>
+              </div>
               <p className="mt-1 text-[11px] uppercase tracking-wide text-[color:var(--text-secondary)]/80">
-              {post.author.refCode}
-            </p>
-          </div>
-        </div>
+                {post.author.refCode}
+              </p>
+            </div>
+          </Link>
           {funded ? (
             <Badge className="rounded-full bg-[color:rgba(245,199,106,0.18)] text-xs font-semibold uppercase tracking-wide text-[color:var(--color-chip-gold)] shadow-sm">
               Funded

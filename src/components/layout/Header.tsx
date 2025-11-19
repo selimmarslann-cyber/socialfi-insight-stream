@@ -126,8 +126,8 @@ export const Header = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                {connectedAddress ? (
-                  <DropdownMenuItem onSelect={() => navigate(`/u/${connectedAddress}`)}>Profile</DropdownMenuItem>
+                  {connectedAddress ? (
+                    <DropdownMenuItem onSelect={() => navigate("/profile")}>Profile</DropdownMenuItem>
                 ) : (
                   <DropdownMenuItem disabled className="text-text-muted">
                     Connect wallet to view profile

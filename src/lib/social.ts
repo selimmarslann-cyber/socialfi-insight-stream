@@ -3,9 +3,10 @@ import { supabase } from "@/lib/supabaseClient";
 import { generateRefCode } from "@/lib/utils";
 import { mockPosts } from "@/lib/mock-api";
 import type { Post, PostComment, CreatePostInput } from "@/types/feed";
+import { ensureProfileForWallet, getProfileByWallet } from "@/lib/profile";
 
 type SocialPostRow = Tables<"social_posts">;
-type SocialLikeRow = Tables<"social_likes">;
+type SocialLikeRow = Tables<"post_likes">;
 type SocialCommentRow = Tables<"social_comments">;
 type SocialProfileRow = Tables<"social_profiles">;
 
@@ -94,6 +95,29 @@ const mapPostRow = (
   };
 };
 
+const hydratePosts = async (rows: SocialPostRow[], viewer: string): Promise<Post[]> => {
+  if (!supabase) {
+    return [];
+  }
+  if (rows.length === 0) {
+    return [];
+  }
+  const postIds = rows.map((row) => row.id);
+  const [likesRes, commentsRes] = await Promise.all([
+    supabase.from("post_likes").select("*").in("post_id", postIds),
+    supabase
+      .from("social_comments")
+      .select("*")
+      .in("post_id", postIds)
+      .order("created_at", { ascending: true }),
+  ]);
+  const likes = likesRes.data ?? [];
+  const comments = commentsRes.data ?? [];
+  const likesByPost = mapLikes(likes);
+  const commentsByPost = mapComments(comments);
+  return rows.map((row) => mapPostRow(row, { likes: likesByPost, comments: commentsByPost, viewer }));
+};
+
 const uniqueById = (posts: Post[]): Post[] => {
   const seen = new Set<string>();
   return posts.filter((post) => {
@@ -107,54 +131,19 @@ export type FetchSocialFeedOptions = {
   limit?: number;
   viewerWallet?: string;
   authorWallet?: string;
+  includeHidden?: boolean;
+  featuredOnly?: boolean;
 };
-
-export async function ensureSocialProfile(input: {
-  walletAddress: string;
-  displayName?: string;
-  avatarUrl?: string;
-  bio?: string;
-}): Promise<SocialProfileRow | null> {
-  const client = supabase;
-  if (!client || !input.walletAddress) {
-    return null;
-  }
-  const normalized = sanitizeWallet(input.walletAddress);
-  const payload = {
-    wallet_address: normalized,
-    display_name: input.displayName ?? formatWallet(input.walletAddress),
-    avatar_url: input.avatarUrl ?? null,
-    bio: input.bio ?? null,
-  };
-  const { data, error } = await client
-    .from("social_profiles")
-    .upsert(payload, { onConflict: "wallet_address" })
-    .select("*")
-    .single();
-  if (error) {
-    console.warn("[social] Failed to upsert profile", error);
-    return null;
-  }
-  return data;
-}
 
 export async function fetchSocialProfile(walletAddress: string): Promise<SocialProfileRow | null> {
   const client = supabase;
   if (!client || !walletAddress) return null;
   const normalized = sanitizeWallet(walletAddress);
-  const { data, error } = await client
-    .from("social_profiles")
-    .select("*")
-    .eq("wallet_address", normalized)
-    .maybeSingle();
-  if (error) {
-    console.warn("[social] Failed to fetch profile", error);
-    return null;
+  const existing = await getProfileByWallet(normalized);
+  if (existing) {
+    return existing as SocialProfileRow;
   }
-  if (data) {
-    return data;
-  }
-  return ensureSocialProfile({ walletAddress: normalized });
+  return ensureProfileForWallet(normalized);
 }
 
 export async function fetchSocialFeed(options: FetchSocialFeedOptions = {}): Promise<Post[]> {
@@ -170,6 +159,12 @@ export async function fetchSocialFeed(options: FetchSocialFeedOptions = {}): Pro
       .select("*")
       .order("created_at", { ascending: false })
       .limit(limit);
+    if (!options.includeHidden) {
+      query = query.eq("is_hidden", false);
+    }
+    if (options.featuredOnly) {
+      query = query.eq("is_featured", true);
+    }
     if (options.authorWallet) {
       query = query.eq("wallet_address", sanitizeWallet(options.authorWallet));
     }
@@ -177,28 +172,44 @@ export async function fetchSocialFeed(options: FetchSocialFeedOptions = {}): Pro
     if (error || !data) {
       throw error ?? new Error("social_posts_empty");
     }
-    const postIds = data.map((row) => row.id);
-    if (postIds.length === 0) {
-      return mockPosts;
-    }
-    const [likesRes, commentsRes] = await Promise.all([
-      client.from("social_likes").select("*").in("post_id", postIds),
-      client
-        .from("social_comments")
-        .select("*")
-        .in("post_id", postIds)
-        .order("created_at", { ascending: true }),
-    ]);
-    const likes = likesRes.data ?? [];
-    const comments = commentsRes.data ?? [];
-    const likesByPost = mapLikes(likes);
-    const commentsByPost = mapComments(comments);
-    const posts = data.map((row) => mapPostRow(row, { likes: likesByPost, comments: commentsByPost, viewer }));
+    const posts = await hydratePosts(data, viewer);
     const fallback = posts.length === 0 ? mockPosts : [];
     return uniqueById([...posts, ...fallback]);
   } catch (error) {
     console.warn("[social] Falling back to mock feed", error);
     return mockPosts;
+  }
+}
+
+export async function fetchPostsByIds(
+  postIds: number[],
+  viewerWallet?: string,
+  options?: { includeHidden?: boolean },
+): Promise<Post[]> {
+  const client = supabase;
+  if (!client || postIds.length === 0) {
+    return [];
+  }
+  const viewer = sanitizeWallet(viewerWallet);
+  try {
+    let query = client.from("social_posts").select("*").in("id", postIds);
+    if (!options?.includeHidden) {
+      query = query.eq("is_hidden", false);
+    }
+    const { data, error } = await query;
+    if (error || !data) {
+      throw error ?? new Error("posts_by_ids_empty");
+    }
+    const posts = await hydratePosts(data, viewer);
+    const order = new Map(postIds.map((id, index) => [id, index]));
+    return posts.sort((a, b) => {
+      const aIndex = order.get(Number(a.id)) ?? 0;
+      const bIndex = order.get(Number(b.id)) ?? 0;
+      return aIndex - bIndex;
+    });
+  } catch (error) {
+    console.warn("[social] Failed to fetch posts by ids", error);
+    return [];
   }
 }
 
@@ -215,8 +226,15 @@ export async function createSocialPost(input: CreatePostInput): Promise<Post> {
       createdAt: new Date().toISOString(),
     };
   }
+  if (!walletAddress) {
+    throw new Error("Wallet address is required to publish");
+  }
+  const profile = await ensureProfileForWallet(walletAddress);
   const payload = {
     wallet_address: walletAddress,
+    author_profile_id: profile.id,
+    author_name: profile.display_name ?? formatWallet(walletAddress),
+    author_avatar_url: profile.avatar_url,
     content: input.content,
     media_urls: input.mediaUrls?.length ? input.mediaUrls : null,
     tags: input.tags?.length ? input.tags : null,
@@ -226,30 +244,7 @@ export async function createSocialPost(input: CreatePostInput): Promise<Post> {
   if (error || !data) {
     throw new Error(error?.message ?? "Unable to publish contribution");
   }
-  await ensureSocialProfile({ walletAddress });
   return mapPostRow(data, { likes: new Map(), comments: new Map(), viewer: walletAddress });
-}
-
-export async function togglePostLike(postId: number, walletAddress: string): Promise<{
-  liked: boolean;
-}> {
-  const client = supabase;
-  if (!client) {
-    return { liked: false };
-  }
-  const normalized = sanitizeWallet(walletAddress);
-  const { data: existing } = await client
-    .from("social_likes")
-    .select("post_id")
-    .eq("post_id", postId)
-    .eq("wallet_address", normalized)
-    .maybeSingle();
-  if (existing) {
-    await client.from("social_likes").delete().eq("post_id", postId).eq("wallet_address", normalized);
-    return { liked: false };
-  }
-  await client.from("social_likes").insert({ post_id: postId, wallet_address: normalized });
-  return { liked: true };
 }
 
 export async function createPostComment({
