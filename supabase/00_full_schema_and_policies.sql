@@ -467,11 +467,17 @@ for insert
 with check (true);
 
 drop policy if exists "social_posts_delete_admin" on public.social_posts;
-create policy "social_posts_delete_admin"
+drop policy if exists "social_posts_delete_own" on public.social_posts;
+create policy "social_posts_delete_own"
 on public.social_posts
 for delete
-using ((select auth.role()) = 'service_role')
-with check ((select auth.role()) = 'service_role');
+using (
+  (select auth.role()) = 'service_role'
+  or (
+    lower(wallet_address) = lower(coalesce((select wallet_address from public.social_profiles where id = (select auth.uid())), ''))
+  )
+  or public.is_admin()
+);
 
 drop policy if exists "social_posts_update_admin" on public.social_posts;
 drop policy if exists "social_posts_update_public" on public.social_posts;

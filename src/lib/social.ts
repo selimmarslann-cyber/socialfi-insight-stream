@@ -338,6 +338,56 @@ export async function createSocialPost(input: CreatePostInput): Promise<Post> {
   return mapPostRow(data, { likes: new Map(), comments: new Map(), viewer: walletAddress, verifiedProfiles });
 }
 
+export async function deletePost(postId: number, walletAddress: string): Promise<boolean> {
+  const client = supabase;
+  if (!client) {
+    throw new Error("Supabase client is not configured");
+  }
+
+  const normalized = sanitizeWallet(walletAddress);
+  if (!normalized) {
+    throw new Error("Wallet address is required");
+  }
+
+  // Get post to check ownership
+  const { data: post, error: fetchError } = await client
+    .from("social_posts")
+    .select("wallet_address")
+    .eq("id", postId)
+    .maybeSingle();
+
+  if (fetchError || !post) {
+    throw new Error("Post not found");
+  }
+
+  // Check if user is the owner
+  const isOwner = sanitizeWallet(post.wallet_address) === normalized;
+  if (!isOwner) {
+    // Check if user is admin via profile
+    const { data: profile } = await client
+      .from("social_profiles")
+      .select("is_banned")
+      .eq("wallet_address", normalized)
+      .maybeSingle();
+    
+    // Note: Admin check would require checking profiles.is_admin in Supabase
+    // For now, we'll let RLS policies handle admin check
+    // RLS should allow deletion if user is owner or admin
+  }
+
+  const { error } = await client
+    .from("social_posts")
+    .delete()
+    .eq("id", postId);
+
+  if (error) {
+    console.error("[social] Failed to delete post", error);
+    throw new Error(error.message || "Failed to delete post");
+  }
+
+  return true;
+}
+
 export async function createPostComment({
   postId,
   walletAddress,

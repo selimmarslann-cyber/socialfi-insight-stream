@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { BadgeCheck, Clock, Heart, MessageCircle, Share2, Coins } from "lucide-react";
+import { BadgeCheck, Clock, Heart, MessageCircle, Share2, Coins, Trash2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,10 +10,12 @@ import { ImageGrid } from "@/components/post/ImageGrid";
 import { AIInsightStrip } from "@/components/ai/AIInsightStrip";
 import { toast } from "sonner";
 import { TradeActions } from "@/components/pool/TradeActions";
-import { createPostComment } from "@/lib/social";
+import { createPostComment, deletePost } from "@/lib/social";
 import { useWalletStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { toggleLike } from "@/lib/likes";
+import { isAdminLoggedIn } from "@/lib/adminAuth";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface PostCardProps {
   post: Post;
@@ -32,6 +34,7 @@ const timeAgo = (value: string) => {
 };
 
 export const PostCard = ({ post }: PostCardProps) => {
+  const queryClient = useQueryClient();
   const hashtags = useMemo(() => post.tags ?? [], [post.tags]);
     const media = useMemo(
       () => (post.attachments?.length ? post.attachments : post.images ?? []),
@@ -46,11 +49,17 @@ export const PostCard = ({ post }: PostCardProps) => {
   const [isLiking, setIsLiking] = useState(false);
   const [commentValue, setCommentValue] = useState("");
   const [isCommenting, setIsCommenting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [engagement, setEngagement] = useState(post.engagement);
   const [comments, setComments] = useState(post.comments ?? []);
   const commentInputRef = useRef<HTMLTextAreaElement>(null);
   const numericPostId = Number(post.id);
   const canMutatePost = Number.isFinite(numericPostId) && !Number.isNaN(numericPostId);
+  
+  // Check if user can delete this post (owner or admin)
+  const isOwner = viewerAddress && walletAddress && viewerAddress.toLowerCase() === walletAddress.toLowerCase();
+  const isAdmin = isAdminLoggedIn();
+  const canDelete = canMutatePost && (isOwner || isAdmin);
 
   const focusCommentBox = () => {
     commentInputRef.current?.focus();
@@ -132,8 +141,32 @@ export const PostCard = ({ post }: PostCardProps) => {
     toast.info(`${labels[action]} will sync to on-chain interactions soon.`);
   };
 
+  const handleDelete = async () => {
+    if (!viewerAddress || !canDelete) {
+      return;
+    }
+
+    if (!confirm("Bu postu silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.")) {
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+      await deletePost(numericPostId, viewerAddress);
+      toast.success("Post başarıyla silindi");
+      // Invalidate feed query to refresh the list
+      await queryClient.invalidateQueries({ queryKey: ["social-feed"] });
+    } catch (error) {
+      console.error("[PostCard] Failed to delete post", error);
+      const message = error instanceof Error ? error.message : "Post silinirken bir hata oluştu";
+      toast.error(message);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
     return (
-      <article className="rounded-2xl bg-[color:var(--bg-card)] p-6 text-[color:var(--text-primary)] shadow-lg ring-1 ring-[color:var(--ring)] transition will-change-transform hover:translate-y-[1px] hover:ring-indigo-500/30">
+      <article className="group rounded-2xl bg-[color:var(--bg-card)] p-6 text-[color:var(--text-primary)] shadow-lg ring-1 ring-[color:var(--ring)] transition will-change-transform hover:translate-y-[1px] hover:ring-indigo-500/30">
         <header className="flex items-start justify-between gap-4">
           <Link
             to={`/u/${post.walletAddress ?? post.author.username}`}
@@ -184,6 +217,18 @@ export const PostCard = ({ post }: PostCardProps) => {
                 Funded
               </Badge>
             ) : null}
+            {canDelete && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 rounded-full opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
+                onClick={handleDelete}
+                disabled={isDeleting}
+                title="Postu sil"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            )}
           </div>
       </header>
 
