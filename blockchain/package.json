@@ -10,8 +10,11 @@
     "@matterlabs/hardhat-zksync-deploy": "^1.8.0",
     "@matterlabs/hardhat-zksync-solc": "^1.5.1",
     "@nomicfoundation/hardhat-toolbox": "^3.0.0",
+    "@types/node": "^24.10.1",
     "dotenv": "^16.0.0",
     "hardhat": "^2.17.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3",
     "zksync-ethers": "^6.21.0",
     "zksync-web3": "^0.17.1"
   },
