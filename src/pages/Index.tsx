@@ -173,18 +173,16 @@ const Index = () => {
                 <Link to="/contributes">Go to Contributes</Link>
               </Button>
             </DashboardCard>
-        </div>
-            <aside className="hidden space-y-4 lg:block">
-              <IntelligenceFeed />
-              <TrendingUsers limit={5} />
-              <CryptoNews />
-              <div className="hidden xl:block">
-                <BoostedTasks />
-              </div>
-              <div className="hidden xl:block">
-                <TokenBurn />
-              </div>
-            </aside>
+          </div>
+          <aside className="hidden space-y-4 lg:block">
+            <IntelligenceFeed />
+            <TrendingUsers limit={5} />
+            <CryptoNews />
+            <BoostedTasks />
+            <div className="hidden xl:block">
+              <TokenBurn />
+            </div>
+          </aside>
         </div>
       </div>
     );
