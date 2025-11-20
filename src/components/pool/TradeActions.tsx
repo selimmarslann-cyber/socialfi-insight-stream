@@ -256,7 +256,9 @@ export function TradeActions({ contractPostId, onSettled, className }: TradeActi
                 : "text-text-muted opacity-50 cursor-not-allowed",
             )}
             disabled={banned || isSelling || !hasPosition || !hasValidAmount}
-            onClick={hasPosition ? handleSell : undefined}
+            onClick={hasPosition ? handleSell : () => {
+              toast.info("You don't have a position to sell");
+            }}
           >
             {isSelling ? (
               <>

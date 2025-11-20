@@ -11,7 +11,7 @@ const baseNavItems: SidebarNavItem[] = [
   { label: "Burn", href: "/burn", icon: Flame },
   { label: "Docs", href: "/docs", icon: BookOpen },
   { label: "Settings", href: "/settings", icon: Settings },
-  { label: "Admin", href: "/admin", icon: Shield, isAdmin: true },
+  // Admin panel removed from menu - accessible via footer link only
 ];
 
 export const useSidebarNavItems = () => useMemo(() => baseNavItems, []);

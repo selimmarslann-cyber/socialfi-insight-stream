@@ -3,6 +3,7 @@ import { useSearchParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Search as SearchIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ContributeCard } from "@/components/ContributeCard";
@@ -65,15 +66,21 @@ export default function Search() {
         <DashboardSectionTitle label="Search" title="Discover Contributes" />
         
         <form onSubmit={handleSearch} className="space-y-4">
-          <div className="relative">
-            <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-text-muted sm:left-4" />
-            <Input
-              type="text"
-              placeholder="Search by title, author, tags, description…"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              className="h-12 pl-10 pr-4 text-base sm:pl-12"
-            />
+          <div className="relative flex gap-2">
+            <div className="relative flex-1">
+              <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-text-muted sm:left-4" />
+              <Input
+                type="text"
+                placeholder="Search by title, author, tags, description…"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                className="h-12 pl-10 pr-4 text-base sm:pl-12"
+              />
+            </div>
+            <Button type="submit" className="h-12 px-6">
+              <SearchIcon className="h-4 w-4" />
+              <span className="hidden sm:inline">Search</span>
+            </Button>
           </div>
           
           <div className="flex flex-wrap gap-2">
