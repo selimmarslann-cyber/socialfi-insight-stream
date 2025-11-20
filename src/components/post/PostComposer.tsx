@@ -45,19 +45,38 @@ const emojiOptions = ["🚀", "🔥", "🧠", "💎", "📊", "🤝", "🪙", "�
 const MAX_FILES = 4;
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
-// ✅ Enhanced XSS protection with DOMPurify
+// ✅ Enhanced XSS protection with DOMPurify (SSR-safe)
 const sanitizeContent = (value: string): string => {
-  // Remove HTML tags and sanitize
-  const sanitized = DOMPurify.sanitize(value, {
-    ALLOWED_TAGS: [], // No HTML tags allowed
-    ALLOWED_ATTR: [],
-    KEEP_CONTENT: true, // Keep text content
-  });
-  // Additional: Remove control characters and limit length
-  return sanitized
-    .replace(/[\x00-\x1F\x7F]/g, "") // Remove control characters
-    .trim()
-    .slice(0, 10000); // Max 10KB
+  // Check if we're in browser environment
+  if (typeof window === "undefined") {
+    // SSR: Simple sanitization without DOMPurify
+    return value
+      .replace(/[<>]/g, "") // Remove HTML brackets
+      .replace(/[\x00-\x1F\x7F]/g, "") // Remove control characters
+      .trim()
+      .slice(0, 10000); // Max 10KB
+  }
+  
+  // Browser: Use DOMPurify for better sanitization
+  try {
+    const sanitized = DOMPurify.sanitize(value, {
+      ALLOWED_TAGS: [], // No HTML tags allowed
+      ALLOWED_ATTR: [],
+      KEEP_CONTENT: true, // Keep text content
+    });
+    return sanitized
+      .replace(/[\x00-\x1F\x7F]/g, "") // Remove control characters
+      .trim()
+      .slice(0, 10000); // Max 10KB
+  } catch (error) {
+    // Fallback if DOMPurify fails
+    console.warn("[PostComposer] DOMPurify failed, using fallback:", error);
+    return value
+      .replace(/[<>]/g, "")
+      .replace(/[\x00-\x1F\x7F]/g, "")
+      .trim()
+      .slice(0, 10000);
+  }
 };
 const extractHashtags = (value: string) =>
   Array.from(new Set(value.match(/#[\p{L}\d_]{2,24}/gu) ?? []));

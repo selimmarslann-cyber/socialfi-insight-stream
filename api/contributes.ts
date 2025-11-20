@@ -1,15 +1,72 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createClient } from "@supabase/supabase-js";
-import {
-  withSecurity,
-  validateWalletAddress,
-  sanitizeText,
-  sanitizeArray,
-  validateBodySize,
-} from "@/lib/apiSecurity";
 
-export default withSecurity(
-  async function handler(req: VercelRequest, res: VercelResponse) {
+// Inline security utilities for API endpoints (to avoid frontend build issues)
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",")
+  : ["http://localhost:5173", "http://localhost:3000"];
+
+function getCORSHeaders(origin?: string): Record<string, string> {
+  const allowedOrigin =
+    origin && (ALLOWED_ORIGINS.includes(origin) || process.env.NODE_ENV === "development")
+      ? origin
+      : ALLOWED_ORIGINS[0] || "*";
+
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+    "Access-Control-Max-Age": "86400",
+  };
+}
+
+function validateWalletAddress(address: unknown): string | null {
+  if (typeof address !== "string") return null;
+  const trimmed = address.trim();
+  if (!/^0x[a-fA-F0-9]{40}$/.test(trimmed)) return null;
+  return trimmed.toLowerCase();
+}
+
+function sanitizeText(input: unknown, maxLength: number = 10000): string | null {
+  if (typeof input !== "string") return null;
+  const trimmed = input.trim();
+  if (trimmed.length === 0) return null;
+  if (trimmed.length > maxLength) return null;
+  return trimmed.replace(/\0/g, "").replace(/[\x00-\x1F\x7F]/g, "");
+}
+
+function sanitizeArray(input: unknown, maxItems: number = 50): string[] | null {
+  if (!Array.isArray(input)) return null;
+  if (input.length > maxItems) return null;
+  const sanitized = input
+    .filter((item) => typeof item === "string")
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0 && item.length <= 100);
+  return sanitized.length > 0 ? sanitized : null;
+}
+
+function validateBodySize(body: unknown, maxSizeBytes: number = 1024 * 1024): boolean {
+  const bodyString = JSON.stringify(body);
+  return bodyString.length <= maxSizeBytes;
+}
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // Handle CORS preflight
+  if (req.method === "OPTIONS") {
+    const origin = req.headers.origin;
+    const headers = getCORSHeaders(origin);
+    Object.entries(headers).forEach(([key, value]) => {
+      res.setHeader(key, value);
+    });
+    return res.status(200).end();
+  }
+
+  // Set CORS headers
+  const origin = req.headers.origin;
+  const headers = getCORSHeaders(origin);
+  Object.entries(headers).forEach(([key, value]) => {
+    res.setHeader(key, value);
+  });
 
   // Initialize Supabase client
   const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
@@ -149,11 +206,5 @@ export default withSecurity(
       }),
     });
   }
-},
-  {
-    requireAuth: false, // Public endpoint, but rate-limited
-    rateLimit: true,
-    cors: true,
-  }
-);
+}
 
