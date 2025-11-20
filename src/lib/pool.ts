@@ -9,6 +9,8 @@ import { mintPositionNft } from "@/lib/positionNft";
 import { calculateFairFeeDistribution } from "@/lib/fairFeeDistribution";
 import { recordCreatorEarnings } from "@/lib/creatorRewards";
 import { getContributeAuthor, getBuyerCount } from "@/lib/contributeHelpers";
+import { validateUserAction } from "@/lib/fairData";
+import { checkAndAwardBadges } from "@/lib/badges";
 
 const poolAbi = ((poolArtifact as { abi?: InterfaceAbi }).abi ?? (poolArtifact as InterfaceAbi)) as InterfaceAbi;
 const tokenAbi = erc20Abi as InterfaceAbi;
@@ -91,8 +93,17 @@ export async function approveToken(maxAmount?: string | bigint) {
 export async function buyShares(postId: number, amountNop: number, contributeTitle?: string) {
   const signer = await getSigner();
   const user = await signer.getAddress();
+  
+  // Validate action (fair data, prevent inflation)
+  const validation = await validateUserAction(user, "trade", amountNop);
+  if (!validation.allowed) {
+    throw new Error(validation.reason || "Action not allowed");
+  }
+  
+  // Use normalized value if provided
+  const normalizedAmount = validation.normalizedValue ?? amountNop;
   const pool = getPoolContractInstance(signer);
-  const amount = parseUnits(String(amountNop), 18);
+  const amount = parseUnits(String(normalizedAmount), 18);
   const tx = await pool.depositNOP(postId, amount);
   const receipt = await tx.wait();
 

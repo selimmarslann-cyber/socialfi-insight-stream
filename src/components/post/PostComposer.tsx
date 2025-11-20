@@ -280,6 +280,10 @@ export const PostComposer = () => {
           // Check and award badges
           await checkAndAwardBadges(address);
 
+          // Complete referral if this is first post
+          const { completeReferral } = await import("@/lib/referral");
+          await completeReferral(address, "first_post");
+
           const optimisticPost: Post = {
             ...newPost,
             score: estimatedReward,

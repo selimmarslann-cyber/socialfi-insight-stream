@@ -5,6 +5,7 @@
 
 import { supabase } from "@/lib/supabaseClient";
 import { useWalletStore } from "@/lib/store";
+import { calculateFairReferralReward, normalizeReward } from "@/lib/fairData";
 
 export type Referral = {
   id: string;
@@ -24,8 +25,10 @@ export type ReferralStats = {
   pendingRewards: number;
 };
 
-const REFERRAL_REWARD_AMOUNT = 10; // NOP tokens
-const REFERRER_REWARD_AMOUNT = 5; // NOP tokens when referral completes action
+// Rewards are calculated dynamically to prevent inflation
+// Base amounts are normalized based on platform activity
+const BASE_REFERRAL_REWARD = 10; // Base NOP tokens (will be normalized)
+const BASE_REFERRER_REWARD = 5; // Base NOP tokens (will be normalized)
 
 /**
  * Generate a unique referral code for a wallet
@@ -133,6 +136,10 @@ export async function registerReferral(
     throw new Error("Address already has a referral");
   }
 
+  // Calculate fair reward (prevents inflation)
+  const fairReward = await calculateFairReferralReward();
+  const normalizedReward = normalizeReward(fairReward, "referral");
+
   // Create referral record
   const { data: referral, error: insertError } = await supabase
     .from("referrals")
@@ -140,7 +147,7 @@ export async function registerReferral(
       referrer_address: referrerAddress,
       referred_address: normalizedReferred,
       referral_code: referralCode,
-      reward_nop: REFERRAL_REWARD_AMOUNT,
+      reward_nop: normalizedReward,
       status: "pending",
     })
     .select("*")

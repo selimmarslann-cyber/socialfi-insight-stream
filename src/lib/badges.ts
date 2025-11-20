@@ -4,6 +4,7 @@
  */
 
 import { supabase } from "@/lib/supabaseClient";
+import { calculateBadgeReward, normalizeReward } from "@/lib/fairData";
 
 export type Badge = {
   id: string;
