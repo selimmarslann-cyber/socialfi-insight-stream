@@ -42,16 +42,33 @@ export const ProfileEditDialog = ({ profile, trigger, onUpdated }: ProfileEditDi
   const handleAvatarChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+
+    // Validate file before upload
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error(`Invalid file type. Please use: JPG, PNG, WebP, or GIF`);
+      return;
+    }
+
+    const maxSize = 2 * 1024 * 1024; // 2MB
+    if (file.size > maxSize) {
+      toast.error(`File too large. Maximum size is 2MB. Current: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
+      return;
+    }
+
     try {
       setIsUploading(true);
       const url = await uploadAvatar(file);
       setAvatarUrl(url);
-      toast.success("Avatar updated.");
+      toast.success("Avatar updated successfully!");
     } catch (error) {
-      console.error(error);
-      toast.error("Unable to upload avatar. Try again.");
+      console.error("[ProfileEditDialog] Avatar upload error:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unable to upload avatar. Please try again.";
+      toast.error(errorMessage);
     } finally {
       setIsUploading(false);
+      // Reset input to allow re-uploading the same file
+      event.target.value = "";
     }
   };
 

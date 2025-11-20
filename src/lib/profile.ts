@@ -149,19 +149,96 @@ export async function uploadAvatar(file: File): Promise<string> {
   if (!supabase) {
     throw new Error("Supabase client is not configured");
   }
-  const wallet = resolveWalletOrThrow();
-  const extension = file.name.split(".").pop() ?? "jpg";
-  const path = `${wallet}/${Date.now()}.${extension}`;
-  const { error } = await supabase.storage.from(AVATAR_BUCKET).upload(path, file, {
-    cacheControl: "3600",
-    upsert: true,
-    contentType: file.type,
-  });
-  if (error) {
-    throw error;
+
+  // Validate file type
+  const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"];
+  if (!allowedTypes.includes(file.type)) {
+    throw new Error(`Invalid file type. Allowed types: ${allowedTypes.join(", ")}`);
   }
-  const { data } = supabase.storage.from(AVATAR_BUCKET).getPublicUrl(path);
-  return data.publicUrl;
+
+  // Validate file size (max 2MB)
+  const maxSize = 2 * 1024 * 1024; // 2MB
+  if (file.size > maxSize) {
+    throw new Error(`File size too large. Maximum size is 2MB. Current size: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
+  }
+
+  const wallet = resolveWalletOrThrow();
+  
+  // Sanitize file extension
+  const extension = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+  const sanitizedExtension = ["jpg", "jpeg", "png", "webp", "gif"].includes(extension) ? extension : "jpg";
+  
+  // Create unique path with wallet address and timestamp
+  const timestamp = Date.now();
+  const randomSuffix = Math.random().toString(36).slice(-6);
+  const path = `${wallet}/${timestamp}-${randomSuffix}.${sanitizedExtension}`;
+
+  try {
+    // Check if bucket exists by trying to list it
+    const { data: buckets, error: listError } = await supabase.storage.listBuckets();
+    if (listError) {
+      console.error("[uploadAvatar] Failed to list buckets:", listError);
+      throw new Error("Storage service unavailable. Please contact support.");
+    }
+
+    const bucketExists = buckets?.some((b) => b.name === AVATAR_BUCKET);
+    if (!bucketExists) {
+      throw new Error(
+        `Storage bucket '${AVATAR_BUCKET}' does not exist. Please create it in Supabase Dashboard → Storage → Buckets and mark it as public.`
+      );
+    }
+
+    // Upload file
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from(AVATAR_BUCKET)
+      .upload(path, file, {
+        cacheControl: "3600",
+        upsert: true,
+        contentType: file.type || `image/${sanitizedExtension}`,
+      });
+
+    if (uploadError) {
+      console.error("[uploadAvatar] Upload error:", uploadError);
+      
+      // Provide more specific error messages
+      if (uploadError.message.includes("new row violates row-level security")) {
+        throw new Error("Storage bucket RLS policy error. Please check Supabase storage policies.");
+      } else if (uploadError.message.includes("The resource already exists")) {
+        // Try with a different path
+        const retryPath = `${wallet}/${timestamp}-${Math.random().toString(36).slice(-6)}.${sanitizedExtension}`;
+        const { data: retryData, error: retryError } = await supabase.storage
+          .from(AVATAR_BUCKET)
+          .upload(retryPath, file, {
+            cacheControl: "3600",
+            upsert: false,
+            contentType: file.type || `image/${sanitizedExtension}`,
+          });
+        
+        if (retryError) {
+          throw new Error(`Upload failed: ${retryError.message}`);
+        }
+        
+        const { data: urlData } = supabase.storage.from(AVATAR_BUCKET).getPublicUrl(retryPath);
+        return urlData.publicUrl;
+      } else {
+        throw new Error(`Upload failed: ${uploadError.message}`);
+      }
+    }
+
+    // Get public URL
+    const { data: urlData } = supabase.storage.from(AVATAR_BUCKET).getPublicUrl(uploadData.path);
+    if (!urlData?.publicUrl) {
+      throw new Error("Failed to get public URL for uploaded avatar");
+    }
+
+    return urlData.publicUrl;
+  } catch (error) {
+    // Re-throw with better error message
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error("Unknown error occurred during avatar upload");
+  }
 }
 
 export async function listUserPosts(profileId: string, viewerWallet?: string): Promise<Post[]> {
