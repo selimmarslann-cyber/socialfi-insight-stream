@@ -146,7 +146,16 @@ const AppContent = () => {
 
 const App = () => {
   return (
-    <Suspense fallback={<div className="flex h-screen items-center justify-center">Loading...</div>}>
+    <Suspense
+      fallback={
+        <div className="flex h-screen items-center justify-center bg-background">
+          <div className="text-center">
+            <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-indigo-600 border-r-transparent"></div>
+            <p className="text-sm text-text-secondary">Loading...</p>
+          </div>
+        </div>
+      }
+    >
       <AppContent />
     </Suspense>
   );

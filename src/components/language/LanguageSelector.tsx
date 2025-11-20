@@ -47,7 +47,7 @@ export const LanguageSelector = () => {
           variant="ghost"
           size="sm"
           className="h-9 gap-2 rounded-xl border border-border-subtle bg-surface text-text-primary hover:bg-surface-muted"
-          aria-label={t("language.select")}
+          aria-label={t("common.language") || "Select language"}
         >
           <Globe className="h-4 w-4" />
           <span className="hidden text-xs font-medium sm:inline">{currentLang.code.toUpperCase()}</span>
@@ -58,7 +58,7 @@ export const LanguageSelector = () => {
         className="w-56 rounded-xl border-2 border-border-subtle bg-card shadow-xl"
       >
         <DropdownMenuLabel className="text-xs font-semibold uppercase tracking-wider text-text-muted">
-          {t("language.select")}
+          {t("common.language") || "Select Language"}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <div className="max-h-[300px] overflow-y-auto">

@@ -52,6 +52,12 @@ i18n
       caches: ['localStorage'],
       lookupLocalStorage: 'nop-language',
     },
+    react: {
+      useSuspense: true,
+    },
+  })
+  .catch((error) => {
+    console.error('i18n initialization failed:', error);
   });
 
 export default i18n;
