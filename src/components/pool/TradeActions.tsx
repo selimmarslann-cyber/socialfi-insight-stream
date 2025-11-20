@@ -194,7 +194,6 @@ export function TradeActions({ contractPostId, onSettled, className }: TradeActi
           Active
         </span>
       </div>
-
       <div className="flex items-center gap-2 sm:gap-3">
         <Input
           type="number"
