@@ -103,7 +103,7 @@ export async function mintPositionNft(params: {
  */
 export async function listMyPositionNfts(walletAddress: string): Promise<PositionNFT[]> {
   try {
-    const contract = await getPositionNftContract();
+    const contract = getPositionNftContract();
     const tokenIds = await contract.walletTokens(walletAddress);
 
     const positions: PositionNFT[] = [];
