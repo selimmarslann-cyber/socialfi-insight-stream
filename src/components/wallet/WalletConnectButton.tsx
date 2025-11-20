@@ -123,10 +123,10 @@ export const WalletConnectButton = () => {
 
     const label = providerLabels[selectedProvider];
 
-    // Get active chain ID from config
+    // Get active chain ID from config (synchronous)
     let targetChainId = 324; // Default to zkSync Era
     try {
-      const { getActiveChain } = await import("@/config/chains");
+      const { getActiveChain } = require("@/config/chains");
       const chain = getActiveChain();
       targetChainId = chain.id;
     } catch {
