@@ -3,7 +3,7 @@ import { AlertTriangle, CheckCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useWalletStore } from "@/lib/store";
-import { DEFAULT_CHAIN } from "@/config/chains";
+import { DEFAULT_CHAIN_CONFIG, getActiveChain } from "@/config/chains";
 import { toast } from "sonner";
 
 export function NetworkStatus() {
@@ -41,7 +41,8 @@ export function NetworkStatus() {
     };
   }, [connected]);
 
-  const expectedChainId = DEFAULT_CHAIN.id;
+  const activeChain = getActiveChain();
+  const expectedChainId = activeChain.id;
   const isCorrectNetwork = currentChainId === expectedChainId;
 
   if (!connected || currentChainId === null) {
@@ -66,14 +67,14 @@ export function NetworkStatus() {
             params: [
               {
                 chainId: `0x${expectedChainId.toString(16)}`,
-                chainName: DEFAULT_CHAIN.name,
-                rpcUrls: [DEFAULT_CHAIN.rpcUrl],
+                chainName: activeChain.name,
+                rpcUrls: [activeChain.rpcUrl],
                 nativeCurrency: {
                   name: "ETH",
                   symbol: "ETH",
                   decimals: 18,
                 },
-                blockExplorerUrls: [DEFAULT_CHAIN.explorerUrl],
+                blockExplorerUrls: [activeChain.explorerUrl],
               },
             ],
           });
@@ -96,7 +97,7 @@ export function NetworkStatus() {
         className="hidden items-center gap-1.5 rounded-full border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 sm:flex"
       >
         <CheckCircle className="h-3 w-3" />
-        {DEFAULT_CHAIN.name} bağlı
+        {activeChain.label} bağlı
       </Badge>
     );
   }
@@ -104,7 +105,7 @@ export function NetworkStatus() {
   return (
     <div className="flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs text-amber-600 dark:bg-amber-500/20 dark:text-amber-400">
       <AlertTriangle className="h-3.5 w-3.5" />
-      <span className="hidden sm:inline">Yanlış ağ. Lütfen {DEFAULT_CHAIN.name} ağına geçin.</span>
+      <span className="hidden sm:inline">Yanlış ağ. Lütfen {activeChain.label} ağına geçin.</span>
       <span className="sm:hidden">Yanlış ağ</span>
       <Button
         variant="ghost"

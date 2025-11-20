@@ -1,6 +1,6 @@
 import type { ContractRunner } from "ethers";
 import { BrowserProvider, Contract, JsonRpcProvider } from "ethers";
-import { DEFAULT_CHAIN, getActiveChain } from "@/config/chains";
+import { getActiveChain } from "@/config/chains";
 
 // Minimal ERC721 ABI for position NFT
 const POSITION_NFT_ABI = [
@@ -50,10 +50,19 @@ export type PositionNFT = {
  */
 export async function getPositionNftContract(runner?: ContractRunner): Promise<Contract> {
   const chain = getActiveChain();
-  const address = chain.nopPositionNftAddress;
+  
+  // Try chain config first
+  let address = chain.nopPositionNftAddress;
+  
+  // Fallback to environment variables
+  if (!address) {
+    address = import.meta.env.VITE_NOP_POSITION_NFT_ADDRESS || 
+              import.meta.env.VITE_POSITION_NFT_ADDRESS ||
+              import.meta.env.VITE_NFT_ADDRESS;
+  }
 
   if (!address) {
-    throw new Error("Position NFT address is not configured");
+    throw new Error("Position NFT address is not configured. Set VITE_NOP_POSITION_NFT_ADDRESS or deploy contract and update chains.ts");
   }
 
   const provider = getDefaultRunner(runner);

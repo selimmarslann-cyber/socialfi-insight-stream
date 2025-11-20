@@ -20,17 +20,41 @@ const rpcProvider = RPC_URL ? new JsonRpcProvider(RPC_URL) : null;
 let browserProvider: BrowserProvider | null = null;
 
 export function getPoolAddress(): string {
+  // First try chain config
+  try {
+    const { getActiveChain } = await import("@/config/chains");
+    const chain = getActiveChain();
+    if (chain.nopPoolAddress) {
+      return chain.nopPoolAddress;
+    }
+  } catch {
+    // Fallback to env vars
+  }
+  
+  // Fallback to environment variables
   const addr =
     import.meta.env.VITE_NOP_POOL_ADDRESS ||
     import.meta.env.VITE_POOL_ADDRESS ||
     import.meta.env.VITE_NEXT_PUBLIC_POOL_ADDRESS;
-  if (!addr) throw new Error("Pool address is not configured");
+  if (!addr) throw new Error("Pool address is not configured. Set VITE_NOP_POOL_ADDRESS or deploy contract and update chains.ts");
   return addr;
 }
 
 function getTokenAddress(): string {
+  // First try chain config
+  try {
+    const { getActiveChain } = require("@/config/chains");
+    const chain = getActiveChain();
+    if (chain.nopTokenAddress) {
+      return chain.nopTokenAddress;
+    }
+  } catch {
+    // Fallback to env vars
+  }
+  
+  // Fallback to environment variables
   const addr = import.meta.env.VITE_NOP_TOKEN_ADDRESS || import.meta.env.VITE_TOKEN_ADDRESS;
-  if (!addr) throw new Error("NOP token address is not configured");
+  if (!addr) throw new Error("NOP token address is not configured. Set VITE_NOP_TOKEN_ADDRESS or update chains.ts");
   return addr;
 }
 

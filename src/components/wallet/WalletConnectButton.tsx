@@ -123,10 +123,20 @@ export const WalletConnectButton = () => {
 
     const label = providerLabels[selectedProvider];
 
+    // Get active chain ID from config
+    let targetChainId = 324; // Default to zkSync Era
+    try {
+      const { getActiveChain } = await import("@/config/chains");
+      const chain = getActiveChain();
+      targetChainId = chain.id;
+    } catch {
+      // Fallback to default
+    }
+
     connect(addresses[selectedProvider], {
       provider: selectedProvider,
       inviterCode: normalizedRef,
-      chainId: 324,
+      chainId: targetChainId,
     });
 
     toast.success(`${label} bağlantısı hazır!`);
