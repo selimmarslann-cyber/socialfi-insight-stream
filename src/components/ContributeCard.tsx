@@ -67,32 +67,32 @@ function ContributeCard({ item }: ContributeCardProps) {
       <Card className="group space-y-4 rounded-2xl border-2 border-border-subtle bg-card p-4 shadow-lg transition-all duration-300 hover:border-indigo-400 hover:shadow-xl hover:shadow-indigo-500/20 dark:hover:border-cyan-600 dark:hover:shadow-cyan-500/20 sm:space-y-5 sm:p-6">
       <div className="flex flex-col items-start gap-3 sm:flex-row sm:flex-wrap sm:justify-between sm:gap-4">
         <div className="space-y-1">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <p className="text-xs font-semibold uppercase tracking-wide text-text-muted">
             Weekly popular pool
           </p>
-            <h3 className="text-xl font-semibold text-foreground transition-colors duration-200 group-hover:text-indigo-600 dark:group-hover:text-cyan-400">
+            <h3 className="text-xl font-semibold text-text-primary transition-colors duration-200 group-hover:text-indigo-600 dark:group-hover:text-cyan-400">
               {item.title}
             </h3>
           {item.subtitle ? (
-              <p className="text-sm text-muted-foreground">{item.subtitle}</p>
+              <p className="text-sm text-text-secondary">{item.subtitle}</p>
           ) : null}
           {item.author ? (
-              <p className="text-xs font-semibold text-muted-foreground">by {item.author}</p>
+              <p className="text-xs font-semibold text-text-muted">by {item.author}</p>
           ) : null}
         </div>
           <div className="flex items-center gap-4">
             {formattedWeeklyVolume ? (
                 <div className="text-right">
-                  <p className="text-xs text-muted-foreground">7d volume</p>
-                  <p className="text-2xl font-semibold text-foreground">
+                  <p className="text-xs text-text-muted">7d volume</p>
+                  <p className="text-2xl font-semibold text-text-primary">
                   {formattedWeeklyVolume}
-                    <span className="ml-1 text-sm font-medium text-muted-foreground">NOP</span>
+                    <span className="ml-1 text-sm font-medium text-text-muted">NOP</span>
                 </p>
               </div>
             ) : typeof item.weeklyScore === "number" ? (
               <div className="text-right">
-                  <p className="text-xs text-muted-foreground">Weekly score</p>
-                  <p className="text-2xl font-semibold text-foreground">
+                  <p className="text-xs text-text-muted">Weekly score</p>
+                  <p className="text-2xl font-semibold text-text-primary">
                   {item.weeklyScore}
                 </p>
               </div>
@@ -112,7 +112,7 @@ function ContributeCard({ item }: ContributeCardProps) {
       </div>
 
         {item.tags?.length ? (
-          <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+          <div className="flex flex-wrap gap-2 text-xs text-text-muted">
           {item.tags.map((tag) => (
             <span
               key={tag}
@@ -125,7 +125,7 @@ function ContributeCard({ item }: ContributeCardProps) {
       ) : null}
 
       {item.description ? (
-          <p className="text-sm leading-relaxed text-muted-foreground">
+          <p className="text-sm leading-relaxed text-text-secondary">
           {item.description}
         </p>
       ) : null}
@@ -158,9 +158,9 @@ function ContributeCard({ item }: ContributeCardProps) {
         </div>
       </div>
 
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-text-muted">
         Your on-chain position:{" "}
-          <span className="font-semibold text-foreground">{formattedPosition} NOP</span>
+          <span className="font-semibold text-text-primary">{formattedPosition} NOP</span>
         {isSyncingPosition ? " · Syncing…" : null}
       </p>
     </Card>

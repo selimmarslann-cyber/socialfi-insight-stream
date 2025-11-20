@@ -68,7 +68,7 @@ export const FeedList = () => {
     <div className="space-y-5">
       {posts.length === 0 ? (
         <div className="rounded-3xl border border-border bg-card p-12 text-center shadow-card-soft">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-text-muted">
             No contributions yet. Be the first to publish an analysis.
           </p>
         </div>
@@ -77,7 +77,7 @@ export const FeedList = () => {
           {posts.map((post) => (
             <PostCard key={post.id} post={post} />
           ))}
-          <div className="text-center text-xs text-muted-foreground">
+          <div className="text-center text-xs text-text-muted">
             {isFetching ? "Refreshing feed…" : "Auto-refresh active"}
           </div>
         </>

@@ -54,6 +54,7 @@ export const WalletConnectButton = () => {
     provider,
     refCode,
     inviterCode,
+    chainId,
     connect,
     disconnect,
   } = useWalletStore();
@@ -80,7 +81,8 @@ export const WalletConnectButton = () => {
         .then((accounts: string[]) => {
           if (accounts.length > 0 && accounts[0].toLowerCase() === address.toLowerCase()) {
             // Wallet is still connected, ensure state is synced
-            connect(address, { provider: 'metamask', chainId });
+            const currentChainId = useWalletStore.getState().chainId;
+            connect(address, { provider: 'metamask', chainId: currentChainId });
           } else {
             // Wallet disconnected, clear state
             disconnect();
