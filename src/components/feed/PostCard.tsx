@@ -40,8 +40,10 @@ export const PostCard = ({ post }: PostCardProps) => {
       () => (post.attachments?.length ? post.attachments : post.images ?? []),
       [post.attachments, post.images],
     );
+    // Pool is active if poolEnabled is true AND contractPostId exists
+    // For feed posts, we auto-enable pool and set contractPostId = postId
     const isPoolActive = post.poolEnabled === true && typeof post.contractPostId === "number" && post.contractPostId !== null;
-    const contractPostId = isPoolActive ? post.contractPostId : null;
+    const contractPostId = isPoolActive ? post.contractPostId : (post.poolEnabled === true && post.id ? Number(post.id) : null);
   const funded = (post.contributedAmount ?? 0) > 0;
   const walletAddress = post.walletAddress;
   const viewerAddress = useWalletStore((state) => state.address);

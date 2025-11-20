@@ -317,11 +317,20 @@ export async function createSocialPost(input: CreatePostInput): Promise<Post> {
     content: input.content,
     media_urls: input.mediaUrls?.length ? input.mediaUrls : null,
     tags: input.tags?.length ? input.tags : null,
-    pool_enabled: false,
+    pool_enabled: true, // Auto-enable pool for all posts
   };
   const { data, error } = await client.from("social_posts").insert(payload).select("*").single();
   if (error || !data) {
     throw new Error(error?.message ?? "Unable to publish contribution");
+  }
+  // Set contract_post_id to post ID so buy/sell buttons appear
+  if (data.id) {
+    await client
+      .from("social_posts")
+      .update({ contract_post_id: data.id })
+      .eq("id", data.id);
+    // Update data object to reflect the change
+    data.contract_post_id = data.id;
   }
   // Fetch profile for verified status
   const verifiedProfiles = new Map<string, boolean>();
