@@ -6,6 +6,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import { Paperclip, Smile, Loader2, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -55,6 +56,7 @@ const readFileAsDataUrl = (file: File) =>
   });
 
 export const PostComposer = () => {
+  const { t } = useTranslation();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
@@ -300,7 +302,7 @@ export const PostComposer = () => {
             queryClient.invalidateQueries({ queryKey: ["public-liked-posts"] }),
           ]);
 
-        toast.success("Contribution shared with the network");
+        toast.success(t("post.publishSuccess"));
         
         // Fire-and-forget sentiment analysis
         if (newPost.id && typeof newPost.id === "string") {
@@ -319,7 +321,7 @@ export const PostComposer = () => {
         resetComposer();
     } catch (err) {
       console.error("[PostComposer] Failed to create post", err);
-      const message = err instanceof Error ? err.message : "Failed to publish contribution";
+      const message = err instanceof Error ? err.message : t("post.publishError");
       toast.error(message);
       // Note: optimisticPost is added after successful creation, so no rollback needed
     } finally {

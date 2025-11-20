@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { BadgeCheck, Clock, Heart, MessageCircle, Share2, Coins, Trash2, AlertTriangle } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -44,6 +45,7 @@ const timeAgo = (value: string) => {
 };
 
 export const PostCard = ({ post }: PostCardProps) => {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const removePost = useFeedStore((state) => state.removePost);
   const hashtags = useMemo(() => post.tags ?? [], [post.tags]);
@@ -166,7 +168,7 @@ export const PostCard = ({ post }: PostCardProps) => {
       removePost(post.id);
       
       await deletePost(numericPostId, viewerAddress);
-      toast.success("Post başarıyla silindi");
+      toast.success(t("post.deleteSuccess"));
       
       // Invalidate all related queries to ensure post is removed everywhere
       await Promise.all([
@@ -179,7 +181,7 @@ export const PostCard = ({ post }: PostCardProps) => {
       setShowDeleteDialog(false);
     } catch (error) {
       console.error("[PostCard] Failed to delete post", error);
-      const message = error instanceof Error ? error.message : "Post silinirken bir hata oluştu";
+      const message = error instanceof Error ? error.message : t("post.deleteError");
       toast.error(message);
       // Re-fetch all queries to restore the post if deletion failed
       await Promise.all([
@@ -265,22 +267,22 @@ export const PostCard = ({ post }: PostCardProps) => {
                         </div>
                         <div>
                           <AlertDialogTitle className="text-xl font-semibold text-text-primary">
-                            Postu Sil
+                            {t("post.delete")}
                           </AlertDialogTitle>
                           <AlertDialogDescription className="mt-1 text-sm text-text-secondary">
-                            Bu işlem geri alınamaz
+                            {t("post.deleteWarning")}
                           </AlertDialogDescription>
                         </div>
                       </div>
                     </AlertDialogHeader>
                     <div className="py-4">
                       <p className="text-sm text-text-secondary">
-                        Bu postu kalıcı olarak silmek istediğinizden emin misiniz? Tüm yorumlar, beğeniler ve veriler kaybolacak.
+                        {t("post.deleteConfirm")}
                       </p>
                     </div>
                     <AlertDialogFooter className="gap-2 sm:gap-0">
                       <AlertDialogCancel className="min-h-[44px] rounded-xl border-2 border-border-subtle bg-surface-muted text-text-primary hover:bg-surface hover:border-indigo-300 dark:hover:border-cyan-600">
-                        İptal
+                        {t("common.cancel")}
                       </AlertDialogCancel>
                       <AlertDialogAction
                         onClick={handleDelete}
@@ -290,12 +292,12 @@ export const PostCard = ({ post }: PostCardProps) => {
                         {isDeleting ? (
                           <>
                             <span className="mr-2">⏳</span>
-                            Siliniyor...
+                            {t("common.loading")}
                           </>
                         ) : (
                           <>
                             <Trash2 className="mr-2 h-4 w-4" />
-                            Evet, Sil
+                            {t("common.confirm")}
                           </>
                         )}
                       </AlertDialogAction>

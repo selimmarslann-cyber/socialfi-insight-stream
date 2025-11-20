@@ -17,6 +17,7 @@ import { NetworkStatus } from "@/components/wallet/NetworkStatus";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { Container } from "@/components/layout/Container";
 import { useSidebarNavItems } from "@/hooks/useSidebarNavItems";
+import { LanguageSelector } from "@/components/language/LanguageSelector";
 import Logo from "@/assets/nop-logo-circle.svg";
 import {
   getThemePreference,
@@ -28,6 +29,7 @@ import {
 import { useWalletStore } from "@/lib/store";
 
 export const Header = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [mode, setMode] = useState<ThemePreference>(() => getThemePreference());
   const [isNavOpen, setIsNavOpen] = useState(false);
@@ -97,7 +99,7 @@ export const Header = () => {
           <div className="relative hidden h-10 max-w-md flex-1 md:block">
             <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
             <Input
-              placeholder="Search contributes, creators…"
+              placeholder={t("common.searchPlaceholder")}
               className="h-full border border-border-subtle/60 bg-surface pl-11 pr-4 text-sm-2 shadow-subtle/10 placeholder:text-text-muted"
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
@@ -122,6 +124,7 @@ export const Header = () => {
           </Button>
 
           <div className="flex items-center gap-1.5 sm:gap-2">
+            <LanguageSelector />
             <NotificationBell />
             <div className="hidden sm:block">
               <NopHeaderCounter />

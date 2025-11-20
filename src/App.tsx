@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -56,7 +57,15 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
+  const { i18n } = useTranslation();
   const [showTour, setShowTour] = useState(false);
+
+  // Set document direction for RTL languages
+  useEffect(() => {
+    const isRTL = ['ar', 'he', 'fa', 'ur'].includes(i18n.language);
+    document.documentElement.dir = isRTL ? 'rtl' : 'ltr';
+    document.documentElement.lang = i18n.language;
+  }, [i18n.language]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {

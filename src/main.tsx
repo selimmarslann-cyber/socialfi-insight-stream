@@ -4,6 +4,7 @@ import "./styles/design-tokens.css";
 import "./index.css";
 import { initTheme } from "@/lib/theme";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import "@/lib/i18n";
 
 initTheme();
 
