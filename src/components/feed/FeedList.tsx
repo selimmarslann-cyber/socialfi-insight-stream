@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PostCard } from "./PostCard";
@@ -7,6 +7,7 @@ import { fetchSocialFeed } from "@/lib/social";
 
 export const FeedList = () => {
   const userPosts = useFeedStore((state) => state.userPosts);
+  const removePost = useFeedStore((state) => state.removePost);
   const address = useWalletStore((state) => state.address);
 
   const { data, isLoading, isError, isFetching } = useQuery({
@@ -31,6 +32,19 @@ export const FeedList = () => {
       .sort((a, b) => getTimestamp(b) - getTimestamp(a));
     return sorted;
   }, [userPosts, data]);
+
+  // Remove deleted posts from userPosts when they're removed from remote feed
+  useEffect(() => {
+    if (data) {
+      const remotePostIds = new Set(data.map((p) => p.id));
+      const deletedPosts = userPosts.filter((p) => !remotePostIds.has(p.id));
+      if (deletedPosts.length > 0) {
+        deletedPosts.forEach((post) => {
+          removePost(post.id);
+        });
+      }
+    }
+  }, [data, userPosts, removePost]);
 
   if (isLoading) {
     return (

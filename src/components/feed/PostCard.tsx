@@ -1,17 +1,27 @@
 import { useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { BadgeCheck, Clock, Heart, MessageCircle, Share2, Coins, Trash2 } from "lucide-react";
+import { BadgeCheck, Clock, Heart, MessageCircle, Share2, Coins, Trash2, AlertTriangle } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Post } from "@/types/feed";
 import { ImageGrid } from "@/components/post/ImageGrid";
 import { AIInsightStrip } from "@/components/ai/AIInsightStrip";
 import { toast } from "sonner";
 import { TradeActions } from "@/components/pool/TradeActions";
 import { createPostComment, deletePost } from "@/lib/social";
-import { useWalletStore } from "@/lib/store";
+import { useWalletStore, useFeedStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { toggleLike } from "@/lib/likes";
 import { isAdminLoggedIn } from "@/lib/adminAuth";
@@ -35,6 +45,7 @@ const timeAgo = (value: string) => {
 
 export const PostCard = ({ post }: PostCardProps) => {
   const queryClient = useQueryClient();
+  const removePost = useFeedStore((state) => state.removePost);
   const hashtags = useMemo(() => post.tags ?? [], [post.tags]);
     const media = useMemo(
       () => (post.attachments?.length ? post.attachments : post.images ?? []),
@@ -52,6 +63,7 @@ export const PostCard = ({ post }: PostCardProps) => {
   const [commentValue, setCommentValue] = useState("");
   const [isCommenting, setIsCommenting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [engagement, setEngagement] = useState(post.engagement);
   const [comments, setComments] = useState(post.comments ?? []);
   const commentInputRef = useRef<HTMLTextAreaElement>(null);
@@ -148,20 +160,23 @@ export const PostCard = ({ post }: PostCardProps) => {
       return;
     }
 
-    if (!confirm("Bu postu silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.")) {
-      return;
-    }
-
     try {
       setIsDeleting(true);
+      // Optimistic update: Remove from feed immediately
+      removePost(post.id);
+      
       await deletePost(numericPostId, viewerAddress);
       toast.success("Post başarıyla silindi");
+      
       // Invalidate feed query to refresh the list
       await queryClient.invalidateQueries({ queryKey: ["social-feed"] });
+      setShowDeleteDialog(false);
     } catch (error) {
       console.error("[PostCard] Failed to delete post", error);
       const message = error instanceof Error ? error.message : "Post silinirken bir hata oluştu";
       toast.error(message);
+      // Re-fetch feed to restore the post if deletion failed
+      await queryClient.invalidateQueries({ queryKey: ["social-feed"] });
     } finally {
       setIsDeleting(false);
     }
@@ -220,16 +235,64 @@ export const PostCard = ({ post }: PostCardProps) => {
               </Badge>
             ) : null}
             {canDelete && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 rounded-full opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
-                onClick={handleDelete}
-                disabled={isDeleting}
-                title="Postu sil"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 rounded-full opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
+                  onClick={() => setShowDeleteDialog(true)}
+                  disabled={isDeleting}
+                  title="Postu sil"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+                <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                  <AlertDialogContent className="rounded-2xl border-2 border-border-subtle bg-card shadow-xl">
+                    <AlertDialogHeader>
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-50 dark:bg-red-950/30">
+                          <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />
+                        </div>
+                        <div>
+                          <AlertDialogTitle className="text-xl font-semibold text-text-primary">
+                            Postu Sil
+                          </AlertDialogTitle>
+                          <AlertDialogDescription className="mt-1 text-sm text-text-secondary">
+                            Bu işlem geri alınamaz
+                          </AlertDialogDescription>
+                        </div>
+                      </div>
+                    </AlertDialogHeader>
+                    <div className="py-4">
+                      <p className="text-sm text-text-secondary">
+                        Bu postu kalıcı olarak silmek istediğinizden emin misiniz? Tüm yorumlar, beğeniler ve veriler kaybolacak.
+                      </p>
+                    </div>
+                    <AlertDialogFooter className="gap-2 sm:gap-0">
+                      <AlertDialogCancel className="min-h-[44px] rounded-xl border-2 border-border-subtle bg-surface-muted text-text-primary hover:bg-surface hover:border-indigo-300 dark:hover:border-cyan-600">
+                        İptal
+                      </AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={handleDelete}
+                        disabled={isDeleting}
+                        className="min-h-[44px] rounded-xl bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-lg shadow-red-500/30 hover:from-red-700 hover:to-rose-700 hover:shadow-xl hover:shadow-red-500/40 disabled:opacity-50"
+                      >
+                        {isDeleting ? (
+                          <>
+                            <span className="mr-2">⏳</span>
+                            Siliniyor...
+                          </>
+                        ) : (
+                          <>
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Evet, Sil
+                          </>
+                        )}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </>
             )}
           </div>
       </header>

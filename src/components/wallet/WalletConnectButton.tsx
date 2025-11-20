@@ -28,6 +28,19 @@ import { Label } from '@/components/ui/label';
 import { useWalletStore } from '@/lib/store';
 import { toast } from 'sonner';
 
+// Declare window.ethereum type
+declare global {
+  interface Window {
+    ethereum?: {
+      isMetaMask?: boolean;
+      request: (args: { method: string; params?: unknown[] }) => Promise<string[]>;
+      selectedAddress?: string;
+      on: (event: string, handler: (...args: unknown[]) => void) => void;
+      removeListener: (event: string, handler: (...args: unknown[]) => void) => void;
+    };
+  }
+}
+
 const providerLabels: Record<'metamask' | 'trust' | 'email', string> = {
   metamask: 'MetaMask',
   trust: 'Trust Wallet',
@@ -57,6 +70,28 @@ export const WalletConnectButton = () => {
       setReferralInput(inviterCode ?? '');
     }
   }, [isModalOpen, inviterCode]);
+
+  // Restore wallet connection on page load if persisted
+  useEffect(() => {
+    if (connected && address && provider === 'metamask' && typeof window !== 'undefined' && window.ethereum) {
+      // Check if MetaMask is still connected
+      window.ethereum
+        .request({ method: 'eth_accounts' })
+        .then((accounts: string[]) => {
+          if (accounts.length > 0 && accounts[0].toLowerCase() === address.toLowerCase()) {
+            // Wallet is still connected, ensure state is synced
+            connect(address, { provider: 'metamask', chainId });
+          } else {
+            // Wallet disconnected, clear state
+            disconnect();
+          }
+        })
+        .catch(() => {
+          // MetaMask not available or error, keep persisted state but mark as potentially disconnected
+          console.warn('[WalletConnect] Could not verify MetaMask connection');
+        });
+    }
+  }, []); // Only run on mount
 
   const handleModalChange = (open: boolean) => {
     setModalOpen(open);

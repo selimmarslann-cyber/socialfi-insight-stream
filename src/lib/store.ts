@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import { generateRefCode } from "@/lib/utils";
 import type { WalletTx } from "@/types/wallet";
 import type { Post } from "@/types/feed";
@@ -34,16 +35,18 @@ interface WalletState {
   addTx: (tx: WalletTx) => void;
 }
 
-export const useWalletStore = create<WalletState>((set) => ({
-  connected: false,
-  address: undefined,
-  provider: undefined,
-  refCode: generateRefCode(),
-  inviterCode: undefined,
-  chainId: undefined,
-  usdt: 0,
-  nop: 0,
-  transactions: [
+export const useWalletStore = create<WalletState>()(
+  persist(
+    (set) => ({
+      connected: false,
+      address: undefined,
+      provider: undefined,
+      refCode: generateRefCode(),
+      inviterCode: undefined,
+      chainId: undefined,
+      usdt: 0,
+      nop: 0,
+      transactions: [
     {
       id: 'tx-1',
       hash: '0x79fa...92c1',
@@ -159,7 +162,20 @@ export const useWalletStore = create<WalletState>((set) => ({
     set((state) => ({
       transactions: [tx, ...state.transactions].slice(0, 25),
     })),
-}));
+    }),
+    {
+      name: "nop-wallet-storage",
+      partialize: (state) => ({
+        connected: state.connected,
+        address: state.address,
+        provider: state.provider,
+        refCode: state.refCode,
+        inviterCode: state.inviterCode,
+        chainId: state.chainId,
+      }),
+    }
+  )
+);
 
 interface FeedState {
   userPosts: Post[];
