@@ -9,6 +9,13 @@ const POSITION_NFT_ABI = [
   "function walletTokens(address owner) external view returns (uint256[])",
   "function ownerOf(uint256 tokenId) external view returns (address)",
   "function balanceOf(address owner) external view returns (uint256)",
+  "function transferFrom(address from, address to, uint256 tokenId) external",
+  "function safeTransferFrom(address from, address to, uint256 tokenId) external",
+  "function safeTransferFrom(address from, address to, uint256 tokenId, bytes calldata data) external",
+  "function approve(address to, uint256 tokenId) external",
+  "function getApproved(uint256 tokenId) external view returns (address)",
+  "function setApprovalForAll(address operator, bool approved) external",
+  "function isApprovedForAll(address owner, address operator) external view returns (bool)",
 ] as const;
 
 const RPC_URL = import.meta.env.VITE_RPC_URL;
@@ -127,6 +134,78 @@ export async function listMyPositionNfts(walletAddress: string): Promise<Positio
   } catch (error) {
     console.error("[positionNft] Failed to list position NFTs", error);
     return [];
+  }
+}
+
+/**
+ * Transfers a position NFT to another address (e.g., cold wallet).
+ * Uses safeTransferFrom for better security (checks if recipient can handle ERC721).
+ * 
+ * @param tokenId The token ID to transfer
+ * @param toAddress The destination address (can be any wallet, including cold wallets)
+ * @returns Transaction hash on success, null on failure
+ */
+export async function transferPositionNft(
+  tokenId: string,
+  toAddress: string
+): Promise<string | null> {
+  try {
+    const signer = await getSigner();
+    const fromAddress = await signer.getAddress();
+    const contract = getPositionNftContract(signer);
+
+    // Verify ownership
+    const owner = await contract.ownerOf(tokenId);
+    if (owner.toLowerCase() !== fromAddress.toLowerCase()) {
+      throw new Error("You are not the owner of this NFT");
+    }
+
+    // Validate recipient address
+    if (!toAddress || !toAddress.match(/^0x[a-fA-F0-9]{40}$/)) {
+      throw new Error("Invalid recipient address");
+    }
+
+    // Use safeTransferFrom (safer - checks if recipient can handle ERC721)
+    const tx = await contract.safeTransferFrom(fromAddress, toAddress, tokenId);
+    const receipt = await tx.wait();
+
+    console.log("[positionNft] NFT transferred successfully:", {
+      tokenId,
+      from: fromAddress,
+      to: toAddress,
+      txHash: tx.hash,
+    });
+
+    return tx.hash;
+  } catch (error) {
+    console.error("[positionNft] Failed to transfer NFT", error);
+    
+    if (error instanceof Error) {
+      if (error.message.includes("not the owner")) {
+        throw new Error("You are not the owner of this NFT");
+      }
+      if (error.message.includes("Invalid recipient")) {
+        throw new Error("Invalid recipient address");
+      }
+      if (error.message.includes("ERC721Receiver")) {
+        throw new Error("Recipient cannot receive ERC721 tokens");
+      }
+    }
+    
+    throw error;
+  }
+}
+
+/**
+ * Checks if an address can receive ERC721 tokens (for cold wallets, this is usually true).
+ */
+export async function canReceiveNft(address: string): Promise<boolean> {
+  try {
+    // Most wallets (including cold wallets) can receive ERC721 tokens
+    // This is a simple check - in practice, safeTransferFrom will handle errors
+    return address.match(/^0x[a-fA-F0-9]{40}$/) !== null;
+  } catch {
+    return false;
   }
 }
 
