@@ -1464,6 +1464,47 @@ using (true)
 with check (true);
 
 -- ---------------------------------------------------------------------
+-- Anti-Sybil & Rate Limiting
+-- ---------------------------------------------------------------------
+
+create table if not exists public.rate_limit_logs (
+  id uuid primary key default gen_random_uuid(),
+  wallet_address text not null,
+  ip_address text,
+  action_type text not null,
+  metadata jsonb,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_rate_limit_logs_wallet on public.rate_limit_logs (lower(wallet_address), created_at desc);
+create index if not exists idx_rate_limit_logs_ip on public.rate_limit_logs (ip_address, created_at desc);
+create index if not exists idx_rate_limit_logs_action on public.rate_limit_logs (action_type, created_at desc);
+
+alter table public.rate_limit_logs enable row level security;
+
+drop policy if exists "rate_limit_logs_select_service" on public.rate_limit_logs;
+create policy "rate_limit_logs_select_service"
+on public.rate_limit_logs
+for select
+using ((select auth.role()) = 'service_role' or public.is_admin());
+
+drop policy if exists "rate_limit_logs_insert_service" on public.rate_limit_logs;
+create policy "rate_limit_logs_insert_service"
+on public.rate_limit_logs
+for insert
+with check ((select auth.role()) = 'service_role');
+
+-- Add IP address tracking to social_profiles
+alter table public.social_profiles
+  add column if not exists ip_address text,
+  add column if not exists sybil_risk_score integer default 0,
+  add column if not exists is_sybil_flagged boolean default false,
+  add column if not exists rate_limit_warnings integer default 0;
+
+create index if not exists idx_social_profiles_ip on public.social_profiles (ip_address) where ip_address is not null;
+create index if not exists idx_social_profiles_sybil on public.social_profiles (is_sybil_flagged) where is_sybil_flagged = true;
+
+-- ---------------------------------------------------------------------
 -- Copy Trading
 -- ---------------------------------------------------------------------
 
@@ -1519,6 +1560,215 @@ using (
   lower(copier_address) = lower(coalesce((select wallet_address from public.social_profiles where id = (select auth.uid())), ''))
   or public.is_admin()
 );
+
+-- ---------------------------------------------------------------------
+-- Referral System
+-- ---------------------------------------------------------------------
+
+create table if not exists public.referrals (
+  id uuid primary key default gen_random_uuid(),
+  referrer_address text not null,
+  referred_address text not null,
+  referral_code text not null,
+  reward_nop numeric(36,18) not null default 0,
+  status text not null default 'pending' check (status in ('pending', 'completed', 'cancelled')),
+  completed_at timestamptz,
+  created_at timestamptz not null default now(),
+  unique(referred_address)
+);
+
+create index if not exists idx_referrals_referrer on public.referrals (lower(referrer_address));
+create index if not exists idx_referrals_referred on public.referrals (lower(referred_address));
+create index if not exists idx_referrals_code on public.referrals (referral_code);
+
+alter table public.referrals enable row level security;
+
+drop policy if exists "referrals_select_own" on public.referrals;
+create policy "referrals_select_own"
+on public.referrals
+for select
+using (
+  lower(referrer_address) = lower(coalesce((select wallet_address from public.social_profiles where id = (select auth.uid())), ''))
+  or lower(referred_address) = lower(coalesce((select wallet_address from public.social_profiles where id = (select auth.uid())), ''))
+  or public.is_admin()
+);
+
+drop policy if exists "referrals_insert_public" on public.referrals;
+create policy "referrals_insert_public"
+on public.referrals
+for insert
+with check (true);
+
+drop policy if exists "referrals_update_service" on public.referrals;
+create policy "referrals_update_service"
+on public.referrals
+for update
+using ((select auth.role()) = 'service_role' or public.is_admin())
+with check ((select auth.role()) = 'service_role' or public.is_admin());
+
+-- Add referral_code to social_profiles
+alter table public.social_profiles
+  add column if not exists referral_code text,
+  add column if not exists referral_count integer default 0,
+  add column if not exists total_referral_rewards numeric(36,18) default 0;
+
+create index if not exists idx_social_profiles_referral_code on public.social_profiles (referral_code) where referral_code is not null;
+
+-- ---------------------------------------------------------------------
+-- Gamification (Badges & Achievements)
+-- ---------------------------------------------------------------------
+
+create table if not exists public.badges (
+  id uuid primary key default gen_random_uuid(),
+  badge_key text not null unique,
+  name text not null,
+  description text,
+  icon_url text,
+  rarity text not null default 'common' check (rarity in ('common', 'rare', 'epic', 'legendary')),
+  category text not null default 'general' check (category in ('general', 'trading', 'social', 'achievement', 'special')),
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.user_badges (
+  id uuid primary key default gen_random_uuid(),
+  wallet_address text not null,
+  badge_id uuid not null references public.badges(id) on delete cascade,
+  earned_at timestamptz not null default now(),
+  metadata jsonb,
+  unique(wallet_address, badge_id)
+);
+
+create index if not exists idx_user_badges_wallet on public.user_badges (lower(wallet_address));
+create index if not exists idx_user_badges_badge on public.user_badges (badge_id);
+
+alter table public.user_badges enable row level security;
+
+drop policy if exists "user_badges_select_public" on public.user_badges;
+create policy "user_badges_select_public"
+on public.user_badges
+for select
+using (true);
+
+drop policy if exists "user_badges_insert_service" on public.user_badges;
+create policy "user_badges_insert_service"
+on public.user_badges
+for insert
+with check ((select auth.role()) = 'service_role' or public.is_admin());
+
+-- ---------------------------------------------------------------------
+-- KYC/AML System
+-- ---------------------------------------------------------------------
+
+create table if not exists public.kyc_verifications (
+  id uuid primary key default gen_random_uuid(),
+  wallet_address text not null unique,
+  verification_status text not null default 'pending' check (verification_status in ('pending', 'verified', 'rejected', 'expired')),
+  verification_level text not null default 'basic' check (verification_level in ('basic', 'intermediate', 'advanced')),
+  document_type text,
+  document_hash text,
+  verified_at timestamptz,
+  expires_at timestamptz,
+  metadata jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists idx_kyc_verifications_wallet on public.kyc_verifications (lower(wallet_address));
+create index if not exists idx_kyc_verifications_status on public.kyc_verifications (verification_status);
+
+drop trigger if exists set_timestamp_kyc_verifications on public.kyc_verifications;
+create trigger set_timestamp_kyc_verifications
+before update on public.kyc_verifications
+for each row
+execute procedure public.set_updated_at();
+
+alter table public.kyc_verifications enable row level security;
+
+drop policy if exists "kyc_verifications_select_own" on public.kyc_verifications;
+create policy "kyc_verifications_select_own"
+on public.kyc_verifications
+for select
+using (
+  lower(wallet_address) = lower(coalesce((select wallet_address from public.social_profiles where id = (select auth.uid())), ''))
+  or public.is_admin()
+);
+
+drop policy if exists "kyc_verifications_insert_own" on public.kyc_verifications;
+create policy "kyc_verifications_insert_own"
+on public.kyc_verifications
+for insert
+with check (
+  lower(wallet_address) = lower(coalesce((select wallet_address from public.social_profiles where id = (select auth.uid())), ''))
+  or (select auth.role()) = 'service_role'
+);
+
+drop policy if exists "kyc_verifications_update_service" on public.kyc_verifications;
+create policy "kyc_verifications_update_service"
+on public.kyc_verifications
+for update
+using ((select auth.role()) = 'service_role' or public.is_admin())
+with check ((select auth.role()) = 'service_role' or public.is_admin());
+
+-- Add KYC status to social_profiles
+alter table public.social_profiles
+  add column if not exists kyc_verified boolean default false,
+  add column if not exists kyc_level text default 'basic';
+
+-- ---------------------------------------------------------------------
+-- Analytics & Metrics
+-- ---------------------------------------------------------------------
+
+create table if not exists public.user_analytics (
+  id uuid primary key default gen_random_uuid(),
+  wallet_address text not null,
+  date date not null,
+  posts_count integer default 0,
+  comments_count integer default 0,
+  likes_count integer default 0,
+  trades_count integer default 0,
+  volume_nop numeric(36,18) default 0,
+  pnl_total numeric(36,18) default 0,
+  followers_gained integer default 0,
+  created_at timestamptz not null default now(),
+  unique(wallet_address, date)
+);
+
+create index if not exists idx_user_analytics_wallet on public.user_analytics (lower(wallet_address), date desc);
+create index if not exists idx_user_analytics_date on public.user_analytics (date desc);
+
+alter table public.user_analytics enable row level security;
+
+drop policy if exists "user_analytics_select_own" on public.user_analytics;
+create policy "user_analytics_select_own"
+on public.user_analytics
+for select
+using (
+  lower(wallet_address) = lower(coalesce((select wallet_address from public.social_profiles where id = (select auth.uid())), ''))
+  or public.is_admin()
+);
+
+drop policy if exists "user_analytics_insert_service" on public.user_analytics;
+create policy "user_analytics_insert_service"
+on public.user_analytics
+for insert
+with check ((select auth.role()) = 'service_role' or public.is_admin());
+
+-- ---------------------------------------------------------------------
+-- Advanced Notifications (Enhanced)
+-- ---------------------------------------------------------------------
+
+-- Add notification preferences to social_profiles
+alter table public.social_profiles
+  add column if not exists notification_preferences jsonb default '{"email": true, "push": true, "in_app": true, "posts": true, "mentions": true, "rewards": true, "price_alerts": true, "lp_rewards": true, "creator_earnings": true}'::jsonb,
+  add column if not exists email_notifications_enabled boolean default true,
+  add column if not exists push_notifications_enabled boolean default true;
+
+-- Add email to notifications table
+alter table public.notifications
+  add column if not exists email_sent boolean default false,
+  add column if not exists push_sent boolean default false,
+  add column if not exists email_sent_at timestamptz,
+  add column if not exists push_sent_at timestamptz;
 
 -- =====================================================================
 -- End of schema

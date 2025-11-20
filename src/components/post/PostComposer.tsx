@@ -27,6 +27,8 @@ import { createSocialPost } from "@/lib/social";
 import { useCurrentProfile } from "@/hooks/useCurrentProfile";
 import { isProfileBanned } from "@/lib/profile";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { checkRateLimit, checkSybilRisk, recordAction } from "@/lib/antiSybil";
+import { checkAndAwardBadges } from "@/lib/badges";
 
 const hashtagSuggestions = [
   "#Bitcoin",
@@ -231,6 +233,26 @@ export const PostComposer = () => {
       setIsSubmitting(true);
       setError(null);
 
+      // Anti-Sybil: Check rate limits
+      const rateLimitCheck = await checkRateLimit(address, "post");
+      if (!rateLimitCheck.allowed) {
+        toast.error(rateLimitCheck.reason || "Rate limit exceeded. Please try again later.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Anti-Sybil: Check sybil risk
+      const sybilCheck = await checkSybilRisk(address);
+      if (sybilCheck.action === "block") {
+        toast.error("Account flagged for suspicious activity. Please contact support.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (sybilCheck.action === "warn") {
+        toast.warning("Your account has been flagged. Please verify your identity.");
+      }
+
         const sanitized = sanitizeContent(content.trim());
           const userId = address;
         const uploadedUrls =
@@ -249,6 +271,12 @@ export const PostComposer = () => {
             mediaUrls: uploadedUrls,
             tags,
           });
+
+          // Record action for rate limiting
+          await recordAction(address, "post", { postId: newPost.id });
+
+          // Check and award badges
+          await checkAndAwardBadges(address);
 
           const optimisticPost: Post = {
             ...newPost,
