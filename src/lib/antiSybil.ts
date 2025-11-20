@@ -291,9 +291,31 @@ export async function recordAction(
 }
 
 /**
+ * Get IP address from client (frontend)
+ * Calls API endpoint to get client IP
+ */
+export async function getClientIP(): Promise<string | undefined> {
+  if (typeof window === "undefined") {
+    return undefined;
+  }
+
+  try {
+    const response = await fetch("/api/get-client-ip");
+    if (!response.ok) {
+      return undefined;
+    }
+    const data = await response.json();
+    return data.ip;
+  } catch (error) {
+    console.error("[antiSybil] Failed to get client IP", error);
+    return undefined;
+  }
+}
+
+/**
  * Get IP address from request (for server-side use)
  */
-export function getClientIP(request?: Request): string | undefined {
+export function getClientIPFromRequest(request?: Request): string | undefined {
   if (typeof window === "undefined" || !request) {
     return undefined;
   }

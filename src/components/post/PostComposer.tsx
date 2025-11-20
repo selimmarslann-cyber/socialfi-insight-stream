@@ -241,8 +241,10 @@ export const PostComposer = () => {
         return;
       }
 
-      // Anti-Sybil: Check sybil risk
-      const sybilCheck = await checkSybilRisk(address);
+      // Anti-Sybil: Get IP and check sybil risk
+      const { getClientIP } = await import("@/lib/antiSybil");
+      const clientIP = await getClientIP();
+      const sybilCheck = await checkSybilRisk(address, clientIP);
       if (sybilCheck.action === "block") {
         toast.error("Account flagged for suspicious activity. Please contact support.");
         setIsSubmitting(false);

@@ -42,6 +42,7 @@ import ProfileMe from "./pages/ProfileMe";
 import ProfilePublic from "./pages/ProfilePublic";
 import Intelligence from "./pages/Intelligence";
 import PoolAnalytics from "./pages/PoolAnalytics";
+import CopyTrading from "./pages/CopyTrading";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -62,6 +63,16 @@ const App = () => {
       const hasSeenTour = localStorage.getItem("nopMiniTour");
       if (hasSeenTour !== "done") {
         setShowTour(true);
+      }
+
+      // Handle referral code from URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const refCode = urlParams.get("ref");
+      if (refCode) {
+        // Store referral code for later use (when user connects wallet)
+        localStorage.setItem("nop_referral_code", refCode);
+        // Clean URL
+        window.history.replaceState({}, "", window.location.pathname);
       }
     }
   }, []);

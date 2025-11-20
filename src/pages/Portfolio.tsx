@@ -12,6 +12,8 @@ import { TrendingUp, TrendingDown, Wallet, BarChart3, Trophy, AlertCircle } from
 import { usePageMetadata } from "@/hooks/usePageMetadata";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { AnalyticsDashboard } from "@/components/analytics/AnalyticsDashboard";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Portfolio() {
   const { address, connected } = useWalletStore();
@@ -53,9 +55,15 @@ export default function Portfolio() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Portfolio Summary */}
-      <DashboardCard className="space-y-4">
+    <Tabs defaultValue="portfolio" className="space-y-6">
+      <TabsList className="grid w-full grid-cols-2 rounded-2xl bg-muted/40 p-1">
+        <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
+        <TabsTrigger value="analytics">Analytics</TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="portfolio" className="space-y-6">
+        {/* Portfolio Summary */}
+        <DashboardCard className="space-y-4">
         <DashboardSectionTitle label="Overview" title="Portfolio Summary" />
         
         {summary ? (
@@ -170,7 +178,12 @@ export default function Portfolio() {
           </div>
         )}
       </DashboardCard>
-    </div>
+      </TabsContent>
+
+      <TabsContent value="analytics" className="space-y-6">
+        <AnalyticsDashboard />
+      </TabsContent>
+    </Tabs>
   );
 }
 

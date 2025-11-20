@@ -1,2 +1,7 @@
 User-agent: *
-Disallow: /admin
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /_next/
+
+Sitemap: https://nop-intelligence.com/sitemap.xml

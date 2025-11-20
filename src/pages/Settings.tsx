@@ -28,6 +28,9 @@ import {
   type ThemePreference,
 } from "@/lib/theme";
 import { usePageMetadata } from "@/hooks/usePageMetadata";
+import { NotificationSettings } from "@/components/notifications/NotificationSettings";
+import { ReferralCard } from "@/components/referral/ReferralCard";
+import { KYCVerification } from "@/components/kyc/KYCVerification";
 
 type LanguageOption = "en" | "tr";
 
@@ -254,16 +257,23 @@ export default function Settings() {
                   Decide which signals hit your inbox or push channels. Changes apply instantly when saved.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {switchItem("posts", "Creator drops", "Pings when high-signal accounts publish.")}
-                {switchItem("mentions", "Mentions", "Only when someone tags your handle.")}
-                {switchItem("rewards", "Reward updates", "Claimable NOP, boosts, or referrals.")}
-                {switchItem("product", "Product updates", "Alpha features and release notes.")}
+              <CardContent>
+                <NotificationSettings />
               </CardContent>
             </Card>
           </div>
 
           <div className="space-y-6">
+            <Card className="border-none bg-[color:var(--bg-card)] shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-[color:var(--text-primary)]">Referral Program</CardTitle>
+                <CardDescription>Invite friends and earn rewards</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ReferralCard />
+              </CardContent>
+            </Card>
+
             <Card className="border-none bg-[color:var(--bg-card)] shadow-sm">
               <CardHeader>
                 <CardTitle className="text-[color:var(--text-primary)]">Access</CardTitle>
@@ -290,6 +300,16 @@ export default function Settings() {
                 <p className="text-xs text-[color:var(--text-secondary)]">
                   Share it with researchers you trust. Every verified contribution mints both sides.
                 </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-none bg-[color:var(--bg-card)] shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-[color:var(--text-primary)]">KYC Verification</CardTitle>
+                <CardDescription>Verify your identity for enhanced features</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <KYCVerification />
               </CardContent>
             </Card>
 

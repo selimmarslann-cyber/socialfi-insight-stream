@@ -88,10 +88,19 @@ export const useWalletStore = create<WalletState>((set) => ({
           ? options?.provider ?? state.provider
           : state.provider;
 
-      const inviterCode =
+      let inviterCode =
         !isNumberOption && typeof options === 'object'
           ? options?.inviterCode ?? state.inviterCode
           : state.inviterCode;
+
+      // Check for referral code from localStorage (from URL parameter)
+      if (!inviterCode && typeof window !== "undefined") {
+        const storedRefCode = localStorage.getItem("nop_referral_code");
+        if (storedRefCode) {
+          inviterCode = storedRefCode;
+          localStorage.removeItem("nop_referral_code");
+        }
+      }
 
       const nop =
         typeof options === 'object' && options?.nop !== undefined
@@ -116,6 +125,15 @@ export const useWalletStore = create<WalletState>((set) => ({
         };
       });
     void ensureProfileForWallet(address);
+    
+    // Register referral if inviterCode exists
+    if (inviterCode && typeof window !== "undefined") {
+      import("@/lib/referral").then(({ registerReferral }) => {
+        registerReferral(address, inviterCode).catch((error) => {
+          console.error("[store] Failed to register referral", error);
+        });
+      });
+    }
   },
   disconnect: () =>
     set((state) => ({

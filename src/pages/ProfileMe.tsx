@@ -180,6 +180,13 @@ export default function ProfileMe() {
         <PositionNFTsCard walletAddress={walletAddress} />
       ) : null}
 
+      {walletAddress ? (
+        <DashboardCard className="space-y-4">
+          <DashboardSectionTitle label="Achievements" title="Badges" />
+          <BadgeList walletAddress={walletAddress} />
+        </DashboardCard>
+      ) : null}
+
       <Tabs defaultValue="activity" className="space-y-4">
         <TabsList className="grid w-full grid-cols-3 rounded-2xl bg-muted/40 p-1 text-sm">
           <TabsTrigger value="activity">Activity</TabsTrigger>
