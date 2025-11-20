@@ -59,7 +59,7 @@ export const PostCard = ({ post }: PostCardProps) => {
   // Check if user can delete this post (owner or admin)
   const isOwner = viewerAddress && walletAddress && viewerAddress.toLowerCase() === walletAddress.toLowerCase();
   const isAdmin = isAdminLoggedIn();
-  const canDelete = canMutatePost && (isOwner || isAdmin);
+  const canDelete = canMutatePost && viewerAddress && (isOwner || isAdmin);
 
   const focusCommentBox = () => {
     commentInputRef.current?.focus();
