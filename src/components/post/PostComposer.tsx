@@ -318,8 +318,10 @@ export const PostComposer = () => {
         
         resetComposer();
     } catch (err) {
-      console.error(err);
-      toast.error("Failed to publish contribution");
+      console.error("[PostComposer] Failed to create post", err);
+      const message = err instanceof Error ? err.message : "Failed to publish contribution";
+      toast.error(message);
+      // Note: optimisticPost is added after successful creation, so no rollback needed
     } finally {
       setIsSubmitting(false);
     }
