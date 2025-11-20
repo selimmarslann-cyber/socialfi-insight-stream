@@ -81,7 +81,7 @@ export async function mintPositionNft(params: {
 }): Promise<string | null> {
   try {
     const signer = await getSigner();
-    const contract = await getPositionNftContract(signer);
+    const contract = getPositionNftContract(signer);
 
     const tx = await contract.mintPosition(
       params.walletAddress,
