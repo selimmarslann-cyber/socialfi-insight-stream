@@ -168,15 +168,25 @@ export const PostCard = ({ post }: PostCardProps) => {
       await deletePost(numericPostId, viewerAddress);
       toast.success("Post başarıyla silindi");
       
-      // Invalidate feed query to refresh the list
-      await queryClient.invalidateQueries({ queryKey: ["social-feed"] });
+      // Invalidate all related queries to ensure post is removed everywhere
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["social-feed"] }),
+        queryClient.invalidateQueries({ queryKey: ["profile-posts"] }),
+        queryClient.invalidateQueries({ queryKey: ["public-posts"] }),
+        queryClient.invalidateQueries({ queryKey: ["profile-liked-posts"] }),
+        queryClient.invalidateQueries({ queryKey: ["public-liked-posts"] }),
+      ]);
       setShowDeleteDialog(false);
     } catch (error) {
       console.error("[PostCard] Failed to delete post", error);
       const message = error instanceof Error ? error.message : "Post silinirken bir hata oluştu";
       toast.error(message);
-      // Re-fetch feed to restore the post if deletion failed
-      await queryClient.invalidateQueries({ queryKey: ["social-feed"] });
+      // Re-fetch all queries to restore the post if deletion failed
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["social-feed"] }),
+        queryClient.invalidateQueries({ queryKey: ["profile-posts"] }),
+        queryClient.invalidateQueries({ queryKey: ["public-posts"] }),
+      ]);
     } finally {
       setIsDeleting(false);
     }

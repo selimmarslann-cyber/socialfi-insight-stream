@@ -290,7 +290,15 @@ export const PostComposer = () => {
           };
 
           prependPost(optimisticPost);
-          await queryClient.invalidateQueries({ queryKey: ["social-feed"] });
+          
+          // Invalidate all related queries to ensure post appears everywhere
+          await Promise.all([
+            queryClient.invalidateQueries({ queryKey: ["social-feed"] }),
+            queryClient.invalidateQueries({ queryKey: ["profile-posts"] }),
+            queryClient.invalidateQueries({ queryKey: ["public-posts"] }),
+            queryClient.invalidateQueries({ queryKey: ["profile-liked-posts"] }),
+            queryClient.invalidateQueries({ queryKey: ["public-liked-posts"] }),
+          ]);
 
         toast.success("Contribution shared with the network");
         
