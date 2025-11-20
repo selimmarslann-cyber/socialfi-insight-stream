@@ -179,16 +179,16 @@ export function TradeActions({ contractPostId, onSettled, className }: TradeActi
       {banned ? (
         <Alert className="border-amber-200 bg-amber-50/60 text-amber-800">
           <AlertTitle>Trading disabled</AlertTitle>
-          <AlertDescription>Your account has been restricted. Reach out to support to regain access.</AlertDescription>
+          <AlertDescription>
+            Your account has been restricted. Reach out to support to regain access.
+          </AlertDescription>
         </Alert>
       ) : null}
 
       <div className="flex items-center justify-between gap-2">
         <div className="space-y-1">
           <p className="text-sm font-semibold text-text-primary">Trade this pool</p>
-          <p className="text-xs text-text-secondary">
-            NOPSocialPool · On-chain trading
-          </p>
+          <p className="text-xs text-text-secondary">NOPSocialPool · On-chain trading</p>
         </div>
         <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-600 shadow-inner dark:bg-emerald-500/10 dark:text-emerald-200">
           Active
@@ -255,9 +255,13 @@ export function TradeActions({ contractPostId, onSettled, className }: TradeActi
                 : "text-text-muted opacity-50 cursor-not-allowed",
             )}
             disabled={banned || isSelling || !hasPosition || !hasValidAmount}
-            onClick={hasPosition ? handleSell : () => {
-              toast.info("You don't have a position to sell");
-            }}
+            onClick={
+              hasPosition
+                ? handleSell
+                : () => {
+                    toast.info("You don't have a position to sell");
+                  }
+            }
           >
             {isSelling ? (
               <>
