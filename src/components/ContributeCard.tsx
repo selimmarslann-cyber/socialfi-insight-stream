@@ -10,6 +10,7 @@ import { TradeActions } from "@/components/pool/TradeActions";
 import { getUserPosition } from "@/lib/pool";
 import { getPoolAnalyticsForContribute } from "@/lib/poolAnalytics";
 import { ShareButton } from "@/components/share/ShareButton";
+import { cn } from "@/lib/utils";
 
 type ContributeCardProps = {
   item: Contribute;
