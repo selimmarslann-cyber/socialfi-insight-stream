@@ -37,10 +37,8 @@ export const PostCard = ({ post }: PostCardProps) => {
       () => (post.attachments?.length ? post.attachments : post.images ?? []),
       [post.attachments, post.images],
     );
-    const contractPostId =
-      post.poolEnabled === true && typeof post.contractPostId === "number"
-        ? post.contractPostId
-        : null;
+    const isPoolActive = post.poolEnabled === true && typeof post.contractPostId === "number" && post.contractPostId !== null;
+    const contractPostId = isPoolActive ? post.contractPostId : null;
   const funded = (post.contributedAmount ?? 0) > 0;
   const walletAddress = post.walletAddress;
   const viewerAddress = useWalletStore((state) => state.address);
@@ -294,7 +292,7 @@ export const PostCard = ({ post }: PostCardProps) => {
               </Button>
             </div>
           </div>
-            {contractPostId !== null ? (
+            {isPoolActive && contractPostId !== null ? (
                 <TradeActions contractPostId={contractPostId} className="bg-card/90" />
             ) : null}
       </footer>
