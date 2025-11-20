@@ -28,7 +28,9 @@ const config = {
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
     },
   },
+  paths: {
+    deploy: ["deploy"],
+  },
 };
 
 export default config;
-
