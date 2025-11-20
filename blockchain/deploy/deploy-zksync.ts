@@ -2,7 +2,7 @@ import { deploy } from "@matterlabs/hardhat-zksync-deploy";
 import { Wallet } from "zksync-ethers";
 import * as hre from "hardhat";
 
-export default async function () {
+async function main() {
   console.log("🚀 Deploying to zkSync Era Mainnet...\n");
 
   if (!process.env.PRIVATE_KEY) {
