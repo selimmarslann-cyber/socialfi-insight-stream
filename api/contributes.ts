@@ -63,7 +63,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
       }
 
-      const { data, error } = await supabase
+      // Insert into contributes table
+      const { data: contributeData, error: contributeError } = await supabase
         .from("contributes")
         .insert({
           title: title.trim(),
@@ -80,12 +81,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .select()
         .single();
 
-      if (error) {
-        console.error("[api/contributes] POST error:", error);
-        return res.status(500).json({ error: error.message });
+      if (contributeError) {
+        console.error("[api/contributes] POST error:", contributeError);
+        return res.status(500).json({ error: contributeError.message });
       }
 
-      return res.status(201).setHeader("Content-Type", "application/json").json(data);
+      // Also create a post in social_posts table so it appears in the feed
+      const postContent = `${title.trim()}\n\n${description.trim()}`;
+      const { error: postError } = await supabase
+        .from("social_posts")
+        .insert({
+          wallet_address: author.toLowerCase(),
+          content: postContent,
+          tags: tags || [],
+          media_urls: coverImage ? [coverImage] : null,
+          pool_enabled: false,
+          contract_post_id: null,
+        });
+
+      if (postError) {
+        // Log error but don't fail the request - contribute was created successfully
+        console.warn("[api/contributes] Failed to create social post:", postError);
+      }
+
+      return res.status(201).setHeader("Content-Type", "application/json").json(contributeData);
     }
 
     // GET /api/contributes/:id - Fetch single contribute
