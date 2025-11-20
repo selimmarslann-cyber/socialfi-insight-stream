@@ -1,17 +1,15 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createClient } from "@supabase/supabase-js";
+import {
+  withSecurity,
+  validateWalletAddress,
+  sanitizeText,
+  sanitizeArray,
+  validateBodySize,
+} from "@/lib/apiSecurity";
 
-const CORS_HEADERS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
-};
-
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Handle CORS preflight
-  if (req.method === "OPTIONS") {
-    return res.status(200).json({});
-  }
+export default withSecurity(
+  async function handler(req: VercelRequest, res: VercelResponse) {
 
   // Initialize Supabase client
   const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
@@ -48,32 +46,42 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // POST /api/contributes - Create new contribute
     if (req.method === "POST") {
+      // ✅ Validate request body size
+      if (!validateBodySize(req.body, 500 * 1024)) {
+        return res.status(413).json({
+          error: "Request body too large. Maximum size is 500KB.",
+        });
+      }
+
       const { title, subtitle, description, author, tags, category, coverImage } = req.body;
 
-      if (!title || !description || !author) {
+      // ✅ Sanitize and validate inputs
+      const sanitizedTitle = sanitizeText(title, 200);
+      const sanitizedSubtitle = subtitle ? sanitizeText(subtitle, 200) : null;
+      const sanitizedDescription = sanitizeText(description, 5000);
+      const validatedAuthor = validateWalletAddress(author);
+      const sanitizedTags = tags ? sanitizeArray(tags, 20) : [];
+      const sanitizedCategory = category && typeof category === "string" ? category.trim().slice(0, 50) : "trading";
+      const sanitizedCoverImage =
+        coverImage && typeof coverImage === "string" && coverImage.length <= 500 ? coverImage.trim() : null;
+
+      if (!sanitizedTitle || !sanitizedDescription || !validatedAuthor) {
         return res.status(400).json({
-          error: "Missing required fields: title, description, and author are required.",
+          error: "Missing or invalid required fields: title, description, and author are required.",
         });
       }
 
-      // Validate author is a valid wallet address
-      if (!/^0x[a-fA-F0-9]{40}$/.test(author)) {
-        return res.status(400).json({
-          error: "Invalid wallet address format.",
-        });
-      }
-
-      // Insert into contributes table
+      // Insert into contributes table with sanitized data
       const { data: contributeData, error: contributeError } = await supabase
         .from("contributes")
         .insert({
-          title: title.trim(),
-          subtitle: subtitle?.trim() || null,
-          description: description.trim(),
-          author: author.toLowerCase(),
-          tags: tags || [],
-          category: category || "trading",
-          cover_image: coverImage || null,
+          title: sanitizedTitle,
+          subtitle: sanitizedSubtitle,
+          description: sanitizedDescription,
+          author: validatedAuthor,
+          tags: sanitizedTags || [],
+          category: sanitizedCategory,
+          cover_image: sanitizedCoverImage,
           pool_enabled: false,
           weekly_score: 0,
           weekly_volume_nop: 0,
@@ -87,14 +95,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       // Also create a post in social_posts table so it appears in the feed
-      const postContent = `${title.trim()}\n\n${description.trim()}`;
+      const postContent = `${sanitizedTitle}\n\n${sanitizedDescription}`;
       const { error: postError } = await supabase
         .from("social_posts")
         .insert({
-          wallet_address: author.toLowerCase(),
+          wallet_address: validatedAuthor,
           content: postContent,
-          tags: tags || [],
-          media_urls: coverImage ? [coverImage] : null,
+          tags: sanitizedTags || [],
+          media_urls: sanitizedCoverImage ? [sanitizedCoverImage] : null,
           pool_enabled: false,
           contract_post_id: null,
         });
@@ -132,9 +140,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: "Method not allowed" });
   } catch (error) {
     console.error("[api/contributes] Unexpected error:", error);
+    // ✅ Don't expose internal error details
     return res.status(500).json({
-      error: error instanceof Error ? error.message : "Internal server error",
+      error: "Internal server error",
+      // Only show details in development
+      ...(process.env.NODE_ENV === "development" && {
+        details: error instanceof Error ? error.message : String(error),
+      }),
     });
   }
-}
+},
+  {
+    requireAuth: false, // Public endpoint, but rate-limited
+    rateLimit: true,
+    cors: true,
+  }
+);
 

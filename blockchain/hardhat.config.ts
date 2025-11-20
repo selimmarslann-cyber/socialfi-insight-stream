@@ -6,7 +6,7 @@ dotenv.config();
 
 const config = {
   zksolc: {
-    version: "1.3.17",
+    version: "1.4.0",
     compilerSource: "binary",
     settings: {
       optimizer: { enabled: true },

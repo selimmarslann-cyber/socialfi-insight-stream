@@ -21,6 +21,8 @@ export function TradeActions({ contractPostId, onSettled, className }: TradeActi
   const [isSelling, setIsSelling] = useState(false);
   const [hasAllowance, setHasAllowance] = useState<boolean>(false);
   const [hasPosition, setHasPosition] = useState<boolean>(false);
+  const [pendingTxHash, setPendingTxHash] = useState<string | null>(null);
+  const [isWaitingConfirmation, setIsWaitingConfirmation] = useState(false);
   const { profile } = useCurrentProfile();
   const banned = isProfileBanned(profile);
 
@@ -106,12 +108,47 @@ export function TradeActions({ contractPostId, onSettled, className }: TradeActi
       toast.error("Please install MetaMask or connect a wallet.");
       return;
     }
+    
+    // ✅ Prevent double-click / rapid clicks
+    if (isBuying || isWaitingConfirmation) {
+      toast.info("Transaction already in progress. Please wait...");
+      return;
+    }
+
     try {
+      // ✅ Set loading state IMMEDIATELY (before any async operations)
       setIsBuying(true);
-      await buyShares(contractPostId, amount);
-      toast.success("Buy transaction submitted successfully.");
+      setIsWaitingConfirmation(true);
+      setPendingTxHash(null);
+
+      // Get user address for transaction tracking
+      const accounts = (await (window as any).ethereum.request({
+        method: "eth_requestAccounts",
+      })) as string[];
+      const userAddress = accounts?.[0];
+
+      // Execute buy
+      const receipt = await buyShares(contractPostId, amount);
+      
+      // ✅ Transaction submitted, get hash
+      const txHash = receipt?.hash || receipt?.transactionHash || null;
+      if (txHash) {
+        setPendingTxHash(txHash);
+        toast.success("Transaction submitted!", {
+          description: `Hash: ${txHash.slice(0, 10)}...`,
+          duration: 5000,
+        });
+      } else {
+        toast.success("Buy transaction submitted successfully.");
+      }
+
+      // ✅ Wait for confirmation (receipt.wait() already did this, but keep state)
+      // Refresh position after confirmation
       await refreshPosition();
       await onSettled?.();
+
+      // ✅ Clear pending state after successful confirmation
+      setPendingTxHash(null);
     } catch (err: unknown) {
       console.error(err);
       let message = "Buy transaction failed.";
@@ -120,13 +157,19 @@ export function TradeActions({ contractPostId, onSettled, className }: TradeActi
           message = "Transaction cancelled by user.";
         } else if (err.message.includes("insufficient funds") || err.message.includes("balance")) {
           message = "Insufficient NOP balance or gas.";
+        } else if (err.message.includes("already pending")) {
+          message = err.message; // Show the duplicate transaction message
+        } else if (err.message.includes("Too many transactions")) {
+          message = err.message; // Show rate limit message
         } else {
           message = err.message;
         }
       }
       toast.error(message);
+      setPendingTxHash(null);
     } finally {
       setIsBuying(false);
+      setIsWaitingConfirmation(false);
     }
   };
 
@@ -144,12 +187,40 @@ export function TradeActions({ contractPostId, onSettled, className }: TradeActi
       toast.error("Please install MetaMask or connect a wallet.");
       return;
     }
+    
+    // ✅ Prevent double-click / rapid clicks
+    if (isSelling || isWaitingConfirmation) {
+      toast.info("Transaction already in progress. Please wait...");
+      return;
+    }
+
     try {
+      // ✅ Set loading state IMMEDIATELY
       setIsSelling(true);
-      await sellShares(contractPostId, amount);
-      toast.success("Sell transaction submitted successfully.");
+      setIsWaitingConfirmation(true);
+      setPendingTxHash(null);
+
+      // Execute sell
+      const receipt = await sellShares(contractPostId, amount);
+      
+      // ✅ Transaction submitted, get hash
+      const txHash = receipt?.hash || receipt?.transactionHash || null;
+      if (txHash) {
+        setPendingTxHash(txHash);
+        toast.success("Transaction submitted!", {
+          description: `Hash: ${txHash.slice(0, 10)}...`,
+          duration: 5000,
+        });
+      } else {
+        toast.success("Sell transaction submitted successfully.");
+      }
+
+      // ✅ Wait for confirmation and refresh
       await refreshPosition();
       await onSettled?.();
+
+      // ✅ Clear pending state
+      setPendingTxHash(null);
     } catch (err: unknown) {
       console.error(err);
       let message = "Sell transaction failed.";
@@ -158,13 +229,19 @@ export function TradeActions({ contractPostId, onSettled, className }: TradeActi
           message = "Transaction cancelled by user.";
         } else if (err.message.includes("insufficient funds") || err.message.includes("balance")) {
           message = "Insufficient balance or gas.";
+        } else if (err.message.includes("already pending")) {
+          message = err.message; // Show the duplicate transaction message
+        } else if (err.message.includes("Too many transactions")) {
+          message = err.message; // Show rate limit message
         } else {
           message = err.message;
         }
       }
       toast.error(message);
+      setPendingTxHash(null);
     } finally {
       setIsSelling(false);
+      setIsWaitingConfirmation(false);
     }
   };
 
@@ -234,12 +311,12 @@ export function TradeActions({ contractPostId, onSettled, className }: TradeActi
           <Button
             size="sm"
             className="min-h-[44px] flex-1 rounded-xl bg-emerald-600 text-white shadow-emerald-500/30 hover:bg-emerald-500 disabled:opacity-50 touch-manipulation"
-            disabled={banned || isBuying || !hasValidAmount}
+            disabled={banned || isBuying || isWaitingConfirmation || !hasValidAmount}
             onClick={handleBuy}
           >
-            {isBuying ? (
+            {isBuying || isWaitingConfirmation ? (
               <>
-                <span className="mr-2">⏳</span> Buying…
+                <span className="mr-2">⏳</span> {pendingTxHash ? "Confirming..." : "Processing..."}
               </>
             ) : (
               "Buy"
@@ -254,7 +331,7 @@ export function TradeActions({ contractPostId, onSettled, className }: TradeActi
                 ? "border-red-200 text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
                 : "text-text-muted opacity-50 cursor-not-allowed",
             )}
-            disabled={banned || isSelling || !hasPosition || !hasValidAmount}
+            disabled={banned || isSelling || isWaitingConfirmation || !hasPosition || !hasValidAmount}
             onClick={
               hasPosition
                 ? handleSell
@@ -263,9 +340,9 @@ export function TradeActions({ contractPostId, onSettled, className }: TradeActi
                   }
             }
           >
-            {isSelling ? (
+            {isSelling || isWaitingConfirmation ? (
               <>
-                <span className="mr-2">⏳</span> Selling…
+                <span className="mr-2">⏳</span> {pendingTxHash ? "Confirming..." : "Processing..."}
               </>
             ) : hasPosition ? (
               "Sell"

@@ -15,8 +15,8 @@ export const CHAINS: Record<string, ChainConfig> = {
     rpcUrl: import.meta.env.VITE_RPC_URL || "https://mainnet.era.zksync.io",
     explorerUrl: "https://explorer.zksync.io",
     nopTokenAddress: import.meta.env.VITE_NOP_TOKEN_ADDRESS || "0x941Fc398d9FAebdd9f311011541045A1d66c748E",
-    nopPoolAddress: import.meta.env.VITE_NOP_POOL_ADDRESS || import.meta.env.VITE_POOL_ADDRESS,
-    nopPositionNftAddress: import.meta.env.VITE_NOP_POSITION_NFT_ADDRESS || import.meta.env.VITE_POSITION_NFT_ADDRESS,
+    nopPoolAddress: import.meta.env.VITE_NOP_POOL_ADDRESS || "0x9B68Fb2f7702B173F9D7A7182ceEeFcc6932cEE1",
+    nopPositionNftAddress: import.meta.env.VITE_NOP_POSITION_NFT_ADDRESS || "0xDF4Bcd750d69c4139C70083FEA1EC79e70a926d7",
   },
   sepolia: {
     id: 11155111,

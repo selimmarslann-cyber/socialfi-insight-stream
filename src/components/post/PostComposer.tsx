@@ -30,6 +30,7 @@ import { isProfileBanned } from "@/lib/profile";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { checkRateLimit, checkSybilRisk, recordAction } from "@/lib/antiSybil";
 import { checkAndAwardBadges } from "@/lib/badges";
+import DOMPurify from "dompurify";
 
 const hashtagSuggestions = [
   "#Bitcoin",
@@ -44,7 +45,20 @@ const emojiOptions = ["🚀", "🔥", "🧠", "💎", "📊", "🤝", "🪙", "�
 const MAX_FILES = 4;
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
-const sanitizeContent = (value: string) => value.replace(/[<>]/g, "");
+// ✅ Enhanced XSS protection with DOMPurify
+const sanitizeContent = (value: string): string => {
+  // Remove HTML tags and sanitize
+  const sanitized = DOMPurify.sanitize(value, {
+    ALLOWED_TAGS: [], // No HTML tags allowed
+    ALLOWED_ATTR: [],
+    KEEP_CONTENT: true, // Keep text content
+  });
+  // Additional: Remove control characters and limit length
+  return sanitized
+    .replace(/[\x00-\x1F\x7F]/g, "") // Remove control characters
+    .trim()
+    .slice(0, 10000); // Max 10KB
+};
 const extractHashtags = (value: string) =>
   Array.from(new Set(value.match(/#[\p{L}\d_]{2,24}/gu) ?? []));
 const readFileAsDataUrl = (file: File) =>

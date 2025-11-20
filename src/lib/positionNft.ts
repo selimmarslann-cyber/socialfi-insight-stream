@@ -50,6 +50,7 @@ export type PositionNFT = {
   amount: string;
   createdAt: string;
   tag: string;
+  postId?: number | null; // Optional: parsed from tag
 };
 
 /**
@@ -118,12 +119,14 @@ export async function listMyPositionNfts(walletAddress: string): Promise<Positio
     for (const tokenId of tokenIds) {
       try {
         const position = await contract.getPosition(tokenId);
+        const postId = extractPostIdFromTag(position.tag);
         positions.push({
           tokenId: tokenId.toString(),
           poolAddress: position.pool,
           amount: position.amount.toString(),
           createdAt: new Date(Number(position.createdAt) * 1000).toISOString(),
           tag: position.tag,
+          postId,
         });
       } catch (error) {
         console.warn(`[positionNft] Failed to fetch position ${tokenId}`, error);
@@ -206,6 +209,75 @@ export async function canReceiveNft(address: string): Promise<boolean> {
     return address.match(/^0x[a-fA-F0-9]{40}$/) !== null;
   } catch {
     return false;
+  }
+}
+
+/**
+ * Extracts postId from NFT tag.
+ * Tag format: "#{postId}-{title}" or "Pool-{postId}"
+ * @param tag The tag string from NFT
+ * @returns postId if found, null otherwise
+ */
+export function extractPostIdFromTag(tag: string): number | null {
+  if (!tag) return null;
+  
+  try {
+    // Try format: "#{postId}-{title}"
+    const hashMatch = tag.match(/^#(\d+)-/);
+    if (hashMatch) {
+      const postId = Number.parseInt(hashMatch[1], 10);
+      if (Number.isFinite(postId) && postId > 0) {
+        return postId;
+      }
+    }
+    
+    // Try format: "Pool-{postId}"
+    const poolMatch = tag.match(/^Pool-(\d+)$/);
+    if (poolMatch) {
+      const postId = Number.parseInt(poolMatch[1], 10);
+      if (Number.isFinite(postId) && postId > 0) {
+        return postId;
+      }
+    }
+    
+    // Try format: just a number
+    const numMatch = tag.match(/^(\d+)$/);
+    if (numMatch) {
+      const postId = Number.parseInt(numMatch[1], 10);
+      if (Number.isFinite(postId) && postId > 0) {
+        return postId;
+      }
+    }
+    
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Gets position NFT data including parsed postId.
+ * @param tokenId The NFT token ID
+ * @returns Position data with postId, or null if not found
+ */
+export async function getPositionNftData(tokenId: string): Promise<(PositionNFT & { postId: number | null }) | null> {
+  try {
+    const contract = await getPositionNftContract();
+    const position = await contract.getPosition(tokenId);
+    
+    const postId = extractPostIdFromTag(position.tag);
+    
+    return {
+      tokenId,
+      poolAddress: position.pool,
+      amount: position.amount.toString(),
+      createdAt: new Date(Number(position.createdAt) * 1000).toISOString(),
+      tag: position.tag,
+      postId,
+    };
+  } catch (error) {
+    console.error("[positionNft] Failed to get NFT data", error);
+    return null;
   }
 }
 

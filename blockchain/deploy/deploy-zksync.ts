@@ -1,5 +1,6 @@
-import { deploy } from "@matterlabs/hardhat-zksync-deploy";
-import { Wallet } from "zksync-ethers";
+import { Deployer } from "@matterlabs/hardhat-zksync-deploy";
+import { Wallet, Provider } from "zksync-ethers";
+import { ethers } from "ethers";
 import * as hre from "hardhat";
 
 async function main() {
@@ -9,14 +10,17 @@ async function main() {
     throw new Error("PRIVATE_KEY environment variable is required");
   }
 
-  const wallet = new Wallet(process.env.PRIVATE_KEY);
+  // Create provider and deployer
+  const provider = new Provider("https://mainnet.era.zksync.io");
+  const wallet = new Wallet(process.env.PRIVATE_KEY, provider);
+  const deployer = new Deployer(hre, wallet);
 
   // Check balance
   const balance = await wallet.getBalance();
   console.log("Deployer address:", wallet.address);
-  console.log("Deployer balance:", hre.ethers.formatEther(balance), "ETH\n");
+  console.log("Deployer balance:", ethers.formatEther(balance), "ETH\n");
 
-  if (balance < hre.ethers.parseEther("0.01")) {
+  if (balance < ethers.parseEther("0.01")) {
     console.warn("⚠️  Warning: Low balance. You may need more ETH for gas fees.\n");
   }
 
@@ -31,38 +35,36 @@ async function main() {
   // Deploy Pool
   console.log("=== Deploying NOPSocialPool ===");
   const poolArtifact = await hre.artifacts.readArtifact("NOPSocialPool");
-  const pool = await deploy(wallet, poolArtifact, [
+  const pool = await deployer.deploy(poolArtifact, [
     NOP_TOKEN_ADDRESS,
     process.env.TREASURY_ADDRESS || wallet.address,
   ]);
-  console.log("✅ NOPSocialPool deployed:", pool.address);
-  console.log("   Explorer: https://explorer.zksync.io/address/" + pool.address + "\n");
+  await pool.waitForDeployment();
+  const poolAddress = await pool.getAddress();
+  console.log("✅ NOPSocialPool deployed:", poolAddress);
+  console.log("   Explorer: https://explorer.zksync.io/address/" + poolAddress + "\n");
 
   // Deploy Position NFT
   console.log("=== Deploying NOPPositionNFT ===");
-  // Try V2 first, fallback to V1
-  let nftArtifact;
-  try {
-    nftArtifact = await hre.artifacts.readArtifact("NOPPositionNFT");
-  } catch {
-    // If NOPPositionNFT not found, try NOPPositionNFT_V2
-    nftArtifact = await hre.artifacts.readArtifact("NOPPositionNFT_V2");
-  }
-  const nft = await deploy(wallet, nftArtifact, []);
-  console.log("✅ Position NFT deployed:", nft.address);
-  console.log("   Explorer: https://explorer.zksync.io/address/" + nft.address + "\n");
+  // Use NOPPositionNFT_V2 (has authorizedMinters support)
+  const nftArtifact = await hre.artifacts.readArtifact("contracts/NOPPositionNFT_V2.sol:NOPPositionNFT");
+  const nft = await deployer.deploy(nftArtifact, []);
+  await nft.waitForDeployment();
+  const nftAddress = await nft.getAddress();
+  console.log("✅ Position NFT deployed:", nftAddress);
+  console.log("   Explorer: https://explorer.zksync.io/address/" + nftAddress + "\n");
 
   // Authorize Pool as Minter
   console.log("=== Authorizing Pool as NFT Minter ===");
   try {
-    const authorizeTx = await nft.authorizeMinter(pool.address);
+    const authorizeTx = await nft.authorizeMinter(poolAddress);
     console.log("   Transaction hash:", authorizeTx.hash);
     await authorizeTx.wait();
     console.log("✅ Pool authorized as minter for NFT.\n");
   } catch (error) {
     console.error("❌ Failed to authorize pool as minter:", error);
     console.log("   You can authorize manually later by calling:");
-    console.log(`   nft.authorizeMinter("${pool.address}")`);
+    console.log(`   nft.authorizeMinter("${poolAddress}")`);
   }
 
   console.log("=".repeat(60));
@@ -73,8 +75,8 @@ async function main() {
   console.log("");
   console.log("Contract Addresses:");
   console.log(`  NOP Token:        ${NOP_TOKEN_ADDRESS}`);
-  console.log(`  NOPSocialPool:    ${pool.address}`);
-  console.log(`  NOPPositionNFT:   ${nft.address}`);
+  console.log(`  NOPSocialPool:    ${poolAddress}`);
+  console.log(`  NOPPositionNFT:   ${nftAddress}`);
   console.log(`  Treasury:         ${process.env.TREASURY_ADDRESS || wallet.address}`);
   console.log("");
   console.log("=".repeat(60));
@@ -83,8 +85,8 @@ async function main() {
   console.log(`VITE_CHAIN_ID=324`);
   console.log(`VITE_RPC_URL=https://mainnet.era.zksync.io`);
   console.log(`VITE_NOP_TOKEN_ADDRESS=${NOP_TOKEN_ADDRESS}`);
-  console.log(`VITE_NOP_POOL_ADDRESS=${pool.address}`);
-  console.log(`VITE_NOP_POSITION_NFT_ADDRESS=${nft.address}`);
+  console.log(`VITE_NOP_POOL_ADDRESS=${poolAddress}`);
+  console.log(`VITE_NOP_POSITION_NFT_ADDRESS=${nftAddress}`);
   console.log("=".repeat(60));
   console.log("");
   console.log("✅ Deployment complete!");
@@ -98,4 +100,3 @@ main()
     console.error(error);
     process.exit(1);
   });
-

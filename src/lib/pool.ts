@@ -119,8 +119,23 @@ export async function approveToken(maxAmount?: string | bigint) {
 }
 
 export async function buyShares(postId: number, amountNop: number, contributeTitle?: string) {
+  const { transactionGuard } = await import("@/lib/transactionGuard");
   const signer = await getSigner();
   const user = await signer.getAddress();
+  
+  // ✅ Check for duplicate transaction
+  if (transactionGuard.isTransactionPending(postId, amountNop, user, "buy")) {
+    const pendingHash = transactionGuard.getPendingTransactionHash(postId, amountNop, user, "buy");
+    throw new Error(
+      `Transaction already pending. Please wait for confirmation.${pendingHash ? ` Hash: ${pendingHash.slice(0, 10)}...` : ""}`
+    );
+  }
+
+  // ✅ Rate limiting check
+  const rateLimitCheck = transactionGuard.checkRateLimit(user);
+  if (!rateLimitCheck.allowed) {
+    throw new Error(rateLimitCheck.reason || "Too many transactions. Please wait.");
+  }
   
   // Validate action (fair data, prevent inflation)
   const validation = await validateUserAction(user, "trade", amountNop);
@@ -132,91 +147,135 @@ export async function buyShares(postId: number, amountNop: number, contributeTit
   const normalizedAmount = validation.normalizedValue ?? amountNop;
   const pool = getPoolContractInstance(signer);
   const amount = parseUnits(String(normalizedAmount), 18);
-  const tx = await pool.depositNOP(postId, amount);
-  const receipt = await tx.wait();
-
-  // Get buyer count for early buyer bonus
-  const buyerCount = await getBuyerCount(postId);
   
-  // Calculate fair fee distribution
-  const feeBreakdown = calculateFairFeeDistribution(amount, true, buyerCount);
-
+  let txHash: string | null = null;
   try {
-    await logTrade({
-      walletAddress: user,
-      postId,
-      side: "buy",
-      amountNop: amount,
-      txHash: tx.hash,
-    });
-  } catch (error) {
-    console.warn("[pool] Failed to log BUY trade", error);
-  }
-
-  try {
-    // Look up contribute_id by contractPostId
-    const { getContributeByPostId } = await import("@/lib/contributeHelpers");
-    const contribute = await getContributeByPostId(postId);
+    const tx = await pool.depositNOP(postId, amount);
+    txHash = tx.hash;
     
-    await logBuyPosition({
-      wallet: user,
-      contributeId: contribute?.id || null,
-      amount: amount,
-      txHash: tx.hash,
-    });
-  } catch (error) {
-    console.warn("[pool] Failed to log BUY position", error);
-  }
+    // ✅ Register transaction immediately (before waiting for confirmation)
+    transactionGuard.registerTransaction(postId, amountNop, user, txHash, "buy");
+    
+    // Wait for confirmation
+    const receipt = await tx.wait();
+    
+    // Transaction confirmed, but keep it in guard for a bit to prevent immediate duplicates
+    // Will be cleaned up automatically after 5 minutes
 
-  // Record creator earnings (fair distribution)
-  try {
-    const creatorWallet = await getContributeAuthor(postId);
-    if (creatorWallet && feeBreakdown.creatorShare > 0n) {
-      // Find contribute ID
+    // Get buyer count for early buyer bonus
+    const buyerCount = await getBuyerCount(postId);
+    
+    // Calculate fair fee distribution
+    const feeBreakdown = calculateFairFeeDistribution(amount, true, buyerCount);
+
+    try {
+      await logTrade({
+        walletAddress: user,
+        postId,
+        side: "buy",
+        amountNop: amount,
+        txHash: txHash,
+      });
+    } catch (error) {
+      console.warn("[pool] Failed to log BUY trade", error);
+    }
+
+    try {
+      // Look up contribute_id by contractPostId
       const { getContributeByPostId } = await import("@/lib/contributeHelpers");
       const contribute = await getContributeByPostId(postId);
       
-      if (contribute) {
-        await recordCreatorEarnings({
-          creatorWallet,
-          contributeId: contribute.id,
-          buyAmount: Number(amount) / 1e18,
-          txHash: tx.hash,
-        });
+      await logBuyPosition({
+        wallet: user,
+        contributeId: contribute?.id || null,
+        amount: amount,
+        txHash: txHash,
+      });
+    } catch (error) {
+      console.warn("[pool] Failed to log BUY position", error);
+    }
+
+    // Record creator earnings (fair distribution)
+    try {
+      const creatorWallet = await getContributeAuthor(postId);
+      if (creatorWallet && feeBreakdown.creatorShare > 0n) {
+        // Find contribute ID
+        const { getContributeByPostId } = await import("@/lib/contributeHelpers");
+        const contribute = await getContributeByPostId(postId);
+        
+        if (contribute) {
+          await recordCreatorEarnings({
+            creatorWallet,
+            contributeId: contribute.id,
+            buyAmount: Number(amount) / 1e18,
+            txHash: txHash,
+          });
+        }
       }
+    } catch (error) {
+      console.warn("[pool] Failed to record creator earnings (non-critical):", error);
     }
-  } catch (error) {
-    console.warn("[pool] Failed to record creator earnings (non-critical):", error);
-  }
 
-  // Auto-mint NFT on successful buy
-  try {
-    const poolAddress = getPoolAddress();
-    const tag = contributeTitle ? `#${postId}-${contributeTitle.slice(0, 20)}` : `Pool-${postId}`;
-    const nftTxHash = await mintPositionNft({
-      walletAddress: user,
-      poolAddress,
-      amount,
-      tag,
-    });
-    if (nftTxHash) {
-      console.log("[pool] Position NFT minted:", nftTxHash);
+    // Auto-mint NFT on successful buy
+    try {
+      const poolAddress = getPoolAddress();
+      const tag = contributeTitle ? `#${postId}-${contributeTitle.slice(0, 20)}` : `Pool-${postId}`;
+      const nftTxHash = await mintPositionNft({
+        walletAddress: user,
+        poolAddress,
+        amount,
+        tag,
+      });
+      if (nftTxHash) {
+        console.log("[pool] Position NFT minted:", nftTxHash);
+      }
+    } catch (error) {
+      // NFT mint is optional, don't fail the buy if it fails
+      console.warn("[pool] Failed to mint position NFT (non-critical):", error);
     }
-  } catch (error) {
-    // NFT mint is optional, don't fail the buy if it fails
-    console.warn("[pool] Failed to mint position NFT (non-critical):", error);
-  }
 
-  return receipt;
+    return receipt;
+  } catch (error) {
+    // ✅ On error, remove from guard so user can retry
+    if (txHash) {
+      transactionGuard.completeTransaction(postId, amountNop, user, "buy");
+    }
+    throw error;
+  }
 }
 
 export async function sellShares(postId: number, amountNop: number) {
+  const { transactionGuard } = await import("@/lib/transactionGuard");
   const signer = await getSigner();
   const user = await signer.getAddress();
+  
+  // ✅ Check for duplicate transaction
+  if (transactionGuard.isTransactionPending(postId, amountNop, user, "sell")) {
+    const pendingHash = transactionGuard.getPendingTransactionHash(postId, amountNop, user, "sell");
+    throw new Error(
+      `Transaction already pending. Please wait for confirmation.${pendingHash ? ` Hash: ${pendingHash.slice(0, 10)}...` : ""}`
+    );
+  }
+
+  // ✅ Rate limiting check
+  const rateLimitCheck = transactionGuard.checkRateLimit(user);
+  if (!rateLimitCheck.allowed) {
+    throw new Error(rateLimitCheck.reason || "Too many transactions. Please wait.");
+  }
+  
   const pool = getPoolContractInstance(signer);
   const amount = parseUnits(String(amountNop), 18);
-  const tx = await pool.withdrawNOP(postId, amount);
-  const receipt = await tx.wait();
+  
+  let txHash: string | null = null;
+  try {
+    const tx = await pool.withdrawNOP(postId, amount);
+    txHash = tx.hash;
+    
+    // ✅ Register transaction immediately
+    transactionGuard.registerTransaction(postId, amountNop, user, txHash, "sell");
+    
+    // Wait for confirmation
+    const receipt = await tx.wait();
 
   try {
     await logTrade({
@@ -230,18 +289,70 @@ export async function sellShares(postId: number, amountNop: number) {
     console.warn("[pool] Failed to log SELL trade", error);
   }
 
-  try {
-    await logSellPosition({
-      wallet: user,
-      contributeId: null, // TODO: Look up contribute_id by contractPostId
-      amount: amount,
-      txHash: tx.hash,
-    });
-  } catch (error) {
-    console.warn("[pool] Failed to log SELL position", error);
-  }
+    try {
+      await logSellPosition({
+        wallet: user,
+        contributeId: null, // TODO: Look up contribute_id by contractPostId
+        amount: amount,
+        txHash: txHash,
+      });
+    } catch (error) {
+      console.warn("[pool] Failed to log SELL position", error);
+    }
 
-  return receipt;
+    return receipt;
+  } catch (error) {
+    // ✅ On error, remove from guard so user can retry
+    if (txHash) {
+      transactionGuard.completeTransaction(postId, amountNop, user, "sell");
+    }
+    throw error;
+  }
+}
+
+/**
+ * Sells shares using NFT tokenId.
+ * Extracts postId from NFT tag and sells the position.
+ * @param tokenId The NFT token ID
+ * @param amountNop The amount of NOP to sell (can be partial)
+ * @returns Transaction receipt
+ */
+export async function sellSharesFromNft(tokenId: string, amountNop: number) {
+  const { getPositionNftData, extractPostIdFromTag } = await import("@/lib/positionNft");
+  const { listMyPositionNfts } = await import("@/lib/positionNft");
+  
+  // Get NFT data
+  const nftData = await getPositionNftData(tokenId);
+  if (!nftData) {
+    throw new Error("NFT not found");
+  }
+  
+  // Extract postId from tag
+  const postId = nftData.postId || extractPostIdFromTag(nftData.tag);
+  if (!postId) {
+    throw new Error("Could not extract postId from NFT tag. Tag format should be '#{postId}-{title}' or 'Pool-{postId}'");
+  }
+  
+  // Verify NFT ownership and position
+  const signer = await getSigner();
+  const user = await signer.getAddress();
+  const nfts = await listMyPositionNfts(user);
+  const nft = nfts.find((n) => n.tokenId === tokenId);
+  
+  if (!nft) {
+    throw new Error("You don't own this NFT");
+  }
+  
+  // Verify amount doesn't exceed NFT amount
+  const nftAmount = BigInt(nft.amount);
+  const sellAmount = parseUnits(String(amountNop), 18);
+  
+  if (sellAmount > nftAmount) {
+    throw new Error(`Cannot sell more than NFT amount: ${nftAmount.toString()}`);
+  }
+  
+  // Sell using postId
+  return sellShares(postId, amountNop);
 }
 
 export async function depositToContribute(postId: number, amount: number) {

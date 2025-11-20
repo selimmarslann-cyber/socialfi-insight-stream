@@ -19,6 +19,8 @@
     "zksync-web3": "^0.17.1"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^5.4.0"
+    "@openzeppelin/contracts": "^5.4.0",
+    "@types/dompurify": "^3.0.5",
+    "dompurify": "^3.3.0"
   }
 }
