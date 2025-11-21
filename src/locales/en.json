@@ -67,6 +67,26 @@
     "korean": "Korean",
     "thai": "Thai",
     "filipino": "Filipino (Tagalog)"
+  },
+  "home": {
+    "title": "NOP Intelligence Layer",
+    "subtitle": "Track social positions, AI signals, and community performance inside a single calm SocialFi command center.",
+    "overview": "Overview",
+    "totalUsers": "Total Users",
+    "activePositions": "Active Positions",
+    "reputationLeaders": "Reputation Leaders",
+    "burn7d": "7d Burn",
+    "market": "Market",
+    "marketContext": "Market context",
+    "community": "Community",
+    "shareIntelligence": "Share intelligence",
+    "feed": "Feed",
+    "liveStream": "Live SocialFi stream",
+    "contribute": "Contribute",
+    "discoverPools": "Discover NOP social pools",
+    "discoverDescription": "Browse curated contributes and open on-chain social positions.",
+    "startFromContributes": "Start from the Contributes tab to see which ideas the community is backing.",
+    "goToContributes": "Go to Contributes"
   }
 }
 

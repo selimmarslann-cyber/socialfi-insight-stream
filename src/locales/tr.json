@@ -67,6 +67,26 @@
     "korean": "Korece",
     "thai": "Tayca",
     "filipino": "Filipince (Tagalog)"
+  },
+  "home": {
+    "title": "NOP Intelligence Layer",
+    "subtitle": "Sosyal pozisyonları, AI sinyallerini ve topluluk performansını tek bir sakin SocialFi komut merkezinde takip edin.",
+    "overview": "Genel Bakış",
+    "totalUsers": "Toplam Kullanıcı",
+    "activePositions": "Aktif Pozisyonlar",
+    "reputationLeaders": "İtibar Liderleri",
+    "burn7d": "7 Günlük Yakım",
+    "market": "Piyasa",
+    "marketContext": "Piyasa bağlamı",
+    "community": "Topluluk",
+    "shareIntelligence": "Zeka paylaş",
+    "feed": "Akış",
+    "liveStream": "Canlı SocialFi akışı",
+    "contribute": "Katkı",
+    "discoverPools": "NOP sosyal havuzlarını keşfet",
+    "discoverDescription": "Küratörlüğü yapılmış katkıları gözden geçirin ve zincir üzeri sosyal pozisyonlar açın.",
+    "startFromContributes": "Topluluğun hangi fikirleri desteklediğini görmek için Katkılar sekmesinden başlayın.",
+    "goToContributes": "Katkılara Git"
   }
 }
 

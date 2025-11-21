@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { AIMarketBar } from "@/components/ai/AIMarketBar";
 import { PostComposer } from "@/components/post/PostComposer";
@@ -44,6 +45,7 @@ const buildSparkline = (price: number, change: number) => {
 };
 
 const Index = () => {
+  const { t } = useTranslation();
   const [signals, setSignals] = useState<PriceSignal[]>([]);
   const [loadingSignals, setLoadingSignals] = useState(false);
 
@@ -87,31 +89,31 @@ const Index = () => {
   const heroSnapshot = useMemo(
     () => [
       { 
-        label: "Total Users", 
+        label: t("home.totalUsers"), 
         value: metrics ? formatMetric(metrics.totalUsers) : (metricsQuery.isLoading ? "—" : "0")
       },
       { 
-        label: "Active Positions", 
+        label: t("home.activePositions"), 
         value: metrics ? formatMetric(metrics.activePositions) : (metricsQuery.isLoading ? "—" : "0")
       },
       { 
-        label: "Reputation Leaders", 
+        label: t("home.reputationLeaders"), 
         value: metrics ? formatMetric(metrics.reputationLeaders) : (metricsQuery.isLoading ? "—" : "0")
       },
       { 
-        label: "7d Burn", 
+        label: t("home.burn7d"), 
         value: metrics ? `${formatMetric(metrics.burn7d)} NOP` : (metricsQuery.isLoading ? "—" : "0 NOP")
       },
     ],
-    [metrics, metricsQuery.isLoading],
+    [metrics, metricsQuery.isLoading, t],
   );
 
   return (
-    <div className="space-y-4 lg:space-y-6">
+      <div className="space-y-4 lg:space-y-6">
         <DashboardCard className="space-y-4">
-          <DashboardSectionTitle label="Overview" title="NOP Intelligence Layer" />
+          <DashboardSectionTitle label={t("home.overview")} title={t("home.title")} />
           <p className="text-sm-2 leading-relaxed text-text-secondary">
-            Track social positions, AI signals, and community performance inside a single calm SocialFi command center.
+            {t("home.subtitle")}
           </p>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-4">
             {heroSnapshot.map((item) => (
@@ -129,7 +131,7 @@ const Index = () => {
         <div className="grid gap-5 lg:grid-cols-[minmax(0,2.1fr)_minmax(0,1.1fr)] lg:gap-6">
           <div className="space-y-4 lg:space-y-6">
             <DashboardCard className="space-y-4">
-              <DashboardSectionTitle label="Market" title="Market context" />
+              <DashboardSectionTitle label={t("home.market")} title={t("home.marketContext")} />
               <AIMarketBar />
               <div className="grid gap-3 md:grid-cols-2">
                 {microCharts.length > 0 && !loadingSignals
@@ -151,26 +153,26 @@ const Index = () => {
             </DashboardCard>
 
             <DashboardCard className="space-y-3">
-              <DashboardSectionTitle label="Community" title="Share intelligence" />
+              <DashboardSectionTitle label={t("home.community")} title={t("home.shareIntelligence")} />
               <PostComposer />
             </DashboardCard>
 
             <DashboardCard className="space-y-3">
-              <DashboardSectionTitle label="Feed" title="Live SocialFi stream" />
+              <DashboardSectionTitle label={t("home.feed")} title={t("home.liveStream")} />
               <FeedList />
             </DashboardCard>
 
             <DashboardCard className="space-y-3 lg:hidden">
               <DashboardSectionTitle
-                label="Contribute"
-                title="Discover NOP social pools"
-                description="Browse curated contributes and open on-chain social positions."
+                label={t("home.contribute")}
+                title={t("home.discoverPools")}
+                description={t("home.discoverDescription")}
               />
               <p className="text-sm-2 text-text-secondary">
-                Start from the Contributes tab to see which ideas the community is backing.
+                {t("home.startFromContributes")}
               </p>
               <Button asChild variant="accent" size="sm" className="w-full sm:w-auto">
-                <Link to="/contributes">Go to Contributes</Link>
+                <Link to="/contributes">{t("home.goToContributes")}</Link>
               </Button>
             </DashboardCard>
           </div>
