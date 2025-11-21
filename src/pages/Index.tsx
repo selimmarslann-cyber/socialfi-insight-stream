@@ -107,7 +107,7 @@ const Index = () => {
   );
 
   return (
-      <div className="space-y-4 lg:space-y-6">
+    <div className="space-y-4 lg:space-y-6">
         <DashboardCard className="space-y-4">
           <DashboardSectionTitle label="Overview" title="NOP Intelligence Layer" />
           <p className="text-sm-2 leading-relaxed text-text-secondary">
@@ -184,8 +184,8 @@ const Index = () => {
             </div>
           </aside>
         </div>
-      </div>
-    );
+    </div>
+  );
 };
 
 export default Index;
