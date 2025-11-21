@@ -14,6 +14,8 @@ import { useCurrentProfile } from "@/hooks/useCurrentProfile";
 import { isProfileBanned } from "@/lib/profile";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
+// TradeActions: Buy/Sell component for pool positions
+
 type TradeActionsProps = {
   contractPostId: number;
   onSettled?: () => Promise<void> | void;
