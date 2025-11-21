@@ -67,6 +67,26 @@
     "korean": "الكورية",
     "thai": "التايلاندية",
     "filipino": "الفلبينية (التاغالوغية)"
+  },
+  "home": {
+    "title": "طبقة ذكاء NOP",
+    "subtitle": "تتبع المواضع الاجتماعية وإشارات الذكاء الاصطناعي وأداء المجتمع داخل مركز قيادة SocialFi واحد هادئ.",
+    "overview": "نظرة عامة",
+    "totalUsers": "إجمالي المستخدمين",
+    "activePositions": "المواضع النشطة",
+    "reputationLeaders": "قادة السمعة",
+    "burn7d": "الحرق لمدة 7 أيام",
+    "market": "السوق",
+    "marketContext": "سياق السوق",
+    "community": "المجتمع",
+    "shareIntelligence": "مشاركة الذكاء",
+    "feed": "الخلاصة",
+    "liveStream": "بث SocialFi مباشر",
+    "contribute": "المساهمة",
+    "discoverPools": "اكتشف مجموعات NOP الاجتماعية",
+    "discoverDescription": "تصفح المساهمات المنسقة وافتح المواضع الاجتماعية على السلسلة.",
+    "startFromContributes": "ابدأ من علامة تبويب المساهمات لمعرفة الأفكار التي يدعمها المجتمع.",
+    "goToContributes": "انتقل إلى المساهمات"
   }
 }
 

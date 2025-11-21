@@ -67,6 +67,26 @@
     "korean": "เกาหลี",
     "thai": "ไทย",
     "filipino": "ฟิลิปปินส์ (ตากาล็อก)"
+  },
+  "home": {
+    "title": "NOP Intelligence Layer",
+    "subtitle": "ติดตามตำแหน่งทางสังคม สัญญาณ AI และประสิทธิภาพของชุมชนภายในศูนย์บัญชาการ SocialFi เดียวที่สงบ",
+    "overview": "ภาพรวม",
+    "totalUsers": "ผู้ใช้ทั้งหมด",
+    "activePositions": "ตำแหน่งที่ใช้งานอยู่",
+    "reputationLeaders": "ผู้นำด้านชื่อเสียง",
+    "burn7d": "การเผาไหม้ 7 วัน",
+    "market": "ตลาด",
+    "marketContext": "บริบทตลาด",
+    "community": "ชุมชน",
+    "shareIntelligence": "แบ่งปันข่าวกรอง",
+    "feed": "ฟีด",
+    "liveStream": "สตรีม SocialFi แบบสด",
+    "contribute": "มีส่วนร่วม",
+    "discoverPools": "ค้นพบพูลสังคม NOP",
+    "discoverDescription": "เรียกดูการมีส่วนร่วมที่คัดสรรแล้วและเปิดตำแหน่งทางสังคม on-chain",
+    "startFromContributes": "เริ่มจากแท็บการมีส่วนร่วมเพื่อดูแนวคิดที่ชุมชนสนับสนุน",
+    "goToContributes": "ไปที่การมีส่วนร่วม"
   }
 }
 

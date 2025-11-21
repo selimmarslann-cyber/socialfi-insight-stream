@@ -67,6 +67,26 @@
     "korean": "Bahasa Korea",
     "thai": "Bahasa Thailand",
     "filipino": "Bahasa Filipina (Tagalog)"
+  },
+  "home": {
+    "title": "NOP Intelligence Layer",
+    "subtitle": "Lacak posisi sosial, sinyal AI, dan kinerja komunitas di dalam satu pusat komando SocialFi yang tenang.",
+    "overview": "Ikhtisar",
+    "totalUsers": "Total Pengguna",
+    "activePositions": "Posisi Aktif",
+    "reputationLeaders": "Pemimpin Reputasi",
+    "burn7d": "Pembakaran 7 hari",
+    "market": "Pasar",
+    "marketContext": "Konteks pasar",
+    "community": "Komunitas",
+    "shareIntelligence": "Bagikan intelijen",
+    "feed": "Feed",
+    "liveStream": "Stream SocialFi langsung",
+    "contribute": "Berkontribusi",
+    "discoverPools": "Temukan pool sosial NOP",
+    "discoverDescription": "Jelajahi kontribusi yang dikurasi dan buka posisi sosial on-chain.",
+    "startFromContributes": "Mulai dari tab Kontribusi untuk melihat ide-ide yang didukung komunitas.",
+    "goToContributes": "Buka ke Kontribusi"
   }
 }
 

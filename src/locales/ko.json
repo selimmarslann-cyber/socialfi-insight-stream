@@ -67,6 +67,26 @@
     "korean": "한국어",
     "thai": "태국어",
     "filipino": "필리핀어 (타갈로그어)"
+  },
+  "home": {
+    "title": "NOP Intelligence Layer",
+    "subtitle": "단일 차분한 SocialFi 명령 센터 내에서 소셜 포지션, AI 신호 및 커뮤니티 성능을 추적하세요.",
+    "overview": "개요",
+    "totalUsers": "총 사용자",
+    "activePositions": "활성 포지션",
+    "reputationLeaders": "평판 리더",
+    "burn7d": "7일 소각",
+    "market": "시장",
+    "marketContext": "시장 맥락",
+    "community": "커뮤니티",
+    "shareIntelligence": "지능 공유",
+    "feed": "피드",
+    "liveStream": "라이브 SocialFi 스트림",
+    "contribute": "기여",
+    "discoverPools": "NOP 소셜 풀 발견",
+    "discoverDescription": "큐레이션된 기여를 탐색하고 온체인 소셜 포지션을 엽니다.",
+    "startFromContributes": "커뮤니티가 지원하는 아이디어를 보려면 기여 탭에서 시작하세요.",
+    "goToContributes": "기여로 이동"
   }
 }
 

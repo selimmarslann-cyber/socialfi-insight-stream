@@ -67,6 +67,26 @@
     "korean": "कोरियाई",
     "thai": "थाई",
     "filipino": "फिलिपिनो (टैगालोग)"
+  },
+  "home": {
+    "title": "NOP Intelligence Layer",
+    "subtitle": "एक शांत SocialFi कमांड सेंटर के अंदर सामाजिक पदों, AI संकेतों और समुदाय के प्रदर्शन को ट्रैक करें।",
+    "overview": "अवलोकन",
+    "totalUsers": "कुल उपयोगकर्ता",
+    "activePositions": "सक्रिय पद",
+    "reputationLeaders": "प्रतिष्ठा नेता",
+    "burn7d": "7 दिन जलाना",
+    "market": "बाजार",
+    "marketContext": "बाजार संदर्भ",
+    "community": "समुदाय",
+    "shareIntelligence": "खुफिया साझा करें",
+    "feed": "फीड",
+    "liveStream": "लाइव SocialFi स्ट्रीम",
+    "contribute": "योगदान",
+    "discoverPools": "NOP सामाजिक पूल खोजें",
+    "discoverDescription": "क्यूरेटेड योगदान ब्राउज़ करें और ऑन-चेन सामाजिक पद खोलें।",
+    "startFromContributes": "यह देखने के लिए कि समुदाय किन विचारों का समर्थन कर रहा है, योगदान टैब से शुरू करें।",
+    "goToContributes": "योगदान पर जाएं"
   }
 }
 

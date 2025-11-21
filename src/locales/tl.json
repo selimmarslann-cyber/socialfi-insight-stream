@@ -67,6 +67,26 @@
     "korean": "Koreano",
     "thai": "Thai",
     "filipino": "Filipino (Tagalog)"
+  },
+  "home": {
+    "title": "NOP Intelligence Layer",
+    "subtitle": "Subaybayan ang mga social position, AI signal, at performance ng komunidad sa loob ng isang tahimik na SocialFi command center.",
+    "overview": "Pangkalahatang-ideya",
+    "totalUsers": "Kabuuang Mga User",
+    "activePositions": "Aktibong Posisyon",
+    "reputationLeaders": "Mga Lider ng Reputasyon",
+    "burn7d": "7 Araw na Pagkasunog",
+    "market": "Pamilihan",
+    "marketContext": "Konteksto ng Pamilihan",
+    "community": "Komunidad",
+    "shareIntelligence": "Ibahagi ang Intelligence",
+    "feed": "Feed",
+    "liveStream": "Live SocialFi Stream",
+    "contribute": "Mag-ambag",
+    "discoverPools": "Tuklasin ang NOP Social Pools",
+    "discoverDescription": "Mag-browse ng mga curated na kontribusyon at magbukas ng on-chain social position.",
+    "startFromContributes": "Magsimula sa tab ng Kontribusyon upang makita kung aling mga ideya ang sinusuportahan ng komunidad.",
+    "goToContributes": "Pumunta sa Kontribusyon"
   }
 }
 

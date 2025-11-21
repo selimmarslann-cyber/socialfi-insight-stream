@@ -67,6 +67,26 @@
     "korean": "Tiếng Hàn",
     "thai": "Tiếng Thái",
     "filipino": "Tiếng Philippines (Tagalog)"
+  },
+  "home": {
+    "title": "NOP Intelligence Layer",
+    "subtitle": "Theo dõi vị thế xã hội, tín hiệu AI và hiệu suất cộng đồng trong một trung tâm chỉ huy SocialFi yên tĩnh duy nhất.",
+    "overview": "Tổng quan",
+    "totalUsers": "Tổng người dùng",
+    "activePositions": "Vị thế hoạt động",
+    "reputationLeaders": "Lãnh đạo danh tiếng",
+    "burn7d": "Đốt 7 ngày",
+    "market": "Thị trường",
+    "marketContext": "Bối cảnh thị trường",
+    "community": "Cộng đồng",
+    "shareIntelligence": "Chia sẻ thông tin tình báo",
+    "feed": "Nguồn cấp",
+    "liveStream": "Luồng SocialFi trực tiếp",
+    "contribute": "Đóng góp",
+    "discoverPools": "Khám phá các nhóm xã hội NOP",
+    "discoverDescription": "Duyệt qua các đóng góp được quản lý và mở các vị thế xã hội on-chain.",
+    "startFromContributes": "Bắt đầu từ tab Đóng góp để xem những ý tưởng mà cộng đồng đang ủng hộ.",
+    "goToContributes": "Đi đến Đóng góp"
   }
 }
 
