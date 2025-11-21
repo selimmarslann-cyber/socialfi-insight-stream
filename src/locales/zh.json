@@ -67,6 +67,26 @@
     "korean": "韩语",
     "thai": "泰语",
     "filipino": "菲律宾语（他加禄语）"
+  },
+  "home": {
+    "title": "NOP Intelligence Layer",
+    "subtitle": "在单一平静的SocialFi指挥中心内跟踪社交头寸、AI信号和社区表现。",
+    "overview": "概览",
+    "totalUsers": "总用户数",
+    "activePositions": "活跃头寸",
+    "reputationLeaders": "声誉领袖",
+    "burn7d": "7天销毁",
+    "market": "市场",
+    "marketContext": "市场背景",
+    "community": "社区",
+    "shareIntelligence": "分享情报",
+    "feed": "动态",
+    "liveStream": "实时SocialFi流",
+    "contribute": "贡献",
+    "discoverPools": "发现NOP社交池",
+    "discoverDescription": "浏览精选贡献并开启链上社交头寸。",
+    "startFromContributes": "从贡献标签页开始，查看社区支持的想法。",
+    "goToContributes": "前往贡献"
   }
 }
 

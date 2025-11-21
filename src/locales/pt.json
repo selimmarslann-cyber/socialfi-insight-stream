@@ -67,6 +67,26 @@
     "korean": "Coreano",
     "thai": "Tailandês",
     "filipino": "Filipino (Tagalog)"
+  },
+  "home": {
+    "title": "NOP Intelligence Layer",
+    "subtitle": "Acompanhe posições sociais, sinais de IA e desempenho da comunidade em um único centro de comando SocialFi tranquilo.",
+    "overview": "Visão Geral",
+    "totalUsers": "Total de Usuários",
+    "activePositions": "Posições Ativas",
+    "reputationLeaders": "Líderes de Reputação",
+    "burn7d": "Queima 7d",
+    "market": "Mercado",
+    "marketContext": "Contexto do mercado",
+    "community": "Comunidade",
+    "shareIntelligence": "Compartilhar inteligência",
+    "feed": "Feed",
+    "liveStream": "Transmissão ao vivo SocialFi",
+    "contribute": "Contribuir",
+    "discoverPools": "Descubra pools sociais NOP",
+    "discoverDescription": "Navegue por contribuições curadas e abra posições sociais on-chain.",
+    "startFromContributes": "Comece pela aba Contribuições para ver quais ideias a comunidade está apoiando.",
+    "goToContributes": "Ir para Contribuições"
   }
 }
 
