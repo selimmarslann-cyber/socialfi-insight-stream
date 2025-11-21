@@ -85,28 +85,28 @@ const Index = () => {
   const metrics = metricsQuery.data;
 
   const heroSnapshot = useMemo(
-      () => [
-        { 
-          label: "Total Users", 
-          value: metrics ? formatMetric(metrics.totalUsers) : (metricsQuery.isLoading ? "—" : "0")
-        },
-        { 
-          label: "Active Positions", 
-          value: metrics ? formatMetric(metrics.activePositions) : (metricsQuery.isLoading ? "—" : "0")
-        },
-        { 
-          label: "Reputation Leaders", 
-          value: metrics ? formatMetric(metrics.reputationLeaders) : (metricsQuery.isLoading ? "—" : "0")
-        },
-        { 
-          label: "7d Burn", 
-          value: metrics ? `${formatMetric(metrics.burn7d)} NOP` : (metricsQuery.isLoading ? "—" : "0 NOP")
-        },
-      ],
-      [metrics, metricsQuery.isLoading],
-    );
+    () => [
+      { 
+        label: "Total Users", 
+        value: metrics ? formatMetric(metrics.totalUsers) : (metricsQuery.isLoading ? "—" : "0")
+      },
+      { 
+        label: "Active Positions", 
+        value: metrics ? formatMetric(metrics.activePositions) : (metricsQuery.isLoading ? "—" : "0")
+      },
+      { 
+        label: "Reputation Leaders", 
+        value: metrics ? formatMetric(metrics.reputationLeaders) : (metricsQuery.isLoading ? "—" : "0")
+      },
+      { 
+        label: "7d Burn", 
+        value: metrics ? `${formatMetric(metrics.burn7d)} NOP` : (metricsQuery.isLoading ? "—" : "0 NOP")
+      },
+    ],
+    [metrics, metricsQuery.isLoading],
+  );
 
-    return (
+  return (
       <div className="space-y-4 lg:space-y-6">
         <DashboardCard className="space-y-4">
           <DashboardSectionTitle label="Overview" title="NOP Intelligence Layer" />
