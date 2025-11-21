@@ -97,57 +97,156 @@ export default function BoostedTasks() {
       return;
     }
     try {
-      const { user } = await getUserSafe();
-      const supabaseUserId = user?.id ?? null;
-      const [{ data: tasks, error: tasksError }, { data: userTasks, error: userTasksError }] =
-        await Promise.all([
-          sb
+      // Fetch boosted tasks
+      const { data: tasks, error: tasksError } = await sb
+        .from<BoostedTaskRow>("boosted_tasks")
+        .select("*")
+        .eq("is_active", true)
+        .order("order_index", { ascending: true });
+
+      if (tasksError) {
+        // If table doesn't exist or is empty, create default tasks
+        if (tasksError.code === "42P01" || (tasks && tasks.length === 0)) {
+          // Initialize default tasks if table is empty
+          const defaultTasks = [
+            {
+              code: "signup",
+              title: "Connect Wallet",
+              description: "Connect your wallet to get started",
+              reward_nop: 2000,
+              order_index: 1,
+              is_active: true,
+            },
+            {
+              code: "contribute",
+              title: "Create Your First Post",
+              description: "Share your first contribution with the community",
+              reward_nop: 3000,
+              order_index: 2,
+              is_active: true,
+            },
+            {
+              code: "deposit",
+              title: "Make Your First Investment",
+              description: "Invest in a contribution to unlock rewards",
+              reward_nop: 5000,
+              order_index: 3,
+              is_active: true,
+            },
+          ];
+
+          // Try to insert default tasks (ignore if they already exist)
+          for (const task of defaultTasks) {
+            try {
+              await sb.from("boosted_tasks").insert(task).select().single();
+            } catch (insertError) {
+              // Ignore duplicate errors
+              console.warn("[BoostedTasks] Could not insert default task", insertError);
+            }
+          }
+
+          // Retry fetching tasks
+          const { data: retryTasks } = await sb
             .from<BoostedTaskRow>("boosted_tasks")
             .select("*")
             .eq("is_active", true)
-            .order("order_index", { ascending: true }),
-          supabaseUserId
-            ? sb
-                .from<UserTaskRow>("user_tasks")
-                .select("*")
-                .eq("user_id", supabaseUserId)
-            : Promise.resolve({ data: [], error: null }),
-        ]);
+            .order("order_index", { ascending: true });
 
-      if (tasksError) {
-        throw tasksError;
-      }
-      if (userTasksError) {
-        throw userTasksError;
-      }
+          if (retryTasks && retryTasks.length > 0) {
+            // Process with retryTasks
+            const walletClaims = walletKey ? getWalletClaimsFor(walletKey) : {};
+            const canClaim = Boolean(walletKey);
 
-      const userTaskMap = new Map<string, UserTaskRow>();
-      (userTasks ?? []).forEach((record) => {
-        userTaskMap.set(record.task_id, record);
-      });
+            // Check task completion status based on wallet
+            const nextState: TaskView[] = retryTasks.map((task) => {
+              const code = task.code ?? "";
+              const iconVariant = iconKeyMap[code] ?? "default";
+              const claimedViaWallet = walletKey && walletClaims ? Boolean(walletClaims[task.id]) : false;
 
-      const walletClaims = walletKey ? getWalletClaimsFor(walletKey) : {};
+              // Determine if task is completed
+              let isCompleted = false;
+              if (walletKey) {
+                if (code === "signup") {
+                  // Signup is completed if wallet is connected
+                  isCompleted = true;
+                } else if (code === "contribute") {
+                  // Check if user has created a post
+                  // This will be checked dynamically
+                  isCompleted = false;
+                } else if (code === "deposit") {
+                  // Check if user has made an investment
+                  // This will be checked dynamically
+                  isCompleted = false;
+                }
+              }
 
-      if (!supabaseUserId) {
-        if (walletKey) {
-          setNotice("Demo mod: Claimler cüzdanına yerel olarak kaydediliyor.");
+              const derivedState: TaskState = claimedViaWallet
+                ? "claimed"
+                : isCompleted && canClaim
+                ? "ready"
+                : canClaim
+                ? "ready"
+                : "locked";
+
+              return { ...task, iconVariant, state: derivedState };
+            });
+
+            setState(nextState);
+            return;
+          }
         } else {
-          setNotice("Ödülleri almak için cüzdanını bağla.");
+          throw tasksError;
         }
       }
 
-      const canClaim = Boolean(supabaseUserId || walletKey);
-      const nextState: TaskView[] = (tasks ?? []).map((task) => {
-        const record = userTaskMap.get(task.id);
+      // If tasks exist, process them
+      if (!tasks || tasks.length === 0) {
+        setState([]);
+        if (!walletKey) {
+          setNotice("Ödülleri almak için cüzdanını bağla.");
+        }
+        return;
+      }
+
+      // Fetch user tasks by wallet_address (wallet-based)
+      let userTasks: UserTaskRow[] = [];
+      if (walletKey) {
+        // Try to get profile ID from wallet
+        const { data: profile } = await sb
+          .from("social_profiles")
+          .select("id")
+          .eq("wallet_address", walletKey)
+          .maybeSingle();
+
+        if (profile?.id) {
+          // For now, we'll use wallet-based claims stored in localStorage
+          // In the future, we can create a wallet_tasks table
+        }
+      }
+
+      const walletClaims = walletKey ? getWalletClaimsFor(walletKey) : {};
+      const canClaim = Boolean(walletKey);
+
+      // Check task completion dynamically
+      const nextState: TaskView[] = tasks.map((task) => {
         const code = task.code ?? "";
         const iconVariant = iconKeyMap[code] ?? "default";
+        const claimedViaWallet = walletKey && walletClaims ? Boolean(walletClaims[task.id]) : false;
 
-        const claimedViaWallet =
-          walletKey && walletClaims ? Boolean(walletClaims[task.id]) : false;
-        const claimed = record?.status === "claimed" || claimedViaWallet;
+        // Determine if task is completed (will be checked dynamically)
+        let isCompleted = false;
+        if (walletKey) {
+          if (code === "signup") {
+            // Signup is completed if wallet is connected
+            isCompleted = true;
+          }
+          // Other tasks will be checked in real-time
+        }
 
-        const derivedState: TaskState = claimed
+        const derivedState: TaskState = claimedViaWallet
           ? "claimed"
+          : isCompleted && canClaim
+          ? "ready"
           : canClaim
           ? "ready"
           : "locked";
@@ -156,7 +255,12 @@ export default function BoostedTasks() {
       });
 
       setState(nextState);
+
+      if (!walletKey) {
+        setNotice("Ödülleri almak için cüzdanını bağla.");
+      }
     } catch (error) {
+      console.error("[BoostedTasks] Refresh error", error);
       setErr(getErrorMessage(error, "Görevler yüklenemedi."));
       setState([]);
     }
@@ -173,45 +277,72 @@ export default function BoostedTasks() {
     }
     setBusy(taskId);
     try {
-      const { user } = await getUserSafe();
-      if (user) {
-        if (!sb) {
-          throw new Error(supabaseAdminHint);
-        }
-        const now = new Date().toISOString();
-        const { error } = await sb.from("user_tasks").upsert(
-          {
-            user_id: user.id,
-            task_id: taskId,
-            status: "claimed",
-            completed_at: now,
-            claimed_at: now,
-          },
-          { onConflict: "user_id,task_id" },
-        );
-        if (error) {
-          throw error;
-        }
-        await refresh();
-        return;
+      if (!walletKey) {
+        throw new Error("Önce cüzdan bağla.");
       }
 
-      if (walletKey) {
-        markWalletClaim(walletKey, taskId);
-        const reward = Number(task.reward_nop ?? 0);
-        if (reward > 0) {
-          grantNop?.(reward);
+      // Check if task is actually completed
+      let isTaskCompleted = false;
+      if (task.code === "signup") {
+        // Signup is always completed if wallet is connected
+        isTaskCompleted = true;
+      } else if (task.code === "contribute") {
+        // Check if user has created at least one post
+        if (sb) {
+          const { data: posts } = await sb
+            .from("social_posts")
+            .select("id")
+            .eq("wallet_address", walletKey)
+            .limit(1);
+          isTaskCompleted = (posts?.length ?? 0) > 0;
         }
-        setState((prev) =>
-          prev.map((entry) =>
-            entry.id === taskId ? { ...entry, state: "claimed" } : entry,
-          ),
-        );
-        setNotice("Claim kaydedildi (demo).");
-        return;
+      } else if (task.code === "deposit") {
+        // Check if user has made at least one investment
+        if (sb) {
+          const { data: trades } = await sb
+            .from("nop_trades")
+            .select("id")
+            .eq("wallet_address", walletKey)
+            .eq("side", "buy")
+            .limit(1);
+          isTaskCompleted = (trades?.length ?? 0) > 0;
+        }
       }
 
-      throw new Error("Önce cüzdan bağla veya giriş yap.");
+      if (!isTaskCompleted) {
+        throw new Error("Bu görevi tamamlamak için gerekli şartları sağlamalısınız.");
+      }
+
+      // Mark as claimed in localStorage (wallet-based)
+      markWalletClaim(walletKey, taskId);
+      const reward = Number(task.reward_nop ?? 0);
+      if (reward > 0) {
+        grantNop?.(reward);
+      }
+
+      // Update state optimistically
+      setState((prev) =>
+        prev.map((entry) =>
+          entry.id === taskId ? { ...entry, state: "claimed" } : entry,
+        ),
+      );
+
+      // Try to save to database if profile exists
+      if (sb) {
+        const { data: profile } = await sb
+          .from("social_profiles")
+          .select("id")
+          .eq("wallet_address", walletKey)
+          .maybeSingle();
+
+        if (profile?.id) {
+          // Try to save to user_tasks if table exists and has wallet_address column
+          // For now, we'll just use localStorage
+        }
+      }
+
+      setNotice("Ödül başarıyla alındı!");
+      await refresh();
     } catch (error) {
       setErr(getErrorMessage(error, "Claim başarısız."));
     } finally {

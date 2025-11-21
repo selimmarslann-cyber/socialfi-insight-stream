@@ -468,15 +468,25 @@ with check (true);
 
 drop policy if exists "social_posts_delete_admin" on public.social_posts;
 drop policy if exists "social_posts_delete_own" on public.social_posts;
+-- Allow deletion if:
+-- 1. Service role (backend/admin operations)
+-- 2. User is the owner (wallet_address matches)
+-- 3. User is admin (checked via is_admin() function)
+-- Note: Admin check and investment validation should be done in application layer
 create policy "social_posts_delete_own"
 on public.social_posts
 for delete
 using (
   (select auth.role()) = 'service_role'
-  or (
-    lower(wallet_address) = lower(coalesce((select wallet_address from public.social_profiles where id = (select auth.uid())), ''))
-  )
   or public.is_admin()
+  or exists (
+    select 1 from public.social_profiles
+    where lower(wallet_address) = lower(social_posts.wallet_address)
+    and lower(wallet_address) = lower(coalesce(
+      (select wallet_address from public.social_profiles where id = (select auth.uid())),
+      ''
+    ))
+  )
 );
 
 drop policy if exists "social_posts_update_admin" on public.social_posts;

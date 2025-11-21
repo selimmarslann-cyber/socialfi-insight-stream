@@ -72,28 +72,136 @@ export const WalletConnectButton = () => {
     }
   }, [isModalOpen, inviterCode]);
 
-  // Restore wallet connection on page load if persisted
+  // Persistent wallet connection - auto-reconnect on page load and navigation
   useEffect(() => {
-    if (connected && address && provider === 'metamask' && typeof window !== 'undefined' && window.ethereum) {
-      // Check if MetaMask is still connected
-      window.ethereum
-        .request({ method: 'eth_accounts' })
-        .then((accounts: string[]) => {
-          if (accounts.length > 0 && accounts[0].toLowerCase() === address.toLowerCase()) {
-            // Wallet is still connected, ensure state is synced
-            const currentChainId = useWalletStore.getState().chainId;
-            connect(address, { provider: 'metamask', chainId: currentChainId });
-          } else {
-            // Wallet disconnected, clear state
-            disconnect();
-          }
-        })
-        .catch(() => {
-          // MetaMask not available or error, keep persisted state but mark as potentially disconnected
-          console.warn('[WalletConnect] Could not verify MetaMask connection');
-        });
+    if (!connected || !address || !provider) {
+      // Try to restore from persisted state
+      const persistedState = useWalletStore.getState();
+      if (persistedState.connected && persistedState.address && persistedState.provider) {
+        // Restore connection
+        if (persistedState.provider === 'metamask' && typeof window !== 'undefined' && window.ethereum) {
+          // Verify MetaMask connection
+          window.ethereum
+            .request({ method: 'eth_accounts' })
+            .then((accounts: string[]) => {
+              if (accounts.length > 0) {
+                const account = accounts[0].toLowerCase();
+                if (account === persistedState.address?.toLowerCase()) {
+                  // Wallet is still connected, restore state
+                  connect(persistedState.address, {
+                    provider: persistedState.provider,
+                    chainId: persistedState.chainId,
+                    inviterCode: persistedState.inviterCode,
+                  });
+                } else {
+                  // Different account connected, update to new account
+                  connect(account, {
+                    provider: persistedState.provider,
+                    chainId: persistedState.chainId,
+                    inviterCode: persistedState.inviterCode,
+                  });
+                }
+              } else {
+                // No accounts, but keep persisted state for non-MetaMask providers
+                if (persistedState.provider !== 'metamask') {
+                  connect(persistedState.address, {
+                    provider: persistedState.provider,
+                    chainId: persistedState.chainId,
+                    inviterCode: persistedState.inviterCode,
+                  });
+                }
+              }
+            })
+            .catch(() => {
+              // MetaMask not available, but keep persisted state for other providers
+              if (persistedState.provider !== 'metamask') {
+                connect(persistedState.address, {
+                  provider: persistedState.provider,
+                  chainId: persistedState.chainId,
+                  inviterCode: persistedState.inviterCode,
+                });
+              }
+            });
+        } else if (persistedState.provider === 'trust' || persistedState.provider === 'email') {
+          // Trust Wallet or Email - restore from persisted state
+          connect(persistedState.address, {
+            provider: persistedState.provider,
+            chainId: persistedState.chainId,
+            inviterCode: persistedState.inviterCode,
+          });
+        }
+      }
+      return;
     }
-  }, []); // Only run on mount
+
+    // If already connected, verify and maintain connection
+    if (provider === 'metamask' && typeof window !== 'undefined' && window.ethereum) {
+      // Verify MetaMask connection periodically
+      const verifyConnection = () => {
+        window.ethereum
+          ?.request({ method: 'eth_accounts' })
+          .then((accounts: string[]) => {
+            if (accounts.length > 0) {
+              const account = accounts[0].toLowerCase();
+              if (account !== address?.toLowerCase()) {
+                // Account changed, update state
+                connect(account, {
+                  provider: 'metamask',
+                  chainId: useWalletStore.getState().chainId,
+                  inviterCode: useWalletStore.getState().inviterCode,
+                });
+              }
+            } else if (address) {
+              // Accounts empty but we have address - might be locked, keep state
+              // Don't disconnect, just keep the persisted state
+            }
+          })
+          .catch(() => {
+            // Error checking, keep current state
+          });
+      };
+
+      // Verify on mount
+      verifyConnection();
+
+      // Listen for account changes
+      const handleAccountsChanged = (accounts: string[]) => {
+        if (accounts.length > 0) {
+          const account = accounts[0].toLowerCase();
+          if (account !== address?.toLowerCase()) {
+            connect(account, {
+              provider: 'metamask',
+              chainId: useWalletStore.getState().chainId,
+              inviterCode: useWalletStore.getState().inviterCode,
+            });
+          }
+        } else {
+          // User disconnected from MetaMask, but keep our state (they might reconnect)
+          // Only disconnect if they explicitly disconnect from our UI
+        }
+      };
+
+      // Listen for chain changes
+      const handleChainChanged = (chainId: string) => {
+        const newChainId = Number.parseInt(chainId, 16);
+        useWalletStore.getState().setChainId(newChainId);
+      };
+
+      // Add event listeners
+      if (window.ethereum.on) {
+        window.ethereum.on('accountsChanged', handleAccountsChanged);
+        window.ethereum.on('chainChanged', handleChainChanged);
+      }
+
+      // Cleanup
+      return () => {
+        if (window.ethereum?.removeListener) {
+          window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+          window.ethereum.removeListener('chainChanged', handleChainChanged);
+        }
+      };
+    }
+  }, [connected, address, provider, connect, disconnect]);
 
   const handleModalChange = (open: boolean) => {
     setModalOpen(open);
@@ -102,7 +210,7 @@ export const WalletConnectButton = () => {
     }
   };
 
-  const handleConnect = (selectedProvider: 'metamask' | 'trust' | 'email') => {
+  const handleConnect = async (selectedProvider: 'metamask' | 'trust' | 'email') => {
     const trimmed = referralInput.trim();
     const normalizedRef = trimmed ? trimmed.toLowerCase() : undefined;
 
@@ -116,11 +224,6 @@ export const WalletConnectButton = () => {
       return;
     }
 
-    const addresses: Record<'metamask' | 'trust', string> = {
-      metamask: '0x742d35Cc6634C0532925a3b844Bc9e7595f0aB12',
-      trust: '0x3fD5a019867d8bB6d1A7f0d9033B4F2F4eAaC345',
-    };
-
     const label = providerLabels[selectedProvider];
 
     // Get active chain ID from config (synchronous)
@@ -133,14 +236,55 @@ export const WalletConnectButton = () => {
       // Fallback to default
     }
 
-    connect(addresses[selectedProvider], {
-      provider: selectedProvider,
-      inviterCode: normalizedRef,
-      chainId: targetChainId,
-    });
+    // For MetaMask, request actual connection
+    if (selectedProvider === 'metamask' && typeof window !== 'undefined' && window.ethereum) {
+      try {
+        // Request account access
+        const accounts = await window.ethereum.request({
+          method: 'eth_requestAccounts',
+        });
+        
+        if (accounts && accounts.length > 0) {
+          const account = accounts[0].toLowerCase();
+          // Get current chain ID
+          const chainIdHex = await window.ethereum.request({ method: 'eth_chainId' });
+          const currentChainId = Number.parseInt(chainIdHex as string, 16);
+          
+          connect(account, {
+            provider: 'metamask',
+            inviterCode: normalizedRef,
+            chainId: currentChainId || targetChainId,
+          });
+          
+          toast.success(`${label} bağlantısı başarılı!`);
+          handleModalChange(false);
+        } else {
+          toast.error('MetaMask hesabı seçilmedi');
+        }
+      } catch (error) {
+        console.error('[WalletConnect] MetaMask connection error', error);
+        if ((error as { code?: number })?.code === 4001) {
+          toast.error('MetaMask bağlantısı reddedildi');
+        } else {
+          toast.error('MetaMask bağlantısı başarısız');
+        }
+      }
+    } else {
+      // For Trust Wallet or fallback, use mock addresses
+      const addresses: Record<'metamask' | 'trust', string> = {
+        metamask: '0x742d35Cc6634C0532925a3b844Bc9e7595f0aB12',
+        trust: '0x3fD5a019867d8bB6d1A7f0d9033B4F2F4eAaC345',
+      };
 
-    toast.success(`${label} bağlantısı hazır!`);
-    handleModalChange(false);
+      connect(addresses[selectedProvider], {
+        provider: selectedProvider,
+        inviterCode: normalizedRef,
+        chainId: targetChainId,
+      });
+
+      toast.success(`${label} bağlantısı hazır!`);
+      handleModalChange(false);
+    }
   };
 
   const handleCopyAddress = () => {
@@ -158,6 +302,8 @@ export const WalletConnectButton = () => {
   };
 
   const handleDisconnect = () => {
+    // Only disconnect if user explicitly clicks disconnect
+    // This prevents accidental disconnections
     disconnect();
     toast.info('Cüzdan bağlantısı kesildi');
   };

@@ -28,6 +28,9 @@ const parser = new Parser<CustomItem>({
     item: [
       ["media:content", "mediaContent", { keepArray: true }],
       ["media:thumbnail", "mediaThumbnail", { keepArray: true }],
+      ["content:encoded", "content", { keepArray: false }],
+      ["content", "content", { keepArray: false }],
+      ["description", "description", { keepArray: false }],
     ],
   },
 });
@@ -41,12 +44,15 @@ const HEADERS = {
 
 const DEFAULT_IMAGE = "/placeholder.svg";
 const CACHE_TTL_MS = 60 * 1000;
-const REQUIRED_ITEMS = 3;
-const MAX_ITEMS = REQUIRED_ITEMS;
+const REQUIRED_ITEMS = 6;
+const MAX_ITEMS = 6;
 const FALLBACK_FEEDS = [
   "https://decrypt.co/feed",
   "https://cointelegraph.com/rss",
   "https://www.coindesk.com/arc/outboundfeeds/rss/",
+  "https://www.theblock.co/rss.xml",
+  "https://bitcoinmagazine.com/.rss/full/",
+  "https://www.coinbase.com/blog/rss.xml",
 ] as const;
 
 type CacheBucket = {
@@ -98,15 +104,45 @@ const sanitizeImageUrl = (value?: string): string | undefined => {
   }
 };
 
-const pickImageFromItem = (item: CustomItem): string | undefined => {
+const pickImageFromItem = (item: CustomItem, link?: string): string | undefined => {
+  // Try enclosure first (most reliable)
   const enclosure = Array.isArray(item.enclosure) ? item.enclosure[0] : item.enclosure;
   if (enclosure?.url) {
-    return sanitizeImageUrl(enclosure.url);
+    const url = sanitizeImageUrl(enclosure.url);
+    if (url) return url;
   }
+  
+  // Try media:content and media:thumbnail
   const media =
     item.mediaContent?.find((entry) => entry?.$?.url)?.$?.url ??
     item.mediaThumbnail?.find((entry) => entry?.$?.url)?.$?.url;
-  return sanitizeImageUrl(media);
+  if (media) {
+    const url = sanitizeImageUrl(media);
+    if (url) return url;
+  }
+
+  // Try to extract from content/description HTML
+  const content = (item as any).content || (item as any).description || "";
+  if (typeof content === "string" && content.length > 0) {
+    // Look for img tags
+    const imgMatch = content.match(/<img[^>]+src=["']([^"']+)["']/i);
+    if (imgMatch && imgMatch[1]) {
+      const url = sanitizeImageUrl(imgMatch[1]);
+      if (url) return url;
+    }
+    // Look for og:image or twitter:image meta tags
+    const ogImageMatch = content.match(/property=["']og:image["'][^>]+content=["']([^"']+)["']/i);
+    if (ogImageMatch && ogImageMatch[1]) {
+      const url = sanitizeImageUrl(ogImageMatch[1]);
+      if (url) return url;
+    }
+  }
+
+  // Try to get image from link's Open Graph (if link is provided)
+  // This would require fetching the page, so we'll skip for now
+  // and rely on the RSS feed's own image data
+
+  return undefined;
 };
 
 const normalizeItem = (
@@ -126,10 +162,14 @@ const normalizeItem = (
     return null;
   }
 
-  const image = pickImageFromItem(item);
+  // Try to get image from various sources
+  let image = pickImageFromItem(item, link);
+  
+  // If no image found, use default
   if (!image) {
-    return null;
+    image = DEFAULT_IMAGE;
   }
+
   const identifier = item.guid ?? `${source}-${link}`;
 
   return {
@@ -190,11 +230,17 @@ const fetchAllFeeds = async (): Promise<RemoteNewsItem[]> => {
     (a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime(),
   );
 
+  // Prioritize items with images, but don't filter out items without images
+  // We'll return up to MAX_ITEMS, prioritizing those with images
   const withImages = deduped.filter(
     (item) => item.imageUrl && item.imageUrl !== DEFAULT_IMAGE,
   );
-  const prioritized =
-    withImages.length >= REQUIRED_ITEMS ? withImages : deduped;
+  const withoutImages = deduped.filter(
+    (item) => !item.imageUrl || item.imageUrl === DEFAULT_IMAGE,
+  );
+
+  // Combine: first items with images, then items without images
+  const prioritized = [...withImages, ...withoutImages];
 
   return prioritized.slice(0, MAX_ITEMS);
 };

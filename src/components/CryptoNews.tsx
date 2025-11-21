@@ -101,6 +101,19 @@ const timeFormatter = new Intl.RelativeTimeFormat("en", {
   numeric: "auto",
 });
 
+// Generate a consistent color for a source name
+const getSourceColor = (source: string): string => {
+  let hash = 0;
+  for (let i = 0; i < source.length; i++) {
+    hash = source.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  // Generate a color in the range of 4-9 (darker colors for better contrast)
+  const color = Math.abs(hash) % 6 + 4;
+  // Use a palette of nice colors
+  const colors = ["4A90E2", "50C878", "FF6B6B", "FFA500", "9B59B6", "E74C3C"];
+  return colors[Math.abs(hash) % colors.length];
+};
+
 const toRelativeTime = (value: string): string => {
   const published = new Date(value).getTime();
   if (Number.isNaN(published)) {
@@ -182,17 +195,40 @@ export default function CryptoNews({ className }: CryptoNewsProps) {
             rel="noreferrer"
             className="group flex items-center gap-3 rounded-[16px] border border-border-subtle bg-surface px-3 py-2 transition hover:border-ring-subtle hover:bg-surface-muted"
           >
-            <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-xl border border-border-subtle bg-surface-muted">
-          <img
-            src={item.imageUrl || FALLBACK_IMAGE}
-            alt={item.source}
-            className="h-full w-full object-cover"
-            loading="lazy"
-            onError={(event) => {
-              event.currentTarget.onerror = null;
-              event.currentTarget.src = FALLBACK_IMAGE;
-            }}
-          />
+            <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-xl border border-border-subtle bg-surface-muted relative">
+          {item.imageUrl && item.imageUrl !== FALLBACK_IMAGE ? (
+            <>
+              <img
+                src={item.imageUrl}
+                alt={item.source}
+                className="h-full w-full object-cover"
+                loading="lazy"
+                onError={(event) => {
+                  const target = event.currentTarget;
+                  target.onerror = null;
+                  target.style.display = "none";
+                  // Show fallback div
+                  const fallback = target.nextElementSibling as HTMLElement;
+                  if (fallback) {
+                    fallback.style.display = "flex";
+                  }
+                }}
+              />
+              <div 
+                className="h-full w-full absolute inset-0 hidden items-center justify-center text-white text-xs font-bold"
+                style={{ backgroundColor: `#${getSourceColor(item.source)}` }}
+              >
+                {item.source.charAt(0).toUpperCase()}
+              </div>
+            </>
+          ) : (
+            <div 
+              className="h-full w-full flex items-center justify-center text-white text-xs font-bold"
+              style={{ backgroundColor: `#${getSourceColor(item.source)}` }}
+            >
+              {item.source.charAt(0).toUpperCase()}
+            </div>
+          )}
         </div>
             <div className="min-w-0 flex-1">
               <p className="text-sm-2 font-semibold text-text-primary transition group-hover:text-[var(--color-accent-start)] line-clamp-2">

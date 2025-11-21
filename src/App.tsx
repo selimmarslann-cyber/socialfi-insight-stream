@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import AppShell from "@/components/layout/AppShell";
 import { MiniTour } from "@/components/onboarding/MiniTour";
+import { useWalletStore } from "@/lib/store";
 import Index from "./pages/Index";
 import Explore from "./pages/Explore";
 import WalletPage from "./pages/WalletPage";
@@ -59,6 +60,113 @@ const queryClient = new QueryClient({
 const AppContent = () => {
   const { i18n } = useTranslation();
   const [showTour, setShowTour] = useState(false);
+  const { connected, address, provider, connect, chainId, inviterCode } = useWalletStore();
+
+  // Global wallet persistence - restore connection on app load and route changes
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    // Restore wallet connection from persisted state
+    const restoreWallet = async () => {
+      const state = useWalletStore.getState();
+      
+      // If already connected, verify connection is still valid
+      if (state.connected && state.address && state.provider) {
+        if (state.provider === 'metamask' && window.ethereum) {
+          try {
+            const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+            if (accounts && accounts.length > 0) {
+              const account = accounts[0].toLowerCase();
+              if (account === state.address.toLowerCase()) {
+                // Same account, ensure state is synced
+                const chainIdHex = await window.ethereum.request({ method: 'eth_chainId' });
+                const currentChainId = Number.parseInt(chainIdHex as string, 16);
+                connect(state.address, {
+                  provider: state.provider,
+                  chainId: currentChainId || state.chainId,
+                  inviterCode: state.inviterCode,
+                });
+              } else {
+                // Different account, update
+                connect(account, {
+                  provider: state.provider,
+                  chainId: state.chainId,
+                  inviterCode: state.inviterCode,
+                });
+              }
+            } else {
+              // No accounts but state says connected - keep state for non-MetaMask providers
+              if (state.provider !== 'metamask') {
+                connect(state.address, {
+                  provider: state.provider,
+                  chainId: state.chainId,
+                  inviterCode: state.inviterCode,
+                });
+              }
+            }
+          } catch (error) {
+            console.warn('[App] Could not verify MetaMask connection', error);
+            // Keep persisted state for other providers
+            if (state.provider !== 'metamask') {
+              connect(state.address, {
+                provider: state.provider,
+                chainId: state.chainId,
+                inviterCode: state.inviterCode,
+              });
+            }
+          }
+        } else if (state.provider === 'trust' || state.provider === 'email') {
+          // Trust Wallet or Email - restore from persisted state
+          connect(state.address, {
+            provider: state.provider,
+            chainId: state.chainId,
+            inviterCode: state.inviterCode,
+          });
+        }
+      }
+    };
+
+    restoreWallet();
+
+    // Listen for MetaMask account/chain changes globally
+    if (window.ethereum) {
+      const handleAccountsChanged = (accounts: string[]) => {
+        const state = useWalletStore.getState();
+        if (state.provider === 'metamask') {
+          if (accounts.length > 0) {
+            const account = accounts[0].toLowerCase();
+            if (account !== state.address?.toLowerCase()) {
+              connect(account, {
+                provider: 'metamask',
+                chainId: state.chainId,
+                inviterCode: state.inviterCode,
+              });
+            }
+          }
+        }
+      };
+
+      const handleChainChanged = (chainIdHex: string) => {
+        const state = useWalletStore.getState();
+        if (state.provider === 'metamask') {
+          const newChainId = Number.parseInt(chainIdHex, 16);
+          useWalletStore.getState().setChainId(newChainId);
+        }
+      };
+
+      if (window.ethereum.on) {
+        window.ethereum.on('accountsChanged', handleAccountsChanged);
+        window.ethereum.on('chainChanged', handleChainChanged);
+      }
+
+      return () => {
+        if (window.ethereum?.removeListener) {
+          window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+          window.ethereum.removeListener('chainChanged', handleChainChanged);
+        }
+      };
+    }
+  }, []); // Only run on mount
 
   // Set document direction for RTL languages
   useEffect(() => {

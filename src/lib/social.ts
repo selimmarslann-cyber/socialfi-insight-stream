@@ -358,10 +358,10 @@ export async function deletePost(postId: number, walletAddress: string): Promise
     throw new Error("Wallet address is required");
   }
 
-  // Get post to check ownership
+  // Get post to check ownership and investment status
   const { data: post, error: fetchError } = await client
     .from("social_posts")
-    .select("wallet_address")
+    .select("wallet_address, contract_post_id, pool_enabled")
     .eq("id", postId)
     .maybeSingle();
 
@@ -371,19 +371,52 @@ export async function deletePost(postId: number, walletAddress: string): Promise
 
   // Check if user is the owner
   const isOwner = sanitizeWallet(post.wallet_address) === normalized;
-  if (!isOwner) {
-    // Check if user is admin via profile
-    const { data: profile } = await client
-      .from("social_profiles")
-      .select("is_banned")
-      .eq("wallet_address", normalized)
-      .maybeSingle();
-    
-    // Note: Admin check would require checking profiles.is_admin in Supabase
-    // For now, we'll let RLS policies handle admin check
-    // RLS should allow deletion if user is owner or admin
+  
+  // Check if user is admin
+  const { isAdminLoggedIn } = await import("@/lib/adminAuth");
+  const isAdmin = isAdminLoggedIn();
+
+  if (!isOwner && !isAdmin) {
+    throw new Error("You don't have permission to delete this post");
   }
 
+  // Check if post has investments (only for non-admin users)
+  // Admin can delete posts with investments, but regular users cannot
+  if (!isAdmin && post.contract_post_id) {
+    try {
+      // Check if there are any trades for this post
+      const { data: trades } = await client
+        .from("nop_trades")
+        .select("id")
+        .eq("post_id", post.contract_post_id)
+        .limit(1);
+
+      if (trades && trades.length > 0) {
+        throw new Error("Cannot delete post with active investments. Please contact support.");
+      }
+
+      // Also check onchain_positions table
+      const { data: positions } = await client
+        .from("onchain_positions")
+        .select("id")
+        .eq("post_id", post.contract_post_id)
+        .is("closed_at", null)
+        .limit(1);
+
+      if (positions && positions.length > 0) {
+        throw new Error("Cannot delete post with active positions. Please contact support.");
+      }
+    } catch (error) {
+      // If error is already our custom error, re-throw it
+      if (error instanceof Error && error.message.includes("Cannot delete")) {
+        throw error;
+      }
+      // Otherwise, log and continue (might be a table that doesn't exist)
+      console.warn("[social] Could not check investments", error);
+    }
+  }
+
+  // Delete the post
   const { error } = await client
     .from("social_posts")
     .delete()
