@@ -84,7 +84,7 @@ const Index = () => {
 
   const metrics = metricsQuery.data;
 
-    const heroSnapshot = useMemo(
+  const heroSnapshot = useMemo(
       () => [
         { 
           label: "Total Users", 
