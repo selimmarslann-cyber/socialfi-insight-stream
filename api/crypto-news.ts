@@ -1,6 +1,8 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import Parser from "rss-parser";
 
+// Crypto News API - Returns 6 news items with images
+
 type RemoteNewsItem = {
   id: string;
   title: string;
